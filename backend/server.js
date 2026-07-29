@@ -12,6 +12,42 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+    process.env.SUPABASE_KEY || 'placeholder'
+);
+
+// Auth Middleware
+const authenticateUser = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "No authorization header" });
+
+    const token = authHeader.split(' ')[1];
+    const { data, error } = await supabase.auth.getUser(token);
+    
+    if (error || !data.user) {
+        return res.status(401).json({ error: "Invalid or expired token" });
+    }
+    
+    req.user = data.user;
+    next();
+};
+
+app.post('/api/auth/signup', async (req, res) => {
+    const { email, password } = req.body;
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return res.status(400).json({ error: error.message });
+    res.json({ message: "Signup successful", user: data.user });
+});
+
+app.post('/api/auth/signin', async (req, res) => {
+    const { email, password } = req.body;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return res.status(400).json({ error: error.message });
+    res.json({ message: "Signin successful", token: data.session.access_token });
+});
+
 // Helper function for ROI calculation
 function calculateROI(cropName) {
     const data = marketPrices[cropName.toLowerCase()];
@@ -29,7 +65,7 @@ function calculateROI(cropName) {
     };
 }
 
-app.post('/api/predict', async (req, res) => {
+app.post('/api/predict', authenticateUser, async (req, res) => {
     try {
         const { N, P, K, pH, lat, lon, useLiveWeather, manualTemp, manualHumidity, manualRainfall } = req.body;
         
@@ -61,7 +97,22 @@ app.post('/api/predict', async (req, res) => {
         // 4. Gemini AI Advice
         const aiAdvice = await getAgronomistAdvice(inputs, topCrops[0].name, shapImportance);
         
-        // 5. Single JSON Response
+        // 5. Save to Supabase Database
+        const predictionRecord = {
+            user_id: req.user.id,
+            recommended_crop: topCrops[0].name,
+            soil_n: N,
+            soil_p: P,
+            soil_k: K,
+            ph: pH,
+            lat,
+            lon,
+            advice: aiAdvice
+        };
+        const { error: dbError } = await supabase.from('predictions').insert([predictionRecord]);
+        if (dbError) console.error("Failed to save prediction to DB:", dbError.message);
+        
+        // 6. Single JSON Response
         res.json({
             topCrops,
             shapImportance,
