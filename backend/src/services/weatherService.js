@@ -2,32 +2,23 @@ const axios = require('axios');
 
 async function getWeather(lat, lon) {
     try {
-        const apiKey = process.env.OPENWEATHER_API_KEY;
-        if (!apiKey) {
-            console.warn("OPENWEATHER_API_KEY missing, using mock weather data");
-            return { temperature: 25, humidity: 60, rainfall: 120 };
-        }
+        // Open-Meteo requires no API key. We fetch current temp/humidity and 7-day precipitation sum
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m&daily=precipitation_sum&timezone=auto`;
         
-        // Fetch current weather
-        const currentRes = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
-        const temperature = currentRes.data.main.temp;
-        const humidity = currentRes.data.main.humidity;
+        const res = await axios.get(url);
+        const current = res.data.current;
+        const daily = res.data.daily;
         
-        // Fetch 5-day forecast for rainfall approximation
-        const forecastRes = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
+        const temperature = current.temperature_2m;
+        const humidity = current.relative_humidity_2m;
         
-        // Calculate total rainfall over 5 days (sum of 3h precipitation)
-        let rainfall = 0;
-        for (const item of forecastRes.data.list) {
-            if (item.rain && item.rain['3h']) {
-                rainfall += item.rain['3h'];
-            }
-        }
+        // Sum precipitation over the next 7 days for a base rainfall metric
+        const rainfall = daily.precipitation_sum.reduce((acc, val) => acc + (val || 0), 0);
         
         return { temperature, humidity, rainfall };
     } catch (error) {
-        console.error("Error fetching weather:", error.message);
-        // Fallback mock data
+        console.error("Error fetching weather from Open-Meteo:", error.message);
+        // Fallback mock data if API fails
         return { temperature: 25, humidity: 60, rainfall: 120 };
     }
 }

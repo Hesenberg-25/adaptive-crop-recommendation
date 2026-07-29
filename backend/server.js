@@ -60,14 +60,15 @@ function calculateROI(cropName) {
     const estimatedROI = ((expectedRevenue - data.avgCostPerHectare) / data.avgCostPerHectare) * 100;
     
     return {
+        avgCostPerHectare: data.avgCostPerHectare,
         expectedRevenue,
-        estimatedROI: estimatedROI.toFixed(2) + '%'
+        roi: estimatedROI.toFixed(2) + '%'
     };
 }
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
     try {
-        const { N, P, K, pH, lat, lon, useLiveWeather, manualTemp, manualHumidity, manualRainfall } = req.body;
+        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall } = req.body;
         
         // 1. Get Environmental Inputs
         let temperature, humidity, rainfall;
@@ -91,7 +92,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         // 3. Financial ROI
         const roiCalculations = topCrops.map(crop => ({
             crop: crop.name,
-            roi: calculateROI(crop.name) || "Data not available"
+            ...(calculateROI(crop.name) || { roi: "Data not available" })
         }));
         
         // 4. Gemini AI Advice
