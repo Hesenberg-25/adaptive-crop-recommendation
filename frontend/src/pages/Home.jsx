@@ -26,18 +26,18 @@ const Home = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 max-w-5xl w-full">
         <FeatureCard 
           icon={<Sprout className="w-10 h-10 text-emerald-500" />}
-          title="Precision Agriculture"
-          desc="AI analyzes Nitrogen, Phosphorus, Potassium, and pH levels to suggest the perfect crop."
+          title="Hybrid ML + AI Engine"
+          desc="Mathematical Machine Learning predicts viability, while Gemini LLM designs advanced Intercropping geometries."
         />
         <FeatureCard 
           icon={<Activity className="w-10 h-10 text-cyan-500" />}
           title="Live Weather Sync"
-          desc="Automatically pulls real-time temperature, humidity, and rainfall for your farm's location."
+          desc="Automatically syncs 3-year historical climate averages and applies seasonal and irrigation offsets."
         />
         <FeatureCard 
           icon={<DollarSign className="w-10 h-10 text-amber-500" />}
-          title="Financial ROI"
-          desc="Calculates expected yield and market value so you maximize your profits."
+          title="Autonomous Web Scraping"
+          desc="Google Search Grounding scrapes the live internet to calculate absolute real-time ROI for 47 Indian crops."
         />
       </div>
     </div>

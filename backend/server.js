@@ -2,9 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-const { getWeather } = require('./src/services/weatherService');
-const { getAgronomistAdvice } = require('./src/services/geminiService');
-const marketPrices = require('./src/data/marketPrices.json');
+const { getWeather, getClimateForecast } = require('./src/services/weatherService');
+const { getComprehensiveAnalysis } = require('./src/services/aiService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
 
@@ -48,32 +47,21 @@ app.post('/api/auth/signin', async (req, res) => {
     res.json({ message: "Signin successful", token: data.session.access_token });
 });
 
-// Helper function for ROI calculation
-function calculateROI(cropName) {
-    const data = marketPrices[cropName.toLowerCase()];
-    if (!data) return null;
-    
-    // $$\text{Expected Revenue} = \text{estYieldTons} \times \text{expectedMarketPricePerTon}$$
-    const expectedRevenue = data.estYieldTons * data.expectedMarketPricePerTon;
-    
-    // $$\text{Estimated ROI} = \frac{\text{Expected Revenue} - \text{avgCostPerHectare}}{\text{avgCostPerHectare}} \times 100$$
-    const estimatedROI = ((expectedRevenue - data.avgCostPerHectare) / data.avgCostPerHectare) * 100;
-    
-    return {
-        avgCostPerHectare: data.avgCostPerHectare,
-        expectedRevenue,
-        roi: estimatedROI.toFixed(2) + '%'
-    };
-}
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
     try {
-        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall } = req.body;
+        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique } = req.body;
         
         // 1. Get Environmental Inputs
         let temperature, humidity, rainfall;
         if (useLiveWeather && lat && lon) {
-            const weather = await getWeather(lat, lon);
+            let targetMonth = null;
+            if (season === 'kharif') targetMonth = 5; // June
+            else if (season === 'rabi') targetMonth = 10; // November
+            else if (season === 'zaid') targetMonth = 2; // March
+
+            // Using 120 days for a full plantation cycle climate average
+            const weather = await getClimateForecast(lat, lon, 120, targetMonth);
             temperature = weather.temperature;
             humidity = weather.humidity;
             rainfall = weather.rainfall;
@@ -83,20 +71,29 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             rainfall = manualRainfall || 120;
         }
         
+        // Apply Irrigation Supplement Math
+        if (isIrrigated) {
+            rainfall += 150; 
+        }
+        
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
         
         // 2. ML Logic
         const topCrops = cropModel.predict(inputs);
-        const shapImportance = shapEngine.calculate(inputs, topCrops[0].name);
+        const trainingData = cropModel.getTrainingData();
+        const shapImportance = shapEngine.calculate(inputs, topCrops[0].name, trainingData);
         
-        // 3. Financial ROI
-        const roiCalculations = topCrops.map(crop => ({
-            crop: crop.name,
-            ...(calculateROI(crop.name) || { roi: "Data not available" })
-        }));
+        // 3. Gemini Comprehensive Analysis (Financials & Agronomist Advice)
+        const geminiAnalysis = await getComprehensiveAnalysis(inputs, topCrops, shapImportance, technique);
         
-        // 4. Gemini AI Advice
-        const aiAdvice = await getAgronomistAdvice(inputs, topCrops[0].name, shapImportance);
+        const roiCalculations = [
+            {
+                crop: topCrops[0].name,
+                ...geminiAnalysis.financials
+            }
+        ];
+        
+        const aiAdvice = geminiAnalysis.markdownAdvice;
         
         // 5. Save to Supabase Database
         const predictionRecord = {

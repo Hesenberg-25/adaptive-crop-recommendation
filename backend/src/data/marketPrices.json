@@ -1,6 +1,0 @@
-{
-  "rice": { "avgCostPerHectare": 25000, "expectedMarketPricePerTon": 2200, "estYieldTons": 4.5 },
-  "maize": { "avgCostPerHectare": 18000, "expectedMarketPricePerTon": 1900, "estYieldTons": 5.0 },
-  "chickpea": { "avgCostPerHectare": 15000, "expectedMarketPricePerTon": 5000, "estYieldTons": 2.0 },
-  "coffee": { "avgCostPerHectare": 45000, "expectedMarketPricePerTon": 12000, "estYieldTons": 1.2 }
-}

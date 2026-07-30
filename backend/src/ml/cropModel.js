@@ -6,19 +6,14 @@ const DATA_PATH = path.join(__dirname, '../data/Crop_recommendation.csv');
 let trainingData = [];
 let isModelTrained = false;
 
-// Normalize function for features
-function normalize(val, min, max) {
-    return (val - min) / (max - min || 1);
-}
-
 let featureStats = {
-    N: { min: Infinity, max: -Infinity },
-    P: { min: Infinity, max: -Infinity },
-    K: { min: Infinity, max: -Infinity },
-    temperature: { min: Infinity, max: -Infinity },
-    humidity: { min: Infinity, max: -Infinity },
-    ph: { min: Infinity, max: -Infinity },
-    rainfall: { min: Infinity, max: -Infinity }
+    N: { values: [], mean: 0, std: 1 },
+    P: { values: [], mean: 0, std: 1 },
+    K: { values: [], mean: 0, std: 1 },
+    temperature: { values: [], mean: 0, std: 1 },
+    humidity: { values: [], mean: 0, std: 1 },
+    ph: { values: [], mean: 0, std: 1 },
+    rainfall: { values: [], mean: 0, std: 1 }
 };
 
 function trainModel() {
@@ -46,18 +41,27 @@ function trainModel() {
                 const label = row.label;
                 if (!label) return;
                 
-                // Update stats
+                // Store values to compute standard deviation later
                 for (let key in features) {
-                    if (features[key] < featureStats[key].min) featureStats[key].min = features[key];
-                    if (features[key] > featureStats[key].max) featureStats[key].max = features[key];
+                    featureStats[key].values.push(features[key]);
                 }
                 
                 data.push({ features, label });
             })
             .on('end', () => {
+                // Compute Mean and Standard Deviation for Z-Score Standardization
+                for (let key in featureStats) {
+                    const vals = featureStats[key].values;
+                    const mean = vals.reduce((sum, val) => sum + val, 0) / vals.length;
+                    const variance = vals.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / vals.length;
+                    featureStats[key].mean = mean;
+                    featureStats[key].std = Math.sqrt(variance) || 1;
+                    delete featureStats[key].values; // Free memory
+                }
+
                 trainingData = data;
                 isModelTrained = true;
-                console.log(`KNN Model successfully trained on ${trainingData.length} samples.`);
+                console.log(`KNN Model successfully trained on ${trainingData.length} samples with Z-Score Standardization.`);
                 resolve();
             })
             .on('error', (err) => {
@@ -67,12 +71,17 @@ function trainModel() {
     });
 }
 
+// Z-Score Standardization: z = (x - mean) / std
+function standardize(val, mean, std) {
+    return (val - mean) / std;
+}
+
 function euclideanDistance(point1, point2) {
     let sum = 0;
     for (let key in point1) {
-        const norm1 = normalize(point1[key], featureStats[key].min, featureStats[key].max);
-        const norm2 = normalize(point2[key], featureStats[key].min, featureStats[key].max);
-        sum += Math.pow(norm1 - norm2, 2);
+        const z1 = standardize(point1[key], featureStats[key].mean, featureStats[key].std);
+        const z2 = standardize(point2[key], featureStats[key].mean, featureStats[key].std);
+        sum += Math.pow(z1 - z2, 2);
     }
     return Math.sqrt(sum);
 }
@@ -129,18 +138,25 @@ function predict(inputs) {
     distances.sort((a, b) => a.distance - b.distance);
     
     const nearestNeighbors = distances.slice(0, k);
-    let classCounts = {};
+    let classWeights = {};
+    let totalWeight = 0;
     
+    // Distance Weighting: Closer neighbors get higher voting power
     for (let i = 0; i < nearestNeighbors.length; i++) {
         const label = nearestNeighbors[i].label;
-        classCounts[label] = (classCounts[label] || 0) + 1;
+        const dist = nearestNeighbors[i].distance;
+        // Inverse distance weighting (add small epsilon to avoid div by zero)
+        const weight = 1 / (dist + 0.001);
+        
+        classWeights[label] = (classWeights[label] || 0) + weight;
+        totalWeight += weight;
     }
     
     let result = [];
-    for (let label in classCounts) {
+    for (let label in classWeights) {
         result.push({
             name: label,
-            confidence: Math.round((classCounts[label] / k) * 100)
+            confidence: Math.round((classWeights[label] / totalWeight) * 100)
         });
     }
     
@@ -152,7 +168,24 @@ function predict(inputs) {
         return fallback;
     }
     
-    return result.slice(0, 3);
+    let finalCrops = result.slice(0, 3);
+    
+    // Ensure we always return exactly 3 crops (if the cluster is homogeneous, it might only return 1 or 2)
+    if (finalCrops.length < 3) {
+        const fallback = fallbackPredict(inputs);
+        for (let i = 0; i < fallback.length; i++) {
+            if (!finalCrops.find(c => c.name === fallback[i].name)) {
+                finalCrops.push({ name: fallback[i].name, confidence: Math.max(10, finalCrops[0].confidence - 30 - (i * 10)) });
+            }
+            if (finalCrops.length === 3) break;
+        }
+    }
+    
+    return finalCrops;
 }
 
-module.exports = { trainModel, predict };
+function getTrainingData() {
+    return trainingData;
+}
+
+module.exports = { trainModel, predict, getTrainingData };

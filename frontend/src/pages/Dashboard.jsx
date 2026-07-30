@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Tooltip from '../components/Tooltip';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Loader2, MapPin, HelpCircle } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 import Controls from '../components/Controls';
 import Simulator from '../components/Simulator';
 import ResultsCards from '../components/ResultsCards';
@@ -23,7 +23,11 @@ const Dashboard = () => {
   const [location, setLocation] = useState({ lat: null, lon: null });
   const [locationName, setLocationName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Run AI Prediction');
   const [results, setResults] = useState(null);
+  const [season, setSeason] = useState('auto');
+  const [isIrrigated, setIsIrrigated] = useState(false);
+  const [technique, setTechnique] = useState('monocropping');
 
   const handleInputChange = (key, value) => {
     setInputs(prev => ({ ...prev, [key]: value }));
@@ -68,25 +72,49 @@ const Dashboard = () => {
 
   const handlePredict = async () => {
     setLoading(true);
+    
+    const loadingStates = [
+      "Initializing ML Engine...",
+      "Running K-Nearest Neighbors...",
+      "Calculating SHAP Feature Importance...",
+      "Live Web-Scraping for Market Prices...",
+      "Generating Expert Agronomist Report...",
+      "Finalizing Results..."
+    ];
+    let stateIndex = 0;
+    setLoadingText(loadingStates[stateIndex]);
+    
+    const intervalId = setInterval(() => {
+      stateIndex = (stateIndex + 1) % loadingStates.length;
+      if (stateIndex === loadingStates.length - 1) clearInterval(intervalId);
+      setLoadingText(loadingStates[stateIndex]);
+    }, 1200);
+
     try {
       const payload = {
         ...inputs,
         rainfall: inputs.rainfall * (1 - droughtReduction / 100),
         useLiveWeather,
         lat: location.lat,
-        lon: location.lon
+        lon: location.lon,
+        season,
+        isIrrigated,
+        technique
       };
       
       const response = await axios.post('http://localhost:5000/api/predict', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      clearInterval(intervalId);
       setResults(response.data);
       toast.success('Prediction generated & saved to database!');
     } catch (error) {
+      clearInterval(intervalId);
       toast.error(error.response?.data?.error || 'Failed to generate prediction');
     } finally {
       setLoading(false);
+      setLoadingText('Run AI Prediction');
     }
   };
 
@@ -110,12 +138,12 @@ const Dashboard = () => {
         </motion.p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column - Inputs */}
+      <div className="flex flex-col gap-8 items-center max-w-4xl mx-auto">
+        {/* Top Section - Inputs */}
         <motion.div 
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-5 flex flex-col gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full flex flex-col gap-6"
         >
           <div className="glass-panel p-4 flex justify-between items-center">
             <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100 font-medium">
@@ -128,7 +156,17 @@ const Dashboard = () => {
             </label>
           </div>
 
-          <Controls values={inputs} onChange={handleInputChange} useLiveWeather={useLiveWeather} />
+          <Controls 
+            values={inputs} 
+            onChange={handleInputChange} 
+            useLiveWeather={useLiveWeather}
+            season={season}
+            setSeason={setSeason}
+            isIrrigated={isIrrigated}
+            setIsIrrigated={setIsIrrigated}
+            technique={technique}
+            setTechnique={setTechnique}
+          />
           
           <Simulator 
             baseRainfall={inputs.rainfall} 
@@ -139,17 +177,20 @@ const Dashboard = () => {
           <button 
             onClick={handlePredict}
             disabled={loading}
-            className="glass-button w-full py-4 text-lg flex justify-center items-center mt-2 font-poppins"
+            className="glass-button w-full py-4 text-lg flex justify-center items-center mt-2 font-poppins relative overflow-hidden"
           >
-            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Run AI Prediction'}
+            {loading && <Loader2 className="w-6 h-6 animate-spin mr-3" />}
+            <span className="min-w-[250px] text-center">
+                {loadingText}
+            </span>
           </button>
         </motion.div>
 
-        {/* Right Column - Results */}
+        {/* Bottom Section - Results */}
         <motion.div 
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-7 flex flex-col gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full flex flex-col gap-6"
         >
           {results ? (
             <>

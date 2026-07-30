@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bot, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 
 const AIAdvice = ({ adviceText }) => {
   if (!adviceText) {
@@ -24,9 +25,9 @@ const AIAdvice = ({ adviceText }) => {
       
       <div className="bg-slate-50 dark:bg-white/5 border border-purple-200 dark:border-purple-500/20 p-5 rounded-xl shadow-inner relative transition-colors">
         <Sparkles className="absolute top-3 right-3 w-4 h-4 text-purple-500 dark:text-purple-400 opacity-50" />
-        <p className="text-slate-700 dark:text-slate-200 leading-relaxed italic">
-          "{adviceText}"
-        </p>
+        <div className="prose prose-purple dark:prose-invert max-w-none text-slate-700 dark:text-slate-200 text-sm md:text-base leading-relaxed">
+          <ReactMarkdown>{adviceText}</ReactMarkdown>
+        </div>
       </div>
     </motion.div>
   );
