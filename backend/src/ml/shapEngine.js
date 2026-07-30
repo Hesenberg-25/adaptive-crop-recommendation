@@ -15,44 +15,44 @@ const idealConditions = {
 function calculate(inputs, topCrop) {
     let cropName = topCrop ? topCrop.toLowerCase() : 'default';
     let target = idealConditions[cropName] || idealConditions['default'];
-    
+
     const impacts = [];
-    
-    // Check how close the input is to the ideal range. 
+
+    // Check how close the input is to the ideal range.
     // Closer = positive impact, further = negative or lower impact.
     for (let feature in inputs) {
         if (!target[feature]) continue;
-        
+
         let value = parseFloat(inputs[feature]);
         let [min, max] = target[feature];
         let mid = (min + max) / 2;
-        
+
         let impactScore = 0;
         let direction = "Optimal";
-        
+
         if (value >= min && value <= max) {
             impactScore = 30 + Math.random() * 20; // 30-50% base impact
         } else if (value < min) {
             impactScore = 5 + Math.random() * 15; // 5-20% base impact
             direction = "Low";
         } else {
-            impactScore = 5 + Math.random() * 15; 
+            impactScore = 5 + Math.random() * 15;
             direction = "Excessive";
         }
-        
+
         impacts.push({
             feature: feature,
             score: impactScore,
             direction: direction
         });
     }
-    
+
     // Sort by score descending to find the top drivers
     impacts.sort((a, b) => b.score - a.score);
-    
+
     // Normalize to 100% total impact for UI display
     let total = impacts.reduce((sum, item) => sum + item.score, 0);
-    
+
     let result = {};
     impacts.forEach(item => {
         let percentage = Math.round((item.score / total) * 100);
@@ -60,13 +60,13 @@ function calculate(inputs, topCrop) {
         let featureName = item.feature.charAt(0).toUpperCase() + item.feature.slice(1);
         result[featureName] = `${prefix}${percentage}% Impact (${item.direction})`;
     });
-    
+
     if (impacts.length > 0) {
         result["topFeature"] = impacts[0].feature.charAt(0).toUpperCase() + impacts[0].feature.slice(1);
     } else {
         result["topFeature"] = "None";
     }
-    
+
     return result;
 }
 
