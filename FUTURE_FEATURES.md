@@ -1,9 +1,5 @@
 # 🏆 Standout Features to Win the Hackathon
 
-To truly impress the judges and secure a win, your app needs to go beyond a basic recommendation engine. Judges at hackathons look for **"Real-World Applicability"**, **"Wow Factor"**, and **"Technical Depth"**. 
-
-Here are 5 killer features you (and your team) can implement to elevate this project from a standard ML app to a prize-winning product.
-
 ---
 
 ## 1. 📱 SMS/WhatsApp Bot for Rural Farmers (The "Real-World" Factor)

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { User as UserIcon, Phone, Mail, MapPin, Maximize, Wheat, Save, Loader2, Map, Droplet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CustomSelect from '../components/CustomSelect';
 
@@ -15,6 +16,9 @@ const soilOptions = [
 
 const Profile = () => {
   const { token } = useAuth();
+  const locationState = useLocation().state || {};
+  const isNewUser = locationState.isNewUser;
+  
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   
@@ -76,11 +80,48 @@ const Profile = () => {
     return <div className="min-h-[50vh] flex justify-center items-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
   }
 
+  const crazyIntroVariants = {
+    hidden: { opacity: 0, scale: 0.1, rotate: -180, y: 300 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      rotate: 0, 
+      y: 0,
+      transition: { type: "spring", bounce: 0.6, duration: 1.5 }
+    }
+  };
+
   return (
-    <div className="container mx-auto px-4 max-w-3xl pb-12">
+    <motion.div 
+      variants={isNewUser ? crazyIntroVariants : {}}
+      initial={isNewUser ? "hidden" : false}
+      animate={isNewUser ? "visible" : false}
+      className="container mx-auto px-4 max-w-3xl pb-12"
+    >
+      {isNewUser && (
+        <div className="text-center mt-8 mb-4">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 font-poppins"
+          >
+            Welcome to AgriVision! 🌾
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="text-slate-500 dark:text-slate-400 mt-2 text-lg"
+          >
+            Let's get your farm profile set up so our AI can give you the best recommendations.
+          </motion.p>
+        </div>
+      )}
+      
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={!isNewUser ? { opacity: 0, y: 20 } : false}
+        animate={!isNewUser ? { opacity: 1, y: 0 } : false}
         className="glass-panel p-8 mt-4"
       >
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2 font-poppins">
@@ -234,7 +275,7 @@ const Profile = () => {
           </div>
         </form>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 

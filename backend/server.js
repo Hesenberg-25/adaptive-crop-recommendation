@@ -85,8 +85,9 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const allTopCrops = cropModel.predict(inputs);
         
         const threshold = 60;
-        const recommendedCrops = allTopCrops.filter(c => c.confidence >= threshold);
-        const avoidCrops = allTopCrops.filter(c => c.confidence < threshold);
+        // Explicitly sort each group descending so ordering is always correct
+        const recommendedCrops = allTopCrops.filter(c => c.confidence >= threshold).sort((a, b) => b.confidence - a.confidence);
+        const avoidCrops = allTopCrops.filter(c => c.confidence < threshold).sort((a, b) => b.confidence - a.confidence);
 
         const marketPrices = require('./src/data/marketPrices.json');
         
@@ -94,18 +95,20 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
             const avgCostPerHectare = data.costPerHectare;
             const expectedRevenue = data.yieldPerHectareTons * data.pricePerTon;
+            const netReturnPerHectare = expectedRevenue - avgCostPerHectare;
             const roiValue = (((expectedRevenue - avgCostPerHectare) / avgCostPerHectare) * 100).toFixed(1);
             
-            let feasibility = "Medium";
-            if (rainfall >= data.minRainfall && rainfall <= data.maxRainfall) feasibility = "High";
-            else if (rainfall < data.minRainfall - 50 || rainfall > data.maxRainfall + 50) feasibility = "Low";
+            let rainfallFit = "Medium";
+            if (rainfall >= data.minRainfall && rainfall <= data.maxRainfall) rainfallFit = "High";
+            else if (rainfall < data.minRainfall - 50 || rainfall > data.maxRainfall + 50) rainfallFit = "Low";
 
             return {
                 ...crop,
                 roi: roiValue,
                 avgCostPerHectare,
                 expectedRevenue,
-                feasibility
+                netReturnPerHectare,
+                rainfallFit
             };
         };
 
@@ -122,10 +125,15 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         
         const aiAdvice = geminiAnalysis.markdownAdvice;
         
+        const topThreeCrops = [...recommendedWithROI, ...avoidWithROI]
+            .slice(0, 3)
+            .map(c => c.name)
+            .join(', ');
+        
         // 5. Save to Supabase Database
         const predictionRecord = {
             user_id: req.user.id,
-            recommended_crop: primaryCrop,
+            recommended_crop: topThreeCrops,
             soil_n: N,
             soil_p: P,
             soil_k: K,

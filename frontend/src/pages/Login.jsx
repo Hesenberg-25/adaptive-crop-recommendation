@@ -20,7 +20,7 @@ const Login = () => {
       const response = await axios.post('http://localhost:5000/api/auth/signin', { email, password });
       login(response.data.token);
       toast.success('Successfully logged in!');
-      navigate('/dashboard');
+      navigate('/dashboard', { state: { justLoggedIn: true } });
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to log in');
     } finally {

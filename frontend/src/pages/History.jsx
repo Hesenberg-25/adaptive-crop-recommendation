@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { History as HistoryIcon, Sprout, MapPin, Calendar, Loader2 } from 'lucide-react';
+import { History as HistoryIcon, Sprout, MapPin, Calendar, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,6 +8,11 @@ const History = () => {
   const { token } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -57,11 +62,14 @@ const History = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               key={record.id}
-              className="glass-panel p-6 border-l-4 border-l-emerald-500 hover:shadow-lg transition-all"
+              className="glass-panel border-l-4 border-l-emerald-500 hover:shadow-lg transition-all overflow-hidden"
             >
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
+              <div 
+                className="p-6 cursor-pointer flex flex-col md:flex-row md:items-start justify-between gap-4 select-none"
+                onClick={() => toggleExpand(record.id)}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <Calendar className="w-4 h-4 text-slate-500" />
                     <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                       {new Date(record.created_at).toLocaleDateString(undefined, {
@@ -70,45 +78,63 @@ const History = () => {
                       })}
                     </span>
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2 capitalize mt-1">
-                    <Sprout className="w-6 h-6 text-emerald-500" />
-                    {record.recommended_crop}
-                  </h2>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {record.recommended_crop.split(',').map((crop, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full font-semibold border border-emerald-200 dark:border-emerald-800/60 capitalize">
+                        <Sprout className="w-4 h-4" />
+                        {crop.trim()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-3 text-sm flex gap-4 border border-slate-200 dark:border-slate-700">
-                  <div className="flex flex-col">
-                    <span className="text-slate-500 text-xs font-bold uppercase">N-P-K (mg/kg)</span>
-                    <span className="font-mono text-slate-700 dark:text-slate-300">
-                      {record.soil_n}-{record.soil_p}-{record.soil_k}
-                    </span>
+                <div className="flex items-center gap-4">
+                  <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-3 text-sm flex gap-4 border border-slate-200 dark:border-slate-700">
+                    <div className="flex flex-col">
+                      <span className="text-slate-500 text-xs font-bold uppercase">N-P-K</span>
+                      <span className="font-mono text-slate-700 dark:text-slate-300">
+                        {record.soil_n}-{record.soil_p}-{record.soil_k}
+                      </span>
+                    </div>
+                    <div className="w-px bg-slate-300 dark:bg-slate-600"></div>
+                    <div className="flex flex-col">
+                      <span className="text-slate-500 text-xs font-bold uppercase">pH</span>
+                      <span className="font-mono text-slate-700 dark:text-slate-300">{record.ph}</span>
+                    </div>
+                    {(record.lat && record.lon) && (
+                      <>
+                        <div className="w-px bg-slate-300 dark:bg-slate-600"></div>
+                        <div className="flex flex-col">
+                          <span className="text-slate-500 text-xs font-bold uppercase flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> Loc
+                          </span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300">
+                            {parseFloat(record.lat).toFixed(2)}, {parseFloat(record.lon).toFixed(2)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <div className="w-px bg-slate-300 dark:bg-slate-600"></div>
-                  <div className="flex flex-col">
-                    <span className="text-slate-500 text-xs font-bold uppercase">pH Level</span>
-                    <span className="font-mono text-slate-700 dark:text-slate-300">{record.ph}</span>
+                  <div className="text-slate-400">
+                    {expandedId === record.id ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />}
                   </div>
-                  {(record.lat && record.lon) && (
-                    <>
-                      <div className="w-px bg-slate-300 dark:bg-slate-600"></div>
-                      <div className="flex flex-col">
-                        <span className="text-slate-500 text-xs font-bold uppercase flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> Location
-                        </span>
-                        <span className="font-mono text-slate-700 dark:text-slate-300">
-                          {parseFloat(record.lat).toFixed(2)}, {parseFloat(record.lon).toFixed(2)}
-                        </span>
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
 
-              <div className="prose dark:prose-invert prose-emerald max-w-none text-sm mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                <div className="font-semibold text-slate-700 dark:text-slate-300 mb-2">AI Insights Snapshot:</div>
-                <div className="line-clamp-3 text-slate-600 dark:text-slate-400">
-                  {record.advice || "No advice recorded for this simulation."}
-                </div>
-              </div>
+              {expandedId === record.id && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="px-6 pb-6 border-t border-slate-200 dark:border-slate-800/50"
+                >
+                  <div className="prose dark:prose-invert prose-emerald max-w-none text-sm mt-4">
+                    <div className="font-semibold text-slate-700 dark:text-slate-300 mb-2 text-base">AI Detailed Analysis:</div>
+                    <div className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                      {record.advice || "No advice recorded for this simulation."}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           ))}
         </div>

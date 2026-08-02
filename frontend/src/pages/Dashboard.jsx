@@ -8,11 +8,16 @@ import Simulator from '../components/Simulator';
 import ResultsCards from '../components/ResultsCards';
 import AIAdvice from '../components/AIAdvice';
 import { useAuth } from '../context/AuthContext';
+import CropCatalog from '../components/CropCatalog';
+import { useLocation } from 'react-router-dom';
 
 import axios from 'axios';
 
 const Dashboard = () => {
   const { token } = useAuth();
+  const locationState = useLocation().state || {};
+  const isJustLoggedIn = locationState.justLoggedIn;
+  
   const [inputs, setInputs] = useState({
     N: 90, P: 42, K: 43, pH: 6.5, temperature: 24, humidity: 82, rainfall: 220
   });
@@ -136,8 +141,25 @@ const Dashboard = () => {
     }
   };
 
+  const crazyVariants = {
+    hidden: { opacity: 0, scale: 0.3, rotateX: 90, rotateY: 45, y: -200 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      rotateX: 0, 
+      rotateY: 0, 
+      y: 0,
+      transition: { type: "spring", damping: 12, stiffness: 80, duration: 1.2 }
+    }
+  };
+
   return (
-    <div className="container mx-auto px-4 max-w-6xl pb-12">
+    <motion.div 
+      variants={isJustLoggedIn ? crazyVariants : {}}
+      initial={isJustLoggedIn ? "hidden" : false}
+      animate={isJustLoggedIn ? "visible" : false}
+      className="container mx-auto px-4 max-w-6xl pb-12"
+    >
       <header className="mb-10 text-center">
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
@@ -194,6 +216,8 @@ const Dashboard = () => {
             onReductionChange={setDroughtReduction} 
           />
           
+          <CropCatalog />
+          
           <button 
             onClick={handlePredict}
             disabled={loading}
@@ -238,11 +262,11 @@ const Dashboard = () => {
                     <div className="flex flex-col gap-3">
                       {results.alerts.map((alert, idx) => (
                         <div key={idx} className={`p-4 rounded-xl border ${alert.severity === 'high' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'}`}>
-                          <div className="font-bold mb-1 flex items-center gap-2">
+                          <div className="font-bold mb-2 flex items-center gap-2 text-base">
                             <span>{alert.severity === 'high' ? '🔴' : '🟡'}</span>
-                            {alert.risk} Risk ({alert.severity.toUpperCase()})
+                            {alert.risk} <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ml-1 ${alert.severity === 'high' ? 'bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100' : 'bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100'}`}>{alert.severity.toUpperCase()} RISK</span>
                           </div>
-                          <div className="text-sm">
+                          <div className="text-sm leading-relaxed whitespace-pre-line">
                             {alert.message}
                           </div>
                         </div>
@@ -252,8 +276,8 @@ const Dashboard = () => {
                 )}
                 <section>
                   <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-3 ml-2 font-poppins flex items-center">
-                    ML Predictions & Feasibility
-                    <Tooltip text="Analyzes your exact NPK, pH, and Weather data to categorize crops into Highly Recommended and Avoid. Includes ROI based on market data." />
+                    ML Predictions & Crop Analysis
+                    <Tooltip text="Analyzes your exact NPK, pH, and Weather data to categorize crops into Highly Recommended and Avoid. Includes ROI %, net return in ₹, and Rainfall Fit score." />
                   </h3>
                   <ResultsCards recommendedCrops={results.recommendedCrops} avoidCrops={results.avoidCrops} />
                 </section>
@@ -274,7 +298,7 @@ const Dashboard = () => {
           )}
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
