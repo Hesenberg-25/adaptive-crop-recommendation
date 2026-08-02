@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import History from './pages/History';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -21,34 +23,54 @@ const PublicRoute = ({ children }) => {
   return isAuthenticated ? <Navigate to="/dashboard" /> : children;
 };
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <div className="min-h-screen transition-colors duration-500 bg-gradient-to-br from-slate-100 via-emerald-50 to-slate-100 text-slate-900 dark:from-slate-900 dark:via-emerald-950 dark:to-slate-900 dark:text-slate-100 bg-[length:400%_400%] animate-gradient">
-            <Navbar />
-            <Routes>
-              {/* Public Routes - Auto-redirect to dashboard if logged in */}
-              <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
-              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-              <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-              
-              {/* Protected Routes - Auto-redirect to login if not logged in */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-            <Toaster position="bottom-right" />
-          </div>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <div className="min-h-screen transition-colors duration-500 bg-gradient-to-br from-slate-100 via-emerald-50 to-slate-100 text-slate-900 dark:from-slate-900 dark:via-emerald-950 dark:to-slate-900 dark:text-slate-100 bg-[length:400%_400%] animate-gradient">
+              <Navbar />
+              <Routes>
+                {/* Public Routes - Auto-redirect to dashboard if logged in */}
+                <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+                
+                {/* Protected Routes - Auto-redirect to login if not logged in */}
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/history" 
+                  element={
+                    <ProtectedRoute>
+                      <History />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+              <Toaster position="bottom-right" />
+            </div>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

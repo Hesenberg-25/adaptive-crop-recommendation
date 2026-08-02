@@ -1,0 +1,65 @@
+{
+  "carrot": {
+    "pricePerTon": 18000,
+    "costPerHectare": 40000,
+    "yieldPerHectareTons": 25,
+    "minRainfall": 50,
+    "maxRainfall": 150
+  },
+  "tomato": {
+    "pricePerTon": 25000,
+    "costPerHectare": 60000,
+    "yieldPerHectareTons": 30,
+    "minRainfall": 60,
+    "maxRainfall": 140
+  },
+  "wheat": {
+    "pricePerTon": 22000,
+    "costPerHectare": 30000,
+    "yieldPerHectareTons": 4,
+    "minRainfall": 30,
+    "maxRainfall": 100
+  },
+  "rice": {
+    "pricePerTon": 20000,
+    "costPerHectare": 45000,
+    "yieldPerHectareTons": 5,
+    "minRainfall": 150,
+    "maxRainfall": 300
+  },
+  "potato": {
+    "pricePerTon": 12000,
+    "costPerHectare": 50000,
+    "yieldPerHectareTons": 20,
+    "minRainfall": 50,
+    "maxRainfall": 120
+  },
+  "maize": {
+    "pricePerTon": 18000,
+    "costPerHectare": 25000,
+    "yieldPerHectareTons": 6,
+    "minRainfall": 50,
+    "maxRainfall": 100
+  },
+  "cotton": {
+    "pricePerTon": 60000,
+    "costPerHectare": 40000,
+    "yieldPerHectareTons": 2,
+    "minRainfall": 50,
+    "maxRainfall": 110
+  },
+  "sugarcane": {
+    "pricePerTon": 3000,
+    "costPerHectare": 80000,
+    "yieldPerHectareTons": 70,
+    "minRainfall": 150,
+    "maxRainfall": 250
+  },
+  "default": {
+    "pricePerTon": 15000,
+    "costPerHectare": 35000,
+    "yieldPerHectareTons": 10,
+    "minRainfall": 50,
+    "maxRainfall": 150
+  }
+}

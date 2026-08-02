@@ -2,19 +2,20 @@ const axios = require('axios');
 
 async function getWeather(lat, lon) {
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m&daily=precipitation_sum&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&daily=precipitation_sum&timezone=auto`;
         const res = await axios.get(url);
         const current = res.data.current;
         const daily = res.data.daily;
         
         const temperature = current.temperature_2m;
         const humidity = current.relative_humidity_2m;
+        const windSpeed = current.wind_speed_10m;
         const rainfall = daily.precipitation_sum.reduce((acc, val) => acc + (val || 0), 0);
         
-        return { temperature, humidity, rainfall };
+        return { temperature, humidity, rainfall, windSpeed };
     } catch (error) {
         console.error("Error fetching weather:", error.message);
-        return { temperature: 25, humidity: 60, rainfall: 120 };
+        return { temperature: 25, humidity: 60, rainfall: 120, windSpeed: 15 };
     }
 }
 
@@ -40,7 +41,7 @@ async function getClimateForecast(lat, lon, cycleDays = 120, targetMonth = null)
             const startStr = pastYearStart.toISOString().split('T')[0];
             const endStr = pastYearEnd.toISOString().split('T')[0];
             
-            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`;
+            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_mean,precipitation_sum,wind_speed_10m_max&timezone=auto`;
             promises.push(axios.get(url));
         }
 
@@ -48,6 +49,7 @@ async function getClimateForecast(lat, lon, cycleDays = 120, targetMonth = null)
         
         let totalCycleRainfallSum = 0;
         let avgTemperatureSum = 0;
+        let avgWindSum = 0;
 
         responses.forEach(res => {
             const daily = res.data.daily;
@@ -56,8 +58,12 @@ async function getClimateForecast(lat, lon, cycleDays = 120, targetMonth = null)
             const validTemps = daily.temperature_2m_mean.filter(t => t !== null);
             const cycleTemp = validTemps.reduce((acc, val) => acc + val, 0) / (validTemps.length || 1);
             
+            const validWind = daily.wind_speed_10m_max ? daily.wind_speed_10m_max.filter(w => w !== null) : [];
+            const cycleWind = validWind.length > 0 ? validWind.reduce((acc, val) => acc + val, 0) / validWind.length : 15;
+
             totalCycleRainfallSum += cycleRainfall;
             avgTemperatureSum += cycleTemp;
+            avgWindSum += cycleWind;
         });
 
         // Current humidity as a baseline since historical daily humidity isn't easily aggregated
@@ -66,7 +72,8 @@ async function getClimateForecast(lat, lon, cycleDays = 120, targetMonth = null)
         return {
             temperature: parseFloat((avgTemperatureSum / yearsToAverage).toFixed(2)),
             humidity: currentWeather.humidity,
-            rainfall: parseFloat((totalCycleRainfallSum / yearsToAverage).toFixed(2))
+            rainfall: parseFloat((totalCycleRainfallSum / yearsToAverage).toFixed(2)),
+            windSpeed: parseFloat((avgWindSum / yearsToAverage).toFixed(2))
         };
     } catch (error) {
         console.error("Error fetching historical climate:", error.message);

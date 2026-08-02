@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, LogOut, Moon, Sun, User as UserIcon } from 'lucide-react';
+import { Leaf, LogOut, Moon, Sun, User as UserIcon, History as HistoryIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { motion } from 'framer-motion';
@@ -41,6 +41,14 @@ const Navbar = () => {
           <>
             <Link to="/dashboard" className="hidden sm:block text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition-colors">
               Dashboard
+            </Link>
+            <Link to="/history" className="hidden sm:block text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition-colors">
+              <HistoryIcon className="w-5 h-5 inline mr-1 mb-1" />
+              History
+            </Link>
+            <Link to="/profile" className="hidden sm:block text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition-colors">
+              <UserIcon className="w-5 h-5 inline mr-1 mb-1" />
+              Profile
             </Link>
             <button 
               onClick={handleLogout}
