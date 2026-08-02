@@ -1,22 +1,23 @@
 import React from 'react';
-import { Droplets, Thermometer, FlaskConical, Wind, Leaf, CloudLightning, Map, Calendar, Droplet } from 'lucide-react';
+import { Droplets, Thermometer, FlaskConical, Wind, Leaf, CloudLightning, Map, Calendar, Droplet, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Tooltip from './Tooltip';
 import CustomSelect from './CustomSelect';
 
-const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrigated, setIsIrrigated, technique, setTechnique }) => {
+const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrigated, setIsIrrigated, technique, setTechnique, soilType, setSoilType }) => {
   const sliders = [
     { 
-      name: 'Nitrogen (N)', key: 'N', min: 0, max: 140, 
+      name: 'Nitrogen (N) (mg/kg)', key: 'N', min: 0, max: 140, 
       icon: <Leaf className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />,
       tooltip: "Measured in mg/kg. Crucial for leaf growth and vibrant green color."
     },
     { 
-      name: 'Phosphorus (P)', key: 'P', min: 5, max: 145, 
+      name: 'Phosphorus (P) (mg/kg)', key: 'P', min: 5, max: 145, 
       icon: <Leaf className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />,
       tooltip: "Measured in mg/kg. Essential for strong root development and flower/fruit production."
     },
     { 
-      name: 'Potassium (K)', key: 'K', min: 5, max: 205, 
+      name: 'Potassium (K) (mg/kg)', key: 'K', min: 5, max: 205, 
       icon: <Leaf className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />,
       tooltip: "Measured in mg/kg. Vital for overall plant health, drought resistance, and disease immunity."
     },
@@ -44,8 +45,16 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
 
   const isWeatherKey = (key) => ['temperature', 'humidity', 'rainfall'].includes(key);
 
+  const soilOptions = [
+    { value: "alluvial", label: "Alluvial (Northern)" },
+    { value: "black", label: "Black (Deccan)" },
+    { value: "red", label: "Red (East)" },
+    { value: "laterite", label: "Laterite (Ghats)" }
+  ];
+
   const handleSoilTypeChange = (e) => {
     const type = e.target.value;
+    if (setSoilType) setSoilType(type);
     const baselines = {
       alluvial: { N: 60, P: 40, K: 40, pH: 7.0 },
       black: { N: 40, P: 40, K: 60, pH: 7.8 },
@@ -75,16 +84,11 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
           
           {/* Soil Type Dropdown */}
           <CustomSelect 
-            value=""
+            value={soilType || ""}
             onChange={(val) => handleSoilTypeChange({ target: { value: val } })}
             placeholder="Soil Profile..."
             icon={<Map className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-            options={[
-              { value: "alluvial", label: "Alluvial (Northern)" },
-              { value: "black", label: "Black (Deccan)" },
-              { value: "red", label: "Red (East)" },
-              { value: "laterite", label: "Laterite (Ghats)" }
-            ]}
+            options={soilOptions}
           />
 
           {/* Season Dropdown */}
@@ -128,6 +132,17 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
           />
 
         </div>
+
+        {soilType && (
+          <motion.div 
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full mt-1 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center gap-2 text-emerald-800 dark:text-emerald-200 text-sm shadow-sm"
+          >
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>Selected Soil Profile: <strong className="font-semibold">{soilOptions.find(o => o.value === soilType)?.label || soilType}</strong></span>
+          </motion.div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Tooltip from '../components/Tooltip';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -6,7 +6,6 @@ import { Loader2, MapPin } from 'lucide-react';
 import Controls from '../components/Controls';
 import Simulator from '../components/Simulator';
 import ResultsCards from '../components/ResultsCards';
-import Financials from '../components/Financials';
 import AIAdvice from '../components/AIAdvice';
 import { useAuth } from '../context/AuthContext';
 
@@ -28,6 +27,25 @@ const Dashboard = () => {
   const [season, setSeason] = useState('auto');
   const [isIrrigated, setIsIrrigated] = useState(false);
   const [technique, setTechnique] = useState('monocropping');
+  const [soilType, setSoilType] = useState('');
+
+  useEffect(() => {
+    if (!token) return;
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/farmer/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data) {
+          if (response.data.soil_type) setSoilType(response.data.soil_type);
+          if (response.data.irrigation_type) setIsIrrigated(response.data.irrigation_type === 'irrigated');
+        }
+      } catch (error) {
+        // Ignored
+      }
+    };
+    fetchProfile();
+  }, [token]);
 
   const handleInputChange = (key, value) => {
     setInputs(prev => ({ ...prev, [key]: value }));
@@ -166,6 +184,8 @@ const Dashboard = () => {
             setIsIrrigated={setIsIrrigated}
             technique={technique}
             setTechnique={setTechnique}
+            soilType={soilType}
+            setSoilType={setSoilType}
           />
           
           <Simulator 
@@ -199,7 +219,8 @@ const Dashboard = () => {
                   <span className="font-semibold text-emerald-700 dark:text-emerald-400">Model Input Weather:</span> 
                   {' '}{results.weatherUsed.temperature.toFixed(1)}°C, 
                   {' '}{results.weatherUsed.humidity.toFixed(1)}% Humidity, 
-                  {' '}{results.weatherUsed.rainfall.toFixed(1)}mm Rainfall.
+                  {' '}{results.weatherUsed.rainfall.toFixed(1)}mm Rainfall,
+                  {' '}{results.weatherUsed.windSpeed ? results.weatherUsed.windSpeed.toFixed(1) : '15.0'}km/h Wind.
                   {useLiveWeather && (
                     <div className="mt-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
                       📍 Geolocation: {locationName || 'Fetching...'}
@@ -208,20 +229,33 @@ const Dashboard = () => {
                 </div>
               )}
               <div className="flex flex-col gap-8">
+                {results.alerts && results.alerts.length > 0 && (
+                  <section>
+                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-3 ml-2 font-poppins flex items-center">
+                      Pest & Disease Alerts
+                      <Tooltip text="AI-generated warnings based on specific weather conditions that increase the risk of crop diseases or pest outbreaks." />
+                    </h3>
+                    <div className="flex flex-col gap-3">
+                      {results.alerts.map((alert, idx) => (
+                        <div key={idx} className={`p-4 rounded-xl border ${alert.severity === 'high' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'}`}>
+                          <div className="font-bold mb-1 flex items-center gap-2">
+                            <span>{alert.severity === 'high' ? '🔴' : '🟡'}</span>
+                            {alert.risk} Risk ({alert.severity.toUpperCase()})
+                          </div>
+                          <div className="text-sm">
+                            {alert.message}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
                 <section>
                   <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-3 ml-2 font-poppins flex items-center">
-                    ML Predictions
-                    <Tooltip text="Analyzes your exact NPK, pH, and Weather data through our classification model to determine the crops with the highest probability of survival." />
+                    ML Predictions & Feasibility
+                    <Tooltip text="Analyzes your exact NPK, pH, and Weather data to categorize crops into Highly Recommended and Avoid. Includes ROI based on market data." />
                   </h3>
-                  <ResultsCards predictions={results.topCrops} />
-                </section>
-                
-                <section>
-                  <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-3 ml-2 font-poppins flex items-center">
-                    Financial Analysis
-                    <Tooltip text="Calculates Estimated ROI by cross-referencing the predicted crop yield with live market prices and average cultivation costs." />
-                  </h3>
-                  <Financials financialData={results.roiCalculations[0]} />
+                  <ResultsCards recommendedCrops={results.recommendedCrops} avoidCrops={results.avoidCrops} />
                 </section>
                 
                 <section>

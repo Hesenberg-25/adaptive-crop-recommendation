@@ -6,6 +6,7 @@ const { getWeather, getClimateForecast } = require('./src/services/weatherServic
 const { getComprehensiveAnalysis } = require('./src/services/aiService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
+const { evaluateRisk } = require('./src/services/pestDiseaseRules');
 
 const app = express();
 app.use(cors());
@@ -53,7 +54,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique } = req.body;
         
         // 1. Get Environmental Inputs
-        let temperature, humidity, rainfall;
+        let temperature, humidity, rainfall, windSpeed;
         if (useLiveWeather && lat && lon) {
             let targetMonth = null;
             if (season === 'kharif') targetMonth = 5; // June
@@ -65,10 +66,12 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             temperature = weather.temperature;
             humidity = weather.humidity;
             rainfall = weather.rainfall;
+            windSpeed = weather.windSpeed;
         } else {
             temperature = manualTemp || 25;
             humidity = manualHumidity || 60;
             rainfall = manualRainfall || 120;
+            windSpeed = 15;
         }
         
         // Apply Irrigation Supplement Math
@@ -79,26 +82,50 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
         
         // 2. ML Logic
-        const topCrops = cropModel.predict(inputs);
+        const allTopCrops = cropModel.predict(inputs);
+        
+        const threshold = 60;
+        const recommendedCrops = allTopCrops.filter(c => c.confidence >= threshold);
+        const avoidCrops = allTopCrops.filter(c => c.confidence < threshold);
+
+        const marketPrices = require('./src/data/marketPrices.json');
+        
+        const attachFinancials = (crop) => {
+            const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
+            const avgCostPerHectare = data.costPerHectare;
+            const expectedRevenue = data.yieldPerHectareTons * data.pricePerTon;
+            const roiValue = (((expectedRevenue - avgCostPerHectare) / avgCostPerHectare) * 100).toFixed(1);
+            
+            let feasibility = "Medium";
+            if (rainfall >= data.minRainfall && rainfall <= data.maxRainfall) feasibility = "High";
+            else if (rainfall < data.minRainfall - 50 || rainfall > data.maxRainfall + 50) feasibility = "Low";
+
+            return {
+                ...crop,
+                roi: roiValue,
+                avgCostPerHectare,
+                expectedRevenue,
+                feasibility
+            };
+        };
+
+        const recommendedWithROI = recommendedCrops.map(attachFinancials);
+        const avoidWithROI = avoidCrops.map(attachFinancials);
+
+        const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
         const trainingData = cropModel.getTrainingData();
-        const shapImportance = shapEngine.calculate(inputs, topCrops[0].name, trainingData);
+        const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
         
-        // 3. Gemini Comprehensive Analysis (Financials & Agronomist Advice)
-        const geminiAnalysis = await getComprehensiveAnalysis(inputs, topCrops, shapImportance, technique);
-        
-        const roiCalculations = [
-            {
-                crop: topCrops[0].name,
-                ...geminiAnalysis.financials
-            }
-        ];
+        // 3. Gemini Comprehensive Analysis & Pest Alerts
+        const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });
+        const geminiAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks);
         
         const aiAdvice = geminiAnalysis.markdownAdvice;
         
         // 5. Save to Supabase Database
         const predictionRecord = {
             user_id: req.user.id,
-            recommended_crop: topCrops[0].name,
+            recommended_crop: primaryCrop,
             soil_n: N,
             soil_p: P,
             soil_k: K,
@@ -112,16 +139,82 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         
         // 6. Single JSON Response
         res.json({
-            topCrops,
+            recommendedCrops: recommendedWithROI,
+            avoidCrops: avoidWithROI,
             shapImportance,
-            roiCalculations,
             aiAdvice,
-            weatherUsed: { temperature, humidity, rainfall }
+            alerts: geminiAnalysis.alerts || [],
+            weatherUsed: { temperature, humidity, rainfall, windSpeed }
         });
         
     } catch (error) {
         console.error("Prediction error:", error);
         res.status(500).json({ error: "Failed to generate prediction" });
+    }
+});
+
+app.get('/api/farmer/profile', authenticateUser, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', req.user.id)
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 is 'not found'
+            console.error("Error fetching profile:", error);
+            return res.status(500).json({ error: "Failed to fetch profile" });
+        }
+
+        res.json(data || {});
+    } catch (error) {
+        console.error("Profile fetch error:", error);
+        res.status(500).json({ error: "Failed to fetch profile" });
+    }
+});
+
+app.put('/api/farmer/profile', authenticateUser, async (req, res) => {
+    try {
+        const profileData = {
+            id: req.user.id,
+            ...req.body,
+            updated_at: new Date()
+        };
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .upsert(profileData)
+            .select();
+
+        if (error) {
+            console.error("Error saving profile:", error);
+            return res.status(500).json({ error: error.message || "Failed to save profile" });
+        }
+
+        res.json(data[0] || {});
+    } catch (error) {
+        console.error("Profile save error:", error);
+        res.status(500).json({ error: error.message || "Failed to save profile" });
+    }
+});
+
+app.get('/api/predictions/history', authenticateUser, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('predictions')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching history:", error);
+            return res.status(500).json({ error: "Failed to fetch prediction history" });
+        }
+
+        res.json(data || []);
+    } catch (error) {
+        console.error("History fetch error:", error);
+        res.status(500).json({ error: "Failed to fetch prediction history" });
     }
 });
 
