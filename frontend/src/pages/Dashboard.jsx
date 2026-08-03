@@ -7,6 +7,7 @@ import Controls from '../components/Controls';
 import Simulator from '../components/Simulator';
 import ResultsCards from '../components/ResultsCards';
 import Financials from '../components/Financials';
+import GovernmentSchemes from '../components/GovernmentSchemes';
 import AIAdvice from '../components/AIAdvice';
 import { useAuth } from '../context/AuthContext';
 
@@ -181,6 +182,14 @@ const Dashboard = () => {
                     <Tooltip text="Calculates Estimated ROI by cross-referencing the predicted crop yield with live market prices and average cultivation costs." />
                   </h3>
                   <Financials financialData={results.roiCalculations[0]} />
+                </section>
+                
+                <section>
+                  <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-3 ml-2 font-poppins flex items-center">
+                    Govt. Subsidies & Schemes
+                    <Tooltip text="Automatically matches your recommended crop to eligible government subsidies, MSP guarantees, and input support schemes to maximize your income." />
+                  </h3>
+                  <GovernmentSchemes subsidyData={results.governmentSubsidies?.[0]} />
                 </section>
                 
                 <section>

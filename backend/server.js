@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const { getWeather } = require('./src/services/weatherService');
 const { getAgronomistAdvice } = require('./src/services/geminiService');
+const { getSubsidiesForCrop } = require('./src/services/subsidyService');
 const marketPrices = require('./src/data/marketPrices.json');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
@@ -95,6 +96,12 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             ...(calculateROI(crop.name) || { roi: "Data not available" })
         }));
         
+        // 3b. Government Subsidies & Schemes
+        const governmentSubsidies = topCrops.map(crop => ({
+            crop: crop.name,
+            ...getSubsidiesForCrop(crop.name)
+        }));
+        
         // 4. Gemini AI Advice
         const aiAdvice = await getAgronomistAdvice(inputs, topCrops[0].name, shapImportance);
         
@@ -118,6 +125,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             topCrops,
             shapImportance,
             roiCalculations,
+            governmentSubsidies,
             aiAdvice,
             weatherUsed: { temperature, humidity, rainfall }
         });
