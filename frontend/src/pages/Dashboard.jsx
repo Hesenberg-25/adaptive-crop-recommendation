@@ -6,6 +6,7 @@ import { Loader2, MapPin } from 'lucide-react';
 import Controls from '../components/Controls';
 import Simulator from '../components/Simulator';
 import ResultsCards from '../components/ResultsCards';
+import GovernmentSchemes from '../components/GovernmentSchemes';
 import AIAdvice from '../components/AIAdvice';
 import { useAuth } from '../context/AuthContext';
 import CropCatalog from '../components/CropCatalog';
@@ -282,6 +283,14 @@ const Dashboard = () => {
                     <Tooltip text="Analyzes your exact NPK, pH, and Weather data to categorize crops into Highly Recommended and Avoid. Includes ROI %, net return in ₹, and Rainfall Fit score." />
                   </h3>
                   <ResultsCards recommendedCrops={results.recommendedCrops} avoidCrops={results.avoidCrops} />
+                </section>
+                
+                <section>
+                  <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-3 ml-2 font-poppins flex items-center">
+                    Govt. Subsidies & Schemes
+                    <Tooltip text="Automatically matches your recommended crop to eligible government subsidies, MSP guarantees, and input support schemes to maximize your income." />
+                  </h3>
+                  <GovernmentSchemes subsidyData={results.governmentSubsidies?.[0]} />
                 </section>
                 
                 <section>

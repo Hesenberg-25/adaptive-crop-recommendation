@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const { getWeather, getClimateForecast } = require('./src/services/weatherService');
 const { getComprehensiveAnalysis } = require('./src/services/aiService');
+const { getSubsidiesForCrop } = require('./src/services/subsidyService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
 const { evaluateRisk } = require('./src/services/pestDiseaseRules');
@@ -231,6 +232,12 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
         const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
         
+        // 3b. Government Subsidies & Schemes
+        const governmentSubsidies = recommendedWithROI.map(crop => ({
+            crop: crop.name,
+            ...getSubsidiesForCrop(crop.name)
+        }));
+
         // 3. Gemini Comprehensive Analysis & Pest Alerts
         const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });
         const geminiAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks);
@@ -262,6 +269,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             recommendedCrops: recommendedWithROI,
             avoidCrops: avoidWithROI,
             shapImportance,
+            governmentSubsidies,
             aiAdvice,
             alerts: geminiAnalysis.alerts || [],
             weatherUsed: { temperature, humidity, rainfall, windSpeed }
