@@ -7,6 +7,19 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        farm: {
+          bg: 'var(--color-bg)',
+          surface: 'var(--color-surface)',
+          primary: 'var(--color-primary)',
+          'primary-light': 'var(--color-primary-light)',
+          'accent-gold': 'var(--color-accent-gold)',
+          'accent-orange': 'var(--color-accent-orange)',
+          'text-heading': 'var(--color-text-heading)',
+          'text-body': 'var(--color-text-body)',
+          border: 'var(--color-border)',
+        }
+      },
       animation: {
         'gradient': 'gradient 15s ease infinite',
       },

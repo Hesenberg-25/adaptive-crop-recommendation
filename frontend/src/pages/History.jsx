@@ -32,8 +32,8 @@ const History = () => {
         animate={{ opacity: 1, y: 0 }}
         className="glass-panel p-8 w-full mb-8"
       >
-        <h1 className="text-3xl font-bold font-poppins text-slate-800 dark:text-white flex items-center gap-3 mb-2">
-          <HistoryIcon className="w-8 h-8 text-emerald-500" />
+        <h1 className="text-3xl font-bold font-poppins text-slate-800 dark:text-white flex items-center gap-3 mb-2 relative after:absolute after:bottom-[-8px] after:left-0 after:w-20 after:h-[3px] after:bg-gradient-to-r after:from-farm-primary after:to-farm-accent-gold">
+          <HistoryIcon className="w-8 h-8 text-farm-primary" />
           Prediction History
         </h1>
         <p className="text-slate-600 dark:text-slate-400">
@@ -57,7 +57,7 @@ const History = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               key={record.id}
-              className="glass-panel p-6 border-l-4 border-l-emerald-500 hover:shadow-lg transition-all"
+              className="glass-panel p-6 border-l-4 border-l-farm-primary hover:shadow-[0_8px_32px_rgba(139,105,20,0.12)] dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all"
             >
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
                 <div>
@@ -71,7 +71,7 @@ const History = () => {
                     </span>
                   </div>
                   <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2 capitalize mt-1">
-                    <Sprout className="w-6 h-6 text-emerald-500" />
+                    <Sprout className="w-6 h-6 text-farm-primary-light" />
                     {record.recommended_crop}
                   </h2>
                 </div>
@@ -103,7 +103,7 @@ const History = () => {
                 </div>
               </div>
 
-              <div className="prose dark:prose-invert prose-emerald max-w-none text-sm mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="prose dark:prose-invert prose-emerald max-w-none text-sm mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/50">
                 <div className="font-semibold text-slate-700 dark:text-slate-300 mb-2">AI Insights Snapshot:</div>
                 <div className="line-clamp-3 text-slate-600 dark:text-slate-400">
                   {record.advice || "No advice recorded for this simulation."}

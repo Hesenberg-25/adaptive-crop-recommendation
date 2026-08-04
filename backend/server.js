@@ -51,7 +51,7 @@ app.post('/api/auth/signin', async (req, res) => {
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
     try {
-        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique } = req.body;
+        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique, soilType } = req.body;
         
         // 1. Get Environmental Inputs
         let temperature, humidity, rainfall, windSpeed;
@@ -80,16 +80,56 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         }
         
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
-        
-        // 2. ML Logic
-        const allTopCrops = cropModel.predict(inputs);
-        
-        const threshold = 60;
-        const recommendedCrops = allTopCrops.filter(c => c.confidence >= threshold);
-        const avoidCrops = allTopCrops.filter(c => c.confidence < threshold);
-
         const marketPrices = require('./src/data/marketPrices.json');
         
+        // 2. ML Logic
+        const mlPredictions = cropModel.predict(inputs);
+        
+        const trainingData = cropModel.getTrainingData();
+        let allKnownLabels = [...new Set(trainingData.map(d => d.label))];
+        if (allKnownLabels.length === 0) {
+            allKnownLabels = ["rice", "wheat", "maize", "sugarcane", "cotton", "jute", "soybean", "millet"];
+        }
+
+        let allCrops = allKnownLabels.map(label => {
+            const found = mlPredictions.find(p => p.name.toLowerCase() === label.toLowerCase());
+            let confidence = found ? found.confidence : 0;
+            if (!found) {
+                // Anti-clamping: map raw distance to a distinct 1-15% score
+                const cropData = trainingData.filter(d => d.label.toLowerCase() === label.toLowerCase());
+                if (cropData.length > 0) {
+                    let sumDist = 0;
+                    cropData.forEach(d => {
+                        let dist = 0;
+                        const feats = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall'];
+                        for (let key of feats) {
+                            let val = (key === 'ph') ? pH : inputs[key];
+                            const diff = (d.features[key] || 0) - val;
+                            dist += diff * diff;
+                        }
+                        sumDist += Math.sqrt(dist);
+                    });
+                    const avgDist = sumDist / cropData.length;
+                    confidence = Math.max(1, 15 - Math.round(avgDist / 15));
+                } else {
+                    confidence = 1;
+                }
+            }
+            
+            // Apply soil type penalty
+            if (soilType) {
+                const data = marketPrices[label.toLowerCase()] || marketPrices['default'];
+                if (data.preferredSoil && !data.preferredSoil.includes(soilType.toLowerCase())) {
+                    confidence = Math.max(1, confidence - 30);
+                }
+            }
+            
+            return {
+                name: label,
+                confidence
+            };
+        });
+
         const attachFinancials = (crop) => {
             const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
             const avgCostPerHectare = data.costPerHectare;
@@ -109,11 +149,83 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             };
         };
 
-        const recommendedWithROI = recommendedCrops.map(attachFinancials);
-        const avoidWithROI = avoidCrops.map(attachFinancials);
+        const allCropsWithROI = allCrops.map(attachFinancials);
+
+        allCropsWithROI.sort((a, b) => {
+            if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+            const roiA = parseFloat(a.roi) || 0;
+            const roiB = parseFloat(b.roi) || 0;
+            if (roiB !== roiA) return roiB - roiA;
+            return a.name.localeCompare(b.name);
+        });
+
+        const threshold = 40;
+        let recommendedWithROI = [];
+        let avoidWithROI = [];
+
+        if (allCropsWithROI.length >= 6) {
+             recommendedWithROI = allCropsWithROI.slice(0, 3);
+             avoidWithROI = allCropsWithROI.slice(-3).reverse();
+        } else {
+             const mid = Math.ceil(allCropsWithROI.length / 2);
+             recommendedWithROI = allCropsWithROI.slice(0, mid);
+             avoidWithROI = allCropsWithROI.slice(mid).reverse();
+        }
+
+        recommendedWithROI = recommendedWithROI.map(c => ({
+             ...c,
+             isMarginal: c.confidence < threshold
+        }));
+
+        avoidWithROI = avoidWithROI.map(crop => {
+            const cropData = trainingData.filter(d => d.label.toLowerCase() === crop.name.toLowerCase());
+            let avoidReason = "Overall climate mismatch.";
+            
+            const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
+            let soilMismatch = false;
+            if (soilType && data.preferredSoil && !data.preferredSoil.includes(soilType.toLowerCase())) {
+                soilMismatch = true;
+            }
+
+            if (soilMismatch) {
+                avoidReason = `Requires ${data.preferredSoil.join(" or ")} soil, but ${soilType} soil was provided.`;
+            } else if (cropData.length > 0) {
+                let minMax = { N: { min: Infinity, max: -Infinity }, P: { min: Infinity, max: -Infinity }, K: { min: Infinity, max: -Infinity }, temperature: { min: Infinity, max: -Infinity }, humidity: { min: Infinity, max: -Infinity }, ph: { min: Infinity, max: -Infinity }, rainfall: { min: Infinity, max: -Infinity } };
+                cropData.forEach(d => {
+                    for (let key in minMax) {
+                        if (d.features[key] < minMax[key].min) minMax[key].min = d.features[key];
+                        if (d.features[key] > minMax[key].max) minMax[key].max = d.features[key];
+                    }
+                });
+                let maxDeviation = 0;
+                let worstFeature = null;
+                let worstDirection = null;
+                const inputMapping = { N, P, K, temperature, humidity, ph: pH, rainfall };
+                
+                for (let key in minMax) {
+                    const val = inputMapping[key];
+                    let dev = 0;
+                    let dir = null;
+                    if (val < minMax[key].min) { dev = (minMax[key].min - val) / (minMax[key].min || 1); dir = 'low'; }
+                    else if (val > minMax[key].max) { dev = (val - minMax[key].max) / (minMax[key].max || 1); dir = 'high'; }
+                    
+                    if (dev > maxDeviation) {
+                        maxDeviation = dev;
+                        worstFeature = key;
+                        worstDirection = dir;
+                    }
+                }
+                
+                if (worstFeature) {
+                    const featureNames = { N: "Nitrogen", P: "Phosphorus", K: "Potassium", temperature: "Temperature", humidity: "Humidity", ph: "Soil pH", rainfall: "Rainfall" };
+                    const rangeStr = `${Math.round(minMax[worstFeature].min)}-${Math.round(minMax[worstFeature].max)}`;
+                    avoidReason = `${featureNames[worstFeature]} (${inputMapping[worstFeature]}) is too ${worstDirection === 'high' ? 'high' : 'low'} for ${crop.name.charAt(0).toUpperCase() + crop.name.slice(1)} (ideal ${rangeStr}).`;
+                }
+            }
+            return { ...crop, avoidReason };
+        });
 
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
-        const trainingData = cropModel.getTrainingData();
         const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
         
         // 3. Gemini Comprehensive Analysis & Pest Alerts
@@ -218,8 +330,44 @@ app.get('/api/predictions/history', authenticateUser, async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 5000;
+async function runSanityCheck() {
+    console.log("[Data Validation] Running startup sanity check...");
+    const marketPrices = require('./src/data/marketPrices.json');
+    let allKnownLabels = Object.keys(marketPrices).filter(k => k !== 'default');
+    
+    const attachFinancials = (crop) => {
+        const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
+        const roiValue = (((data.yieldPerHectareTons * data.pricePerTon - data.costPerHectare) / data.costPerHectare) * 100).toFixed(1);
+        return { ...crop, roi: roiValue, avgCostPerHectare: data.costPerHectare };
+    };
+    
+    let allCrops = allKnownLabels.map(label => ({ name: label }));
+    const allCropsWithROI = allCrops.map(attachFinancials);
+    
+    let seenValues = { roi: {}, cost: {} };
+    let hasDuplicates = false;
+    allCropsWithROI.forEach(c => {
+        if (seenValues.roi[c.roi]) {
+            console.warn(`[WARNING] Duplicate ROI found: ${c.name} and ${seenValues.roi[c.roi]} both have ${c.roi}%`);
+            hasDuplicates = true;
+        } else {
+            seenValues.roi[c.roi] = c.name;
+        }
+        if (seenValues.cost[c.avgCostPerHectare]) {
+            console.warn(`[WARNING] Duplicate Cost found: ${c.name} and ${seenValues.cost[c.avgCostPerHectare]} both have ${c.avgCostPerHectare}`);
+            hasDuplicates = true;
+        } else {
+            seenValues.cost[c.avgCostPerHectare] = c.name;
+        }
+    });
+    if (!hasDuplicates) {
+        console.log("[Data Validation] PASSED: All crops have unique financial data profiles.");
+    }
+}
+
 cropModel.trainModel().then(() => {
+    runSanityCheck();
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });

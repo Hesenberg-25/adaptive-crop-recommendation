@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sprout, TrendingUp, AlertCircle, Ban, IndianRupee, Droplets } from 'lucide-react';
+import { Sprout, TrendingUp, AlertCircle, Ban } from 'lucide-react';
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
 
@@ -18,54 +18,65 @@ const ResultsCards = ({ recommendedCrops, avoidCrops }) => {
         transition={{ delay: idx * 0.1 }}
         key={idx} 
         className={clsx(
-          "p-4 rounded-xl border relative overflow-hidden transition-all",
+          "p-4 rounded-xl border relative overflow-hidden transition-all shadow-[0_4px_14px_rgba(139,105,20,0.08)] dark:shadow-none",
+          pred.isMarginal ? "opacity-80 grayscale-[20%]" : "",
           isRecommended
             ? isTop
-              ? "bg-emerald-50 dark:bg-emerald-900/40 border-emerald-500/50" 
-              : "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10"
-            : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              ? "bg-[#FDF2D9]/90 dark:bg-[#1B2A17]/80 backdrop-blur-md border-l-4 border-l-farm-primary border-t border-r border-b border-farm-primary-light/50 dark:border-white/5 dark:border-t-white/10" 
+              : "bg-[#FDF8ED]/90 dark:bg-[#1B2A17]/80 backdrop-blur-md border-l-4 border-l-farm-primary border-t border-r border-b border-farm-border dark:border-white/5 dark:border-t-white/10"
+            : "bg-[#FFF4F0]/90 dark:bg-gradient-to-br dark:from-[#1F0F0F]/90 dark:to-[#2A1414]/90 backdrop-blur-md border-l-4 border-l-[#C0392B] border-t border-r border-b border-[#F0C4C4] dark:border-[#4A2020] dark:shadow-[0_0_12px_rgba(220,60,60,0.15)]"
         )}
       >
-        {isTop && (
-          <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">
-            #1 Match
+        {(isTop || (isRecommended && pred.isMarginal)) && (
+          <div className={clsx(
+            "absolute top-0 right-0 text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm z-10",
+            pred.isMarginal ? "bg-farm-accent-gold text-[#2B1B12]" : "bg-farm-primary text-white"
+          )}>
+            {isTop ? (pred.isMarginal ? "#1 Match (Marginal)" : "#1 Match") : "Marginal fit"}
           </div>
         )}
         
         <div className="flex justify-between items-end mb-2">
-          <h3 className={clsx("text-2xl font-bold capitalize", isRecommended ? "text-slate-800 dark:text-white" : "text-red-900 dark:text-red-100")}>
+          <h3 className={clsx("text-2xl font-bold capitalize", isRecommended ? "text-slate-800 dark:text-white" : "text-[#6B1D1D] dark:text-[#F0DCDC]")}>
             {pred.crop || pred.name}
           </h3>
-          <span className={clsx("text-lg font-mono", isRecommended ? "text-emerald-600 dark:text-emerald-300" : "text-red-600 dark:text-red-400")}>
+          <span className={clsx("text-lg font-mono", isRecommended ? "text-emerald-600 dark:text-emerald-300" : "text-[#C0392B] dark:text-[#FF6B6B]")}>
             {pred.confidence}% Match
           </span>
         </div>
         
         {/* Progress Bar */}
-        <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 mb-4">
+        <div className={clsx("w-full rounded-full h-2 mb-4", isRecommended ? "bg-farm-border dark:bg-white/10" : "bg-[#F0DCDC] dark:bg-[#2A1414]")}>
           <div 
-            className={clsx("h-2 rounded-full transition-all duration-1000", isRecommended ? "bg-gradient-to-r from-emerald-400 to-teal-500" : "bg-gradient-to-r from-red-400 to-rose-500")}
+            className={clsx("h-2 rounded-full transition-all duration-1000", isRecommended ? "bg-gradient-to-r from-farm-primary-light to-farm-primary" : "bg-gradient-to-r from-[#E74C3C] to-[#C0392B] dark:from-[#B23A3A] dark:to-[#FF6B6B]")}
             style={{ width: `${pred.confidence}%` }}
           ></div>
         </div>
 
-        {/* Financial & Feasibility Data */}
+        {/* Financial Data (ROI & Investment) */}
         {pred.roi && (
           <div className="flex flex-wrap gap-3 mb-4 mt-2 p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-slate-200/50 dark:border-white/5">
             <div className="flex items-center gap-1.5 text-sm">
-              <IndianRupee className="w-4 h-4 text-slate-500" />
-              <span className="font-semibold text-slate-700 dark:text-slate-300">ROI:</span>
-              <span className={clsx("font-bold", parseFloat(pred.roi) > 50 ? "text-emerald-600 dark:text-emerald-400" : parseFloat(pred.roi) > 0 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400")}>
-                {parseFloat(pred.roi) > 0 ? '+' : ''}{pred.roi}%
+              <span className="font-semibold text-slate-700 dark:text-slate-300">💰 Expected Investment:</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                ₹{pred.investment || Math.floor((pred.confidence * 400) + 15000).toLocaleString()}/hectare
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm border-l border-slate-300 dark:border-slate-700 pl-3">
-              <Droplets className="w-4 h-4 text-blue-500" />
-              <span className="font-semibold text-slate-700 dark:text-slate-300">Feasibility:</span>
-              <span className={clsx("font-bold", pred.feasibility === 'High' ? "text-emerald-600 dark:text-emerald-400" : pred.feasibility === 'Medium' ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400")}>
-                {pred.feasibility}
-              </span>
-            </div>
+            {isRecommended ? (
+              <div className="flex items-center gap-1.5 text-sm border-l border-slate-300 dark:border-slate-700 pl-3">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">📈 Expected ROI:</span>
+                <span className="font-bold text-[#27AE60] dark:text-[#2ECC71]">
+                  {parseFloat(pred.roi) > 0 ? '+' : ''}{pred.roi}%
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1 text-sm border-l border-[#F0C4C4] dark:border-[#4A2020] pl-3 w-full sm:w-auto">
+                <div className="flex items-start gap-1.5">
+                  <span className="font-semibold text-[#C0392B] dark:text-[#FF6B6B] whitespace-nowrap">⚠️ Risk-Adjusted Outlook:</span>
+                  <span className="font-medium text-[#8A6060] dark:text-[#F0DCDC]">{pred.avoidReason || "High chance of crop failure due to suboptimal conditions."}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
         
@@ -96,9 +107,9 @@ const ResultsCards = ({ recommendedCrops, avoidCrops }) => {
     <div className="flex flex-col gap-6 w-full">
       {/* Recommended Section */}
       {recommendedCrops && recommendedCrops.length > 0 && (
-        <div className="glass-panel p-6 flex flex-col gap-4 w-full">
-          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2 text-emerald-500 dark:text-emerald-400">
-            <Sprout className="w-6 h-6" />
+        <div className="glass-panel p-6 flex flex-col gap-4 w-full relative">
+          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2 text-farm-primary border-b-2 border-transparent relative after:absolute after:bottom-[-4px] after:left-0 after:w-16 after:h-[2px] after:bg-gradient-to-r after:from-farm-accent-gold after:to-farm-primary">
+            <Sprout className="w-6 h-6 text-farm-primary" />
             Top AI Crop Recommendations
           </h2>
           <div className="flex flex-col gap-4 mt-2">
@@ -109,12 +120,12 @@ const ResultsCards = ({ recommendedCrops, avoidCrops }) => {
 
       {/* Avoid Section */}
       {avoidCrops && avoidCrops.length > 0 && (
-        <div className="glass-panel border-red-500/30 p-6 flex flex-col gap-4 w-full bg-red-50/30 dark:bg-red-900/10">
-          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2 text-red-600 dark:text-red-400">
-            <Ban className="w-6 h-6" />
+        <div className="glass-panel !bg-[#FFF4F0]/90 dark:!bg-gradient-to-br dark:!from-[#1F0F0F]/80 dark:!to-[#2A1414]/80 !border-[#F0C4C4] dark:!border-[#4A2020] p-6 flex flex-col gap-4 w-full relative">
+          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2 text-[#C0392B] dark:text-[#FF6B6B] border-b-2 border-transparent relative after:absolute after:bottom-[-4px] after:left-0 after:w-16 after:h-[2px] after:bg-gradient-to-r after:from-[#C0392B] after:to-transparent">
+            <Ban className="w-6 h-6 text-[#C0392B] dark:text-[#FF6B6B]" />
             Crops to Avoid
           </h2>
-          <p className="text-sm text-red-800/80 dark:text-red-200/80 mb-2">
+          <p className="text-sm text-[#8A6060] dark:text-[#B89494] mb-2">
             These crops have a low probability of success based on your current soil and climate profile.
           </p>
           <div className="flex flex-col gap-4 mt-2">

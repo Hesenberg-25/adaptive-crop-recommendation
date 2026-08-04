@@ -38,7 +38,7 @@ const Profile = () => {
         if (response.data) {
           setProfile(prev => ({ ...prev, ...response.data }));
         }
-      } catch (error) {
+      } catch (_error) {
         console.error("No existing profile found or error fetching");
       } finally {
         setFetching(false);
@@ -83,8 +83,8 @@ const Profile = () => {
         animate={{ opacity: 1, y: 0 }}
         className="glass-panel p-8 mt-4"
       >
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2 font-poppins">
-          <UserIcon className="w-6 h-6 text-emerald-500" />
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2 font-poppins relative after:absolute after:bottom-[-8px] after:left-0 after:w-16 after:h-[2px] after:bg-gradient-to-r after:from-farm-accent-gold after:to-farm-primary">
+          <UserIcon className="w-6 h-6 text-farm-primary" />
           Farmer Profile
         </h2>
         
@@ -94,14 +94,14 @@ const Profile = () => {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="w-4 h-4 text-slate-400" />
+                  <UserIcon className="w-4 h-4 text-farm-primary-light" />
                 </div>
                 <input 
                   type="text" 
                   name="name"
                   value={profile.name || ''}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                  className="w-full pl-9 pr-3 py-2 glass-input"
                   placeholder="John Doe"
                   required
                 />
@@ -112,14 +112,14 @@ const Profile = () => {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="w-4 h-4 text-slate-400" />
+                  <Phone className="w-4 h-4 text-farm-primary-light" />
                 </div>
                 <input 
                   type="tel" 
                   name="phone"
                   value={profile.phone || ''}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                  className="w-full pl-9 pr-3 py-2 glass-input"
                   placeholder="+91 9876543210"
                 />
               </div>
@@ -129,14 +129,14 @@ const Profile = () => {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="w-4 h-4 text-slate-400" />
+                  <Mail className="w-4 h-4 text-farm-primary-light" />
                 </div>
                 <input 
                   type="email" 
                   name="email"
                   value={profile.email || ''}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                  className="w-full pl-9 pr-3 py-2 glass-input"
                   placeholder="farmer@example.com"
                   required
                 />
@@ -147,14 +147,14 @@ const Profile = () => {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Farm Location (Village/District/State)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPin className="w-4 h-4 text-slate-400" />
+                  <MapPin className="w-4 h-4 text-farm-primary-light" />
                 </div>
                 <input 
                   type="text" 
                   name="location"
                   value={profile.location || ''}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                  className="w-full pl-9 pr-3 py-2 glass-input"
                   placeholder="Pune, Maharashtra"
                 />
               </div>
@@ -164,7 +164,7 @@ const Profile = () => {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Farm Size (Acres)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Maximize className="w-4 h-4 text-slate-400" />
+                  <Maximize className="w-4 h-4 text-farm-primary-light" />
                 </div>
                 <input 
                   type="number" 
@@ -173,7 +173,7 @@ const Profile = () => {
                   onChange={handleChange}
                   min="0"
                   step="0.1"
-                  className="w-full pl-9 pr-3 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                  className="w-full pl-9 pr-3 py-2 glass-input"
                   placeholder="5.5"
                 />
               </div>
@@ -183,14 +183,14 @@ const Profile = () => {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Primary Crops</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Wheat className="w-4 h-4 text-slate-400" />
+                  <Wheat className="w-4 h-4 text-farm-primary-light" />
                 </div>
                 <input 
                   type="text" 
                   name="primary_crops"
                   value={profile.primary_crops || ''}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                  className="w-full pl-9 pr-3 py-2 glass-input"
                   placeholder="Wheat, Cotton"
                 />
               </div>
@@ -226,7 +226,7 @@ const Profile = () => {
             <button 
               type="submit"
               disabled={loading}
-              className="glass-button py-2 px-6 flex items-center gap-2 text-white font-medium shadow-md bg-emerald-600 hover:bg-emerald-700"
+              className="glass-button py-2 px-6 flex items-center gap-2"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save Profile

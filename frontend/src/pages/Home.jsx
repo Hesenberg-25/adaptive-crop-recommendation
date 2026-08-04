@@ -11,7 +11,7 @@ const Home = () => {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-5xl md:text-7xl font-extrabold font-playfair text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-6">
+        <h1 className="text-5xl md:text-7xl font-extrabold font-playfair text-transparent bg-clip-text bg-gradient-to-r from-farm-primary to-farm-accent-gold mb-6 drop-shadow-sm">
           Farm Smarter, Not Harder.
         </h1>
         <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-10 font-lora italic">
@@ -25,17 +25,17 @@ const Home = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 max-w-5xl w-full">
         <FeatureCard 
-          icon={<Sprout className="w-10 h-10 text-emerald-500" />}
+          icon={<Sprout className="w-10 h-10 text-farm-primary" />}
           title="Hybrid ML + AI Engine"
           desc="Mathematical Machine Learning predicts viability, while Gemini LLM designs advanced Intercropping geometries."
         />
         <FeatureCard 
-          icon={<Activity className="w-10 h-10 text-cyan-500" />}
+          icon={<Activity className="w-10 h-10 text-farm-accent-orange" />}
           title="Live Weather Sync"
           desc="Automatically syncs 3-year historical climate averages and applies seasonal and irrigation offsets."
         />
         <FeatureCard 
-          icon={<DollarSign className="w-10 h-10 text-amber-500" />}
+          icon={<DollarSign className="w-10 h-10 text-farm-accent-gold" />}
           title="Autonomous Web Scraping"
           desc="Google Search Grounding scrapes the live internet to calculate absolute real-time ROI for 47 Indian crops."
         />

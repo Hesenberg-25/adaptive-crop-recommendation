@@ -2,24 +2,90 @@
 @config "../tailwind.config.js";
 
 @layer base {
+  :root {
+    --color-bg: #FAF3E0;
+    --color-surface: #FDF8ED;
+    --color-primary: #2F4B26;
+    --color-primary-light: #4A7C3A;
+    --color-accent-gold: #D9A62E;
+    --color-accent-orange: #C9760C;
+    --color-text-heading: #2B1B12;
+    --color-text-body: #4A3221;
+    --color-border: #E8DCC0;
+    --track-npk: linear-gradient(to right, #A8C98A, #4A7C3A);
+    --track-ph: linear-gradient(to right, #E8A33D, #B23A1D);
+  }
+  
+  .dark {
+    --color-bg: #10190F;
+    --color-surface: #1B2A17;
+    --color-primary: #6FA657;
+    --color-primary-light: #6FA657;
+    --color-accent-gold: #E8B94A;
+    --color-accent-orange: #E08A3C;
+    --color-text-heading: #F5EFDD;
+    --color-text-body: #B8AD97;
+    --color-border: #33422E;
+    --track-npk: linear-gradient(to right, #33422E, #6FA657);
+    --track-ph: linear-gradient(to right, #E08A3C, #C0432A);
+  }
+  
   body {
-    @apply antialiased bg-transparent font-inter;
+    @apply antialiased text-farm-text-body font-inter transition-colors duration-300;
   }
 }
 
 @layer components {
   /* Glass Panel */
   .glass-panel {
-    @apply bg-white/40 backdrop-blur-2xl border border-white/40 shadow-2xl rounded-3xl dark:bg-slate-900/40 dark:border-white/10;
+    @apply bg-[#FDF8ED]/90 dark:bg-[#1B2A17]/80 backdrop-blur-md border border-farm-border/50 dark:border-white/5 shadow-[0_4px_14px_rgba(139,105,20,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)] rounded-3xl dark:border-t dark:border-t-white/10 transition-all;
   }
   
   /* Glass Input */
   .glass-input {
-    @apply bg-white/50 backdrop-blur-md border border-slate-300 text-slate-900 placeholder-slate-500 rounded-2xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all dark:bg-black/20 dark:border-white/10 dark:text-white dark:placeholder-slate-400;
+    @apply bg-farm-bg dark:bg-[#1B2A17]/60 dark:backdrop-blur-md border border-farm-border dark:border-white/5 text-farm-text-body dark:text-farm-text-heading placeholder-farm-text-body/60 dark:placeholder-farm-text-heading/50 rounded-2xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-farm-primary-light/50 transition-all shadow-[0_2px_8px_rgba(139,105,20,0.05)] dark:shadow-none;
   }
   
   /* Glass Button Primary */
   .glass-button {
-    @apply bg-emerald-500/80 backdrop-blur-md hover:bg-emerald-500 border border-emerald-400/50 text-white font-medium py-3 px-6 rounded-2xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)];
+    @apply bg-gradient-to-r from-farm-primary to-farm-primary-light hover:brightness-110 hover:scale-[1.02] text-white font-medium py-3 px-6 rounded-2xl transition-all shadow-[0_4px_14px_rgba(47,75,38,0.39)] dark:shadow-[0_0_20px_rgba(232,185,74,0.25)] border border-transparent dark:border-white/10 dark:border-t-white/20;
+  }
+  
+  /* Custom Range Slider */
+  .custom-range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  
+  .custom-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  
+  .dark .custom-range-slider::-webkit-slider-thumb {
+    border-color: var(--color-accent-gold);
+    box-shadow: 0 0 8px var(--color-accent-gold);
+  }
+  
+  .custom-range-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  
+  .dark .custom-range-slider::-moz-range-thumb {
+    border-color: var(--color-accent-gold);
+    box-shadow: 0 0 8px var(--color-accent-gold);
   }
 }
