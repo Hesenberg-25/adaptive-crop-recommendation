@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -11,7 +12,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
-      // For a real app, verify the token with the backend here.
+      axios.get('http://localhost:5000/api/farmer/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        if (res.data) setUser(res.data);
+      })
+      .catch(err => console.error("Error fetching user profile", err));
     } else {
       localStorage.removeItem('token');
       setUser(null);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Droplets, Thermometer, FlaskConical, Wind, Leaf, CloudLightning, Map, Calendar, Droplet, CheckCircle2 } from 'lucide-react';
+import { Droplets, Thermometer, FlaskConical, Wind, Leaf, Map, Calendar, Droplet, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Tooltip from './Tooltip';
 import CustomSelect from './CustomSelect';
@@ -71,13 +71,21 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
   };
 
   return (
-    <div className="glass-panel p-6 flex flex-col gap-6 w-full relative">
-      <div className="flex flex-col gap-4 mb-2">
-        <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-          <FlaskConical className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
+    <div className="glass-panel flex flex-col w-full relative overflow-hidden">
+      {/* Header Bar */}
+      <div className="bg-gradient-to-r from-[#2B1B12] to-[#4A3221] dark:from-[#0F0A07] dark:to-[#2B1B12] px-6 py-4 flex justify-between items-center transition-colors">
+        <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
+          <FlaskConical className="w-6 h-6 text-farm-accent-gold" />
           Soil & Environmental Inputs
-          <Tooltip text="Adjust the chemical and environmental parameters. Live Weather automatically syncs historical climate data for the selected season." align="right" />
         </h2>
+        <div className="text-white/80">
+          <Tooltip text="Adjust the chemical and environmental parameters. Live Weather automatically syncs historical climate data for the selected season." align="right" />
+        </div>
+      </div>
+      
+      {/* Body */}
+      <div className="p-6 flex flex-col gap-6">
+        <div className="flex flex-col gap-4 mb-2">
 
         {/* Extensions Controls */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
@@ -148,14 +156,22 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {sliders.map((s) => {
           const locked = useLiveWeather && isWeatherKey(s.key);
+          const isNPK = ['N', 'P', 'K'].includes(s.key);
+          const isPH = s.key === 'pH';
+          const trackGradient = isNPK 
+            ? 'linear-gradient(to right, #A8C98A, #4A7C3A)' 
+            : isPH 
+              ? 'linear-gradient(to right, #E8A33D, #B23A1D)' 
+              : '#E8DCC0';
+
           return (
             <div key={s.key} className={`flex flex-col gap-2 relative ${locked ? 'opacity-60' : ''}`}>
               <div className="flex justify-between items-center text-sm">
-                <label className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <label className="flex items-center gap-2 text-farm-text-body font-medium">
                   {s.icon} {s.name}
                   {s.tooltip && <Tooltip text={s.tooltip} align="center" />}
                 </label>
-                <span className="font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-md transition-colors">
+                <span className="font-bold text-farm-primary dark:text-farm-accent-gold transition-colors text-lg">
                   {locked ? 'Live' : (values[s.key] ?? s.min)}
                 </span>
               </div>
@@ -167,13 +183,15 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
                 value={values[s.key] ?? s.min}
                 onChange={(e) => onChange(s.key, parseFloat(e.target.value))}
                 disabled={locked}
-                className={`w-full accent-emerald-500 h-2 bg-slate-300 dark:bg-slate-700 rounded-lg appearance-none transition-colors ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`w-full h-2 rounded-lg custom-range-slider transition-colors ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                style={{ background: trackGradient }}
               />
             </div>
           );
         })}
       </div>
     </div>
+  </div>
   );
 };
 

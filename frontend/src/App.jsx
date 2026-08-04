@@ -31,7 +31,16 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
-            <div className="min-h-screen transition-colors duration-500 bg-gradient-to-br from-slate-100 via-emerald-50 to-slate-100 text-slate-900 dark:from-slate-900 dark:via-emerald-950 dark:to-slate-900 dark:text-slate-100 bg-[length:400%_400%] animate-gradient">
+            <div className="min-h-screen text-farm-text-body relative">
+              {/* Background Layer */}
+              <div className="fixed inset-0 z-[-1] transition-all duration-500">
+                 {/* Full-bleed golden hour farmland photo */}
+                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center bg-no-repeat transition-all duration-500"></div>
+                 {/* Dark mode overlay: dusk/night tint */}
+                 <div className="absolute inset-0 bg-transparent dark:bg-[#10190F]/85 transition-colors duration-500"></div>
+                 {/* Light mode overlay: very faint cream tint */}
+                 <div className="absolute inset-0 bg-[#FAF3E0]/20 dark:bg-transparent transition-colors duration-500"></div>
+              </div>
               <Navbar />
               <Routes>
                 {/* Public Routes - Auto-redirect to dashboard if logged in */}

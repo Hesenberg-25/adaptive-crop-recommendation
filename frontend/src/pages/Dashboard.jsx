@@ -45,7 +45,7 @@ const Dashboard = () => {
           if (response.data.soil_type) setSoilType(response.data.soil_type);
           if (response.data.irrigation_type) setIsIrrigated(response.data.irrigation_type === 'irrigated');
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignored
       }
     };
@@ -81,7 +81,7 @@ const Dashboard = () => {
             })
             .catch(() => setLocationName('Your Location'));
         },
-        (error) => {
+        (_error) => {
           toast.error('Failed to get location. Please allow access.', { id: loadToast });
           setUseLiveWeather(false);
         }
@@ -122,7 +122,8 @@ const Dashboard = () => {
         lon: location.lon,
         season,
         isIrrigated,
-        technique
+        technique,
+        soilType
       };
       
       const response = await axios.post('http://localhost:5000/api/predict', payload, {
@@ -164,15 +165,16 @@ const Dashboard = () => {
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-extrabold font-playfair text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2"
+          className="text-4xl font-extrabold font-playfair mb-2"
         >
-          Adaptive Crop Dashboard
+          <span className="text-farm-primary dark:text-farm-text-heading transition-colors">Adaptive Crop</span>{' '}
+          <span className="text-farm-accent-orange transition-colors">Dashboard</span>
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-slate-500 dark:text-slate-400 font-lora text-lg italic"
+          className="text-farm-text-body font-lora text-lg italic"
         >
           Configure your soil parameters and get real-time AI recommendations
         </motion.p>
@@ -185,14 +187,14 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full flex flex-col gap-6"
         >
-          <div className="glass-panel p-4 flex justify-between items-center">
-            <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100 font-medium">
-              <MapPin className="w-5 h-5 text-emerald-500" />
+          <div className="bg-farm-primary dark:bg-[#223321] rounded-3xl p-4 flex justify-between items-center shadow-md transition-colors">
+            <div className="flex items-center gap-2 text-white font-medium">
+              <MapPin className="w-5 h-5 text-farm-accent-gold" />
               Use Live Weather
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" checked={useLiveWeather} onChange={toggleLiveWeather} />
-              <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-farm-primary-light dark:peer-checked:bg-[#E8B94A] dark:peer-checked:shadow-[0_0_10px_#6FA657]"></div>
             </label>
           </div>
 
@@ -221,11 +223,11 @@ const Dashboard = () => {
           <button 
             onClick={handlePredict}
             disabled={loading}
-            className="glass-button w-full py-4 text-lg flex justify-center items-center mt-2 font-poppins relative overflow-hidden"
+            className="w-full py-4 text-lg flex justify-center items-center mt-2 font-poppins relative overflow-hidden rounded-2xl bg-gradient-to-r from-farm-accent-gold to-farm-accent-orange text-white dark:text-[#10190F] font-bold shadow-lg transition-transform hover:scale-[1.02] dark:hover:shadow-[0_0_15px_#E8B94A]"
           >
             {loading && <Loader2 className="w-6 h-6 animate-spin mr-3" />}
-            <span className="min-w-[250px] text-center">
-                {loadingText}
+            <span className="min-w-[250px] text-center flex items-center justify-center gap-2">
+                {loadingText} {!loading && <span className="text-xl">→</span>}
             </span>
           </button>
         </motion.div>
@@ -297,6 +299,35 @@ const Dashboard = () => {
             </div>
           )}
         </motion.div>
+        
+        {/* Feature Tiles */}
+        <div className="w-full max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+          {[
+            { title: "Smart Farming", color: "bg-farm-primary dark:bg-[#1F3319]", icon: "🌱" },
+            { title: "Save Water", color: "bg-farm-accent-gold dark:bg-[#8A6A1E]", icon: "💧" },
+            { title: "Improve Soil", color: "bg-[#6B4423] dark:bg-[#3D2B1A]", icon: "🌍" },
+            { title: "Boost Yield", color: "bg-farm-primary-light dark:bg-[#2F4B26]", icon: "📈" },
+            { title: "AI Powered", color: "bg-farm-accent-orange dark:bg-[#7A4A18]", icon: "🤖" },
+          ].map((tile, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className={`p-4 rounded-2xl flex flex-col justify-between items-start h-32 ${tile.color} text-white dark:text-farm-text-heading dark:border-t dark:border-white/10 shadow-md cursor-pointer hover:-translate-y-1 transition-transform relative overflow-hidden`}
+            >
+              <div className="w-8 h-8 rounded-full bg-white/20 dark:bg-farm-accent-gold/20 flex items-center justify-center text-lg backdrop-blur-sm">
+                {tile.icon}
+              </div>
+              <span className="font-bold font-poppins text-sm md:text-base leading-tight pr-4">
+                {tile.title}
+              </span>
+              <div className="absolute bottom-3 right-3 opacity-70 text-white dark:text-farm-accent-gold">
+                ↗
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </motion.div>
   );

@@ -37,8 +37,8 @@ const History = () => {
         animate={{ opacity: 1, y: 0 }}
         className="glass-panel p-8 w-full mb-8"
       >
-        <h1 className="text-3xl font-bold font-poppins text-slate-800 dark:text-white flex items-center gap-3 mb-2">
-          <HistoryIcon className="w-8 h-8 text-emerald-500" />
+        <h1 className="text-3xl font-bold font-poppins text-slate-800 dark:text-white flex items-center gap-3 mb-2 relative after:absolute after:bottom-[-8px] after:left-0 after:w-20 after:h-[3px] after:bg-gradient-to-r after:from-farm-primary after:to-farm-accent-gold">
+          <HistoryIcon className="w-8 h-8 text-farm-primary" />
           Prediction History
         </h1>
         <p className="text-slate-600 dark:text-slate-400">
@@ -62,7 +62,7 @@ const History = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               key={record.id}
-              className="glass-panel border-l-4 border-l-emerald-500 hover:shadow-lg transition-all overflow-hidden"
+              className="glass-panel border-l-4 border-l-farm-primary hover:shadow-[0_8px_32px_rgba(139,105,20,0.12)] dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all overflow-hidden"
             >
               <div 
                 className="p-6 cursor-pointer flex flex-col md:flex-row md:items-start justify-between gap-4 select-none"
@@ -80,7 +80,7 @@ const History = () => {
                   </div>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {record.recommended_crop.split(',').map((crop, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full font-semibold border border-emerald-200 dark:border-emerald-800/60 capitalize">
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 bg-farm-primary/10 text-farm-primary dark:text-farm-primary-light rounded-full font-semibold border border-farm-primary/20 capitalize">
                         <Sprout className="w-4 h-4" />
                         {crop.trim()}
                       </span>
@@ -127,7 +127,7 @@ const History = () => {
                   exit={{ height: 0, opacity: 0 }}
                   className="px-6 pb-6 border-t border-slate-200 dark:border-slate-800/50"
                 >
-                  <div className="prose dark:prose-invert prose-emerald max-w-none text-sm mt-4">
+                  <div className="prose dark:prose-invert prose-farm-primary max-w-none text-sm mt-4">
                     <div className="font-semibold text-slate-700 dark:text-slate-300 mb-2 text-base">AI Detailed Analysis:</div>
                     <div className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                       {record.advice || "No advice recorded for this simulation."}

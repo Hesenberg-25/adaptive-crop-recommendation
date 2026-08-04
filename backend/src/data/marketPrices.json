@@ -1,65 +1,33 @@
 {
-  "carrot": {
-    "pricePerTon": 18000,
-    "costPerHectare": 40000,
-    "yieldPerHectareTons": 25,
-    "minRainfall": 50,
-    "maxRainfall": 150
-  },
-  "tomato": {
-    "pricePerTon": 25000,
-    "costPerHectare": 60000,
-    "yieldPerHectareTons": 30,
-    "minRainfall": 60,
-    "maxRainfall": 140
-  },
-  "wheat": {
-    "pricePerTon": 22000,
-    "costPerHectare": 30000,
-    "yieldPerHectareTons": 4,
-    "minRainfall": 30,
-    "maxRainfall": 100
-  },
-  "rice": {
-    "pricePerTon": 20000,
-    "costPerHectare": 45000,
-    "yieldPerHectareTons": 5,
-    "minRainfall": 150,
-    "maxRainfall": 300
-  },
-  "potato": {
-    "pricePerTon": 12000,
-    "costPerHectare": 50000,
-    "yieldPerHectareTons": 20,
-    "minRainfall": 50,
-    "maxRainfall": 120
-  },
-  "maize": {
-    "pricePerTon": 18000,
-    "costPerHectare": 25000,
-    "yieldPerHectareTons": 6,
-    "minRainfall": 50,
-    "maxRainfall": 100
-  },
-  "cotton": {
-    "pricePerTon": 60000,
-    "costPerHectare": 40000,
-    "yieldPerHectareTons": 2,
-    "minRainfall": 50,
-    "maxRainfall": 110
-  },
-  "sugarcane": {
-    "pricePerTon": 3000,
-    "costPerHectare": 80000,
-    "yieldPerHectareTons": 70,
-    "minRainfall": 150,
-    "maxRainfall": 250
-  },
-  "default": {
-    "pricePerTon": 15000,
-    "costPerHectare": 35000,
-    "yieldPerHectareTons": 10,
-    "minRainfall": 50,
-    "maxRainfall": 150
-  }
+  "carrot": { "pricePerTon": 18000, "costPerHectare": 41000, "yieldPerHectareTons": 25, "minRainfall": 50, "maxRainfall": 150, "preferredSoil": ["alluvial", "red"] },
+  "tomato": { "pricePerTon": 25000, "costPerHectare": 60000, "yieldPerHectareTons": 30, "minRainfall": 60, "maxRainfall": 140, "preferredSoil": ["alluvial", "red", "black"] },
+  "wheat": { "pricePerTon": 22000, "costPerHectare": 30000, "yieldPerHectareTons": 4, "minRainfall": 30, "maxRainfall": 100, "preferredSoil": ["alluvial", "black"] },
+  "rice": { "pricePerTon": 20000, "costPerHectare": 45000, "yieldPerHectareTons": 5, "minRainfall": 150, "maxRainfall": 300, "preferredSoil": ["alluvial", "laterite"] },
+  "potato": { "pricePerTon": 12000, "costPerHectare": 50000, "yieldPerHectareTons": 20, "minRainfall": 50, "maxRainfall": 120, "preferredSoil": ["alluvial", "red"] },
+  "maize": { "pricePerTon": 18000, "costPerHectare": 26000, "yieldPerHectareTons": 6, "minRainfall": 50, "maxRainfall": 100, "preferredSoil": ["alluvial", "red", "black"] },
+  "cotton": { "pricePerTon": 60000, "costPerHectare": 40000, "yieldPerHectareTons": 2, "minRainfall": 50, "maxRainfall": 110, "preferredSoil": ["black", "alluvial"] },
+  "sugarcane": { "pricePerTon": 3000, "costPerHectare": 82000, "yieldPerHectareTons": 70, "minRainfall": 150, "maxRainfall": 250, "preferredSoil": ["alluvial", "black"] },
+  "chickpea": { "pricePerTon": 45000, "costPerHectare": 20000, "yieldPerHectareTons": 1.5, "minRainfall": 60, "maxRainfall": 90, "preferredSoil": ["black", "red"] },
+  "kidneybeans": { "pricePerTon": 55000, "costPerHectare": 25000, "yieldPerHectareTons": 1.2, "minRainfall": 60, "maxRainfall": 150, "preferredSoil": ["red", "alluvial"] },
+  "pigeonpeas": { "pricePerTon": 50000, "costPerHectare": 22000, "yieldPerHectareTons": 1.5, "minRainfall": 60, "maxRainfall": 100, "preferredSoil": ["black", "red", "laterite"] },
+  "mothbeans": { "pricePerTon": 40000, "costPerHectare": 15000, "yieldPerHectareTons": 1.0, "minRainfall": 30, "maxRainfall": 70, "preferredSoil": ["red", "laterite"] },
+  "mungbean": { "pricePerTon": 60000, "costPerHectare": 18000, "yieldPerHectareTons": 1.1, "minRainfall": 40, "maxRainfall": 80, "preferredSoil": ["red", "black"] },
+  "blackgram": { "pricePerTon": 55000, "costPerHectare": 19000, "yieldPerHectareTons": 1.1, "minRainfall": 60, "maxRainfall": 90, "preferredSoil": ["red", "black", "laterite"] },
+  "lentil": { "pricePerTon": 48000, "costPerHectare": 21000, "yieldPerHectareTons": 1.3, "minRainfall": 40, "maxRainfall": 80, "preferredSoil": ["black", "alluvial"] },
+  "pomegranate": { "pricePerTon": 80000, "costPerHectare": 150000, "yieldPerHectareTons": 15, "minRainfall": 50, "maxRainfall": 80, "preferredSoil": ["red", "black"] },
+  "banana": { "pricePerTon": 15000, "costPerHectare": 126000, "yieldPerHectareTons": 40, "minRainfall": 100, "maxRainfall": 200, "preferredSoil": ["alluvial", "laterite"] },
+  "mango": { "pricePerTon": 35000, "costPerHectare": 80000, "yieldPerHectareTons": 12, "minRainfall": 75, "maxRainfall": 250, "preferredSoil": ["alluvial", "laterite", "red"] },
+  "grapes": { "pricePerTon": 60000, "costPerHectare": 200000, "yieldPerHectareTons": 20, "minRainfall": 60, "maxRainfall": 100, "preferredSoil": ["red", "black"] },
+  "watermelon": { "pricePerTon": 10000, "costPerHectare": 55000, "yieldPerHectareTons": 30, "minRainfall": 40, "maxRainfall": 80, "preferredSoil": ["alluvial", "red"] },
+  "muskmelon": { "pricePerTon": 12000, "costPerHectare": 61000, "yieldPerHectareTons": 25, "minRainfall": 40, "maxRainfall": 80, "preferredSoil": ["alluvial", "red"] },
+  "apple": { "pricePerTon": 50000, "costPerHectare": 180000, "yieldPerHectareTons": 15, "minRainfall": 100, "maxRainfall": 200, "preferredSoil": ["alluvial"] },
+  "orange": { "pricePerTon": 30000, "costPerHectare": 90000, "yieldPerHectareTons": 17, "minRainfall": 100, "maxRainfall": 250, "preferredSoil": ["alluvial", "laterite"] },
+  "papaya": { "pricePerTon": 20000, "costPerHectare": 85000, "yieldPerHectareTons": 35, "minRainfall": 100, "maxRainfall": 200, "preferredSoil": ["alluvial", "laterite"] },
+  "coconut": { "pricePerTon": 25000, "costPerHectare": 70000, "yieldPerHectareTons": 10, "minRainfall": 150, "maxRainfall": 250, "preferredSoil": ["laterite", "alluvial"] },
+  "jute": { "pricePerTon": 40000, "costPerHectare": 31000, "yieldPerHectareTons": 3, "minRainfall": 150, "maxRainfall": 250, "preferredSoil": ["alluvial"] },
+  "coffee": { "pricePerTon": 150000, "costPerHectare": 100000, "yieldPerHectareTons": 1.5, "minRainfall": 150, "maxRainfall": 250, "preferredSoil": ["laterite", "red"] },
+  "soybean": { "pricePerTon": 35000, "costPerHectare": 24000, "yieldPerHectareTons": 2.5, "minRainfall": 70, "maxRainfall": 120, "preferredSoil": ["black", "alluvial"] },
+  "millet": { "pricePerTon": 20000, "costPerHectare": 14000, "yieldPerHectareTons": 1.5, "minRainfall": 30, "maxRainfall": 60, "preferredSoil": ["red", "black"] },
+  "mustard": { "pricePerTon": 40000, "costPerHectare": 23000, "yieldPerHectareTons": 1.5, "minRainfall": 40, "maxRainfall": 80, "preferredSoil": ["alluvial", "black"] },
+  "default": { "pricePerTon": 15000, "costPerHectare": 35000, "yieldPerHectareTons": 10, "minRainfall": 50, "maxRainfall": 150, "preferredSoil": ["alluvial", "black", "red", "laterite"] }
 }
