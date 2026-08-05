@@ -3,6 +3,7 @@ import { Droplets, Thermometer, FlaskConical, Wind, Leaf, Map, Calendar, Droplet
 import { motion } from 'framer-motion';
 import Tooltip from './Tooltip';
 import CustomSelect from './CustomSelect';
+import VoiceInput from './VoiceInput';
 
 const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrigated, setIsIrrigated, technique, setTechnique, soilType, setSoilType }) => {
   const sliders = [
@@ -85,6 +86,14 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
       
       {/* Body */}
       <div className="p-6 flex flex-col gap-6">
+        <VoiceInput onValuesExtracted={(extracted) => {
+          Object.entries(extracted).forEach(([key, val]) => {
+            if (val !== undefined && val !== null) {
+              onChange(key, val);
+            }
+          });
+        }} />
+
         <div className="flex flex-col gap-4 mb-2">
 
         {/* Extensions Controls */}
