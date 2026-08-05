@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
-      axios.get('http://localhost:5000/api/farmer/profile', {
+      axios.get(`${import.meta.env.VITE_API_URL}/api/farmer/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => {

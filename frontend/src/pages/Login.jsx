@@ -17,7 +17,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signin', { email, password });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signin`, { email, password });
       login(response.data.token);
       toast.success('Successfully logged in!');
       navigate('/dashboard', { state: { justLoggedIn: true } });

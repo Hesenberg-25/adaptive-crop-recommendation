@@ -36,7 +36,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/farmer/profile', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/farmer/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data) {
@@ -65,7 +65,7 @@ const Profile = () => {
       if (payload.farm_size === '') payload.farm_size = null;
       else if (payload.farm_size !== null) payload.farm_size = parseFloat(payload.farm_size);
 
-      await axios.put('http://localhost:5000/api/farmer/profile', payload, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/farmer/profile`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Profile saved successfully!');

@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function getWeather(lat, lon) {
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&daily=precipitation_sum&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=16`;
         const res = await axios.get(url);
         const current = res.data.current;
         const daily = res.data.daily;
@@ -10,9 +10,18 @@ async function getWeather(lat, lon) {
         const temperature = current.temperature_2m;
         const humidity = current.relative_humidity_2m;
         const windSpeed = current.wind_speed_10m;
-        const rainfall = daily.precipitation_sum.reduce((acc, val) => acc + (val || 0), 0);
+        const rainfall = daily.precipitation_sum.slice(0, 7).reduce((acc, val) => acc + (val || 0), 0); // 7-day rainfall for pest logic
         
-        return { temperature, humidity, rainfall, windSpeed };
+        // Structure the 16-day forecast
+        const dailyForecast = daily.time.map((date, index) => ({
+            date,
+            weatherCode: daily.weather_code[index],
+            maxTemp: daily.temperature_2m_max[index],
+            minTemp: daily.temperature_2m_min[index],
+            precipitation: daily.precipitation_sum[index]
+        }));
+        
+        return { temperature, humidity, rainfall, windSpeed, dailyForecast };
     } catch (error) {
         console.error("Error fetching weather:", error.message);
         return { temperature: 25, humidity: 60, rainfall: 120, windSpeed: 15 };
