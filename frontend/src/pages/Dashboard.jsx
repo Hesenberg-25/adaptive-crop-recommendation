@@ -150,9 +150,6 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
             <span className="text-farm-primary dark:text-farm-text-heading transition-colors">Adaptive Crop</span>{' '}
             <span className="text-farm-accent-orange transition-colors">Dashboard</span>
           </span>
-          <span className="hidden md:inline-block text-sm font-poppins bg-slate-100 dark:bg-slate-800 text-slate-500 px-3 py-1 rounded-full whitespace-nowrap">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0 }}

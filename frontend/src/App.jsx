@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children }) => {
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/dashboard" /> : children;
+  return isAuthenticated ? <Navigate to="/" /> : children;
 };
 
 // Inner wrapper so we can access location for public/private layout split
@@ -107,8 +107,14 @@ const AppShell = () => {
             🌿 AgriVision
           </span>
           <div className="flex gap-3 text-sm font-semibold">
-            <a href="/login" className="text-slate-700 dark:text-slate-300 hover:text-farm-primary transition-colors px-3 py-1.5">Login</a>
-            <a href="/signup" className="glass-button !py-1.5 !px-4 !text-sm">Sign Up</a>
+            {isAuthenticated ? (
+              <Link to="/dashboard" className="glass-button !py-1.5 !px-4 !text-sm">Go to Dashboard</Link>
+            ) : (
+              <>
+                <Link to="/login" className="text-slate-700 dark:text-slate-300 hover:text-farm-primary transition-colors px-3 py-1.5">Login</Link>
+                <Link to="/signup" className="glass-button !py-1.5 !px-4 !text-sm">Sign Up</Link>
+              </>
+            )}
           </div>
         </nav>
       )}
@@ -116,7 +122,7 @@ const AppShell = () => {
       {/* Page Content */}
       <main className={isAuthenticated && !isPublicPage ? 'pl-20 pt-32' : ''}>
         <Routes>
-          <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/dashboard" element={

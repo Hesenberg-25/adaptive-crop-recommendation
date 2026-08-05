@@ -102,9 +102,16 @@ const parseSections = (text) => {
   return parts.map((part, i) => {
     const lines = part.trim().split('\n');
     const title = lines[0].replace(/^#{1,3}\s*/, '').replace(/\*\*/g, '').replace(/:$/, '').trim();
-    const content = lines.slice(1).join('\n').trim() || part.trim();
+    let content = lines.slice(1).join('\n').trim();
+    if (!content) {
+      if (title.length > 50) {
+        content = title;
+        return { title: `Insight ${i + 1}`, content };
+      }
+      return null;
+    }
     return { title: title || `Insight ${i + 1}`, content };
-  });
+  }).filter(Boolean);
 };
 
 // ── Expanded Record View (full dashboard style) ──

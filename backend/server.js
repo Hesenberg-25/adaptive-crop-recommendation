@@ -39,7 +39,7 @@ app.post('/api/auth/signup', async (req, res) => {
     const { email, password } = req.body;
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: "Signup successful", user: data.user });
+    res.json({ message: "Signup successful", user: data.user, token: data.session?.access_token });
 });
 
 app.post('/api/auth/signin', async (req, res) => {
@@ -337,6 +337,35 @@ app.put('/api/farmer/profile', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error("Profile save error:", error);
         res.status(500).json({ error: error.message || "Failed to save profile" });
+    }
+});
+
+app.delete('/api/farmer/profile', authenticateUser, async (req, res) => {
+    try {
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', req.user.id);
+            
+        if (profileError) {
+            console.error("Error deleting profile:", profileError);
+            return res.status(500).json({ error: "Failed to delete profile data" });
+        }
+        
+        await supabase
+            .from('predictions')
+            .delete()
+            .eq('user_id', req.user.id);
+
+        const { error: authError } = await supabase.auth.admin.deleteUser(req.user.id);
+        if (authError) {
+            console.warn("Could not delete auth user (requires service role key):", authError);
+        }
+        
+        res.json({ message: "Account deleted" });
+    } catch (error) {
+        console.error("Profile delete error:", error);
+        res.status(500).json({ error: "Failed to delete account" });
     }
 });
 

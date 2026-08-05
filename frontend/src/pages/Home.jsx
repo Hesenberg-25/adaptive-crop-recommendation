@@ -2,8 +2,10 @@ import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Sprout, Activity, DollarSign, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
+  const { isAuthenticated } = useAuth();
   const containerRef = useRef(null);
   
   // Track scroll progress within the container
@@ -65,10 +67,10 @@ const Home = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6, type: "spring", bounce: 0.5 }}
           >
-            <Link to="/signup" className="group relative inline-flex items-center justify-center px-10 py-5 font-bold text-white transition-all duration-300 bg-emerald-600 rounded-full shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:shadow-[0_0_60px_rgba(16,185,129,0.7)] hover:-translate-y-1 overflow-hidden">
+            <Link to={isAuthenticated ? "/dashboard" : "/signup"} className="group relative inline-flex items-center justify-center px-10 py-5 font-bold text-white transition-all duration-300 bg-emerald-600 rounded-full shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:shadow-[0_0_60px_rgba(16,185,129,0.7)] hover:-translate-y-1 overflow-hidden">
               <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black"></span>
               <span className="relative text-lg font-poppins flex items-center gap-3">
-                Start Predicting Now
+                {isAuthenticated ? "Go to Dashboard" : "Start Predicting Now"}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </span>
             </Link>
