@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -11,13 +12,22 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const { login } = useAuth();
+  
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/auth/signup', { email, password });
-      toast.success('Account created successfully! Please log in.');
-      navigate('/login');
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, { email, password });
+      
+      if (response.data.token) {
+        login(response.data.token);
+        toast.success('Account created! Please complete your profile.');
+        navigate('/profile', { state: { isNewUser: true } });
+      } else {
+        toast.success('Account created successfully! Please log in.');
+        navigate('/login');
+      }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create account');
     } finally {

@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const { getWeather, getClimateForecast } = require('./src/services/weatherService');
 const { getComprehensiveAnalysis } = require('./src/services/aiService');
+const { getSubsidiesForCrop } = require('./src/services/subsidyService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
 const { evaluateRisk } = require('./src/services/pestDiseaseRules');
@@ -25,11 +26,11 @@ const authenticateUser = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     const { data, error } = await supabase.auth.getUser(token);
-    
+
     if (error || !data.user) {
         return res.status(401).json({ error: "Invalid or expired token" });
     }
-    
+
     req.user = data.user;
     next();
 };
@@ -38,7 +39,7 @@ app.post('/api/auth/signup', async (req, res) => {
     const { email, password } = req.body;
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: "Signup successful", user: data.user });
+    res.json({ message: "Signup successful", user: data.user, token: data.session?.access_token });
 });
 
 app.post('/api/auth/signin', async (req, res) => {
@@ -52,9 +53,9 @@ app.post('/api/auth/signin', async (req, res) => {
 app.post('/api/predict', authenticateUser, async (req, res) => {
     try {
         const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique, soilType } = req.body;
-        
+
         // 1. Get Environmental Inputs
-        let temperature, humidity, rainfall, windSpeed;
+        let temperature, humidity, rainfall, windSpeed, dailyForecast;
         if (useLiveWeather && lat && lon) {
             let targetMonth = null;
             if (season === 'kharif') targetMonth = 5; // June
@@ -67,24 +68,39 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             humidity = weather.humidity;
             rainfall = weather.rainfall;
             windSpeed = weather.windSpeed;
+
+            // Fetch 16-day forecast separately
+            const currentF = await getWeather(lat, lon);
+            if (currentF && currentF.dailyForecast) {
+                dailyForecast = currentF.dailyForecast;
+            }
         } else {
             temperature = manualTemp || 25;
             humidity = manualHumidity || 60;
             rainfall = manualRainfall || 120;
             windSpeed = 15;
+
+            // Even if not live weather, try to fetch 16 day forecast for the results page if lat/lon available
+            if (lat && lon) {
+                const currentF = await getWeather(lat, lon);
+                if (currentF && currentF.dailyForecast) {
+                    dailyForecast = currentF.dailyForecast;
+                }
+            }
         }
-        
+
         // Apply Irrigation Supplement Math
         if (isIrrigated) {
-            rainfall += 150; 
+            rainfall += 150;
         }
-        
+
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
+
         const marketPrices = require('./src/data/marketPrices.json');
-        
+
         // 2. ML Logic
         const mlPredictions = cropModel.predict(inputs);
-        
+
         const trainingData = cropModel.getTrainingData();
         let allKnownLabels = [...new Set(trainingData.map(d => d.label))];
         if (allKnownLabels.length === 0) {
@@ -115,7 +131,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
                     confidence = 1;
                 }
             }
-            
+
             // Apply soil type penalty
             if (soilType) {
                 const data = marketPrices[label.toLowerCase()] || marketPrices['default'];
@@ -123,7 +139,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
                     confidence = Math.max(1, confidence - 30);
                 }
             }
-            
+
             return {
                 name: label,
                 confidence
@@ -134,18 +150,20 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
             const avgCostPerHectare = data.costPerHectare;
             const expectedRevenue = data.yieldPerHectareTons * data.pricePerTon;
+            const netReturnPerHectare = expectedRevenue - avgCostPerHectare;
             const roiValue = (((expectedRevenue - avgCostPerHectare) / avgCostPerHectare) * 100).toFixed(1);
-            
-            let feasibility = "Medium";
-            if (rainfall >= data.minRainfall && rainfall <= data.maxRainfall) feasibility = "High";
-            else if (rainfall < data.minRainfall - 50 || rainfall > data.maxRainfall + 50) feasibility = "Low";
+
+            let rainfallFit = "Medium";
+            if (rainfall >= data.minRainfall && rainfall <= data.maxRainfall) rainfallFit = "High";
+            else if (rainfall < data.minRainfall - 50 || rainfall > data.maxRainfall + 50) rainfallFit = "Low";
 
             return {
                 ...crop,
                 roi: roiValue,
                 avgCostPerHectare,
                 expectedRevenue,
-                feasibility
+                netReturnPerHectare,
+                rainfallFit
             };
         };
 
@@ -164,23 +182,23 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         let avoidWithROI = [];
 
         if (allCropsWithROI.length >= 6) {
-             recommendedWithROI = allCropsWithROI.slice(0, 3);
-             avoidWithROI = allCropsWithROI.slice(-3).reverse();
+            recommendedWithROI = allCropsWithROI.slice(0, 3);
+            avoidWithROI = allCropsWithROI.slice(-3).reverse();
         } else {
-             const mid = Math.ceil(allCropsWithROI.length / 2);
-             recommendedWithROI = allCropsWithROI.slice(0, mid);
-             avoidWithROI = allCropsWithROI.slice(mid).reverse();
+            const mid = Math.ceil(allCropsWithROI.length / 2);
+            recommendedWithROI = allCropsWithROI.slice(0, mid);
+            avoidWithROI = allCropsWithROI.slice(mid).reverse();
         }
 
         recommendedWithROI = recommendedWithROI.map(c => ({
-             ...c,
-             isMarginal: c.confidence < threshold
+            ...c,
+            isMarginal: c.confidence < threshold
         }));
 
         avoidWithROI = avoidWithROI.map(crop => {
             const cropData = trainingData.filter(d => d.label.toLowerCase() === crop.name.toLowerCase());
             let avoidReason = "Overall climate mismatch.";
-            
+
             const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
             let soilMismatch = false;
             if (soilType && data.preferredSoil && !data.preferredSoil.includes(soilType.toLowerCase())) {
@@ -201,21 +219,21 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
                 let worstFeature = null;
                 let worstDirection = null;
                 const inputMapping = { N, P, K, temperature, humidity, ph: pH, rainfall };
-                
+
                 for (let key in minMax) {
                     const val = inputMapping[key];
                     let dev = 0;
                     let dir = null;
                     if (val < minMax[key].min) { dev = (minMax[key].min - val) / (minMax[key].min || 1); dir = 'low'; }
                     else if (val > minMax[key].max) { dev = (val - minMax[key].max) / (minMax[key].max || 1); dir = 'high'; }
-                    
+
                     if (dev > maxDeviation) {
                         maxDeviation = dev;
                         worstFeature = key;
                         worstDirection = dir;
                     }
                 }
-                
+
                 if (worstFeature) {
                     const featureNames = { N: "Nitrogen", P: "Phosphorus", K: "Potassium", temperature: "Temperature", humidity: "Humidity", ph: "Soil pH", rainfall: "Rainfall" };
                     const rangeStr = `${Math.round(minMax[worstFeature].min)}-${Math.round(minMax[worstFeature].max)}`;
@@ -227,17 +245,26 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
 
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
         const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
-        
+        // 3b. Government Subsidies & Schemes
+        const governmentSubsidies = recommendedWithROI.map(crop => ({
+            crop: crop.name,
+            ...getSubsidiesForCrop(crop.name)
+        }));
+
         // 3. Groq Comprehensive Analysis & Pest Alerts
         const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });
         const groqAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks);
-        
+
         const aiAdvice = groqAnalysis.markdownAdvice;
-        
+
+        const topThreeCrops = [...recommendedWithROI, ...avoidWithROI]
+            .slice(0, 3)
+            .map(c => c.name)
+            .join(', ');
         // 5. Save to Supabase Database
         const predictionRecord = {
             user_id: req.user.id,
-            recommended_crop: primaryCrop,
+            recommended_crop: topThreeCrops,
             soil_n: N,
             soil_p: P,
             soil_k: K,
@@ -248,17 +275,18 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         };
         const { error: dbError } = await supabase.from('predictions').insert([predictionRecord]);
         if (dbError) console.error("Failed to save prediction to DB:", dbError.message);
-        
+
         // 6. Single JSON Response
         res.json({
             recommendedCrops: recommendedWithROI,
             avoidCrops: avoidWithROI,
             shapImportance,
+            governmentSubsidies,
             aiAdvice,
             alerts: groqAnalysis.alerts || [],
-            weatherUsed: { temperature, humidity, rainfall, windSpeed }
+            weatherUsed: { temperature, humidity, rainfall, windSpeed, dailyForecast }
         });
-        
+
     } catch (error) {
         console.error("Prediction error:", error);
         res.status(500).json({ error: "Failed to generate prediction" });
@@ -310,6 +338,35 @@ app.put('/api/farmer/profile', authenticateUser, async (req, res) => {
     }
 });
 
+app.delete('/api/farmer/profile', authenticateUser, async (req, res) => {
+    try {
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', req.user.id);
+            
+        if (profileError) {
+            console.error("Error deleting profile:", profileError);
+            return res.status(500).json({ error: "Failed to delete profile data" });
+        }
+        
+        await supabase
+            .from('predictions')
+            .delete()
+            .eq('user_id', req.user.id);
+
+        const { error: authError } = await supabase.auth.admin.deleteUser(req.user.id);
+        if (authError) {
+            console.warn("Could not delete auth user (requires service role key):", authError);
+        }
+        
+        res.json({ message: "Account deleted" });
+    } catch (error) {
+        console.error("Profile delete error:", error);
+        res.status(500).json({ error: "Failed to delete account" });
+    }
+});
+
 app.get('/api/predictions/history', authenticateUser, async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -334,16 +391,16 @@ async function runSanityCheck() {
     console.log("[Data Validation] Running startup sanity check...");
     const marketPrices = require('./src/data/marketPrices.json');
     let allKnownLabels = Object.keys(marketPrices).filter(k => k !== 'default');
-    
+
     const attachFinancials = (crop) => {
         const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
         const roiValue = (((data.yieldPerHectareTons * data.pricePerTon - data.costPerHectare) / data.costPerHectare) * 100).toFixed(1);
         return { ...crop, roi: roiValue, avgCostPerHectare: data.costPerHectare };
     };
-    
+
     let allCrops = allKnownLabels.map(label => ({ name: label }));
     const allCropsWithROI = allCrops.map(attachFinancials);
-    
+
     let seenValues = { roi: {}, cost: {} };
     let hasDuplicates = false;
     allCropsWithROI.forEach(c => {
