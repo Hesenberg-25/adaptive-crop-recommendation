@@ -37,3 +37,8 @@ async function reverseGeocodeToLanguage(lat, lon) {
 }
 
 module.exports = { reverseGeocodeToLanguage };
+
+
+//Converts GPS coordinates into a suggested 
+//regional Indian language by reverse-geocoding the location 
+//and matching the state to a predefined language map, with English as a safe fallback.

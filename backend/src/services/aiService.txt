@@ -26,6 +26,5 @@ It requests the response as strict JSON ({ markdownAdvice, alerts }) via Groq's 
 
 Takes a spoken/transcribed sentence from a farmer (e.g. "my soil has low nitrogen and it's pretty hot") and asks the LLM to extract structured soil/climate values 
 (N, P, K, pH, temperature, humidity, rainfall) from vague qualitative language, using rough numeric heuristics for terms like "high," "low," or "moderate."
-
  It only fills in fields the farmer actually mentioned, returning { extracted: {...}, summary: "..." }. 
- This looks like it's meant to power a voice-input feature so  farmers can speak their conditions instead of using sliders/forms.
+ This looks like it's meant to power a voice-input feature so farmers can speak their conditions instead of using sliders/forms.

@@ -1,0 +1,22 @@
+
+                           ---------------------    FEATURE 2-- Multi-Language Agronomist Advice (Localization)     ------------------------
+
+ 
+The Problem: Agritech tools are often only in English, isolating the target demographic.
+Proposed Solution: Based on the location of user it will reverse geocode the location and get the language linked with the region and will converse in that particular lang 
+
+What this code does  ?
+It takes a GPS location (latitude & longitude) and figures out which Indian regional language to show the user — automatically.
+
+How it works?
+1 .Look up the location → Sends the lat/lon to a free map service (OpenStreetMap Nominatim) and asks "what state is this?"
+2 .Match state to language → Uses a simple lookup table (like a dictionary) that says things like:
+               Maharashtra → Marathi
+               Tamil Nadu → Tamil
+               UP, Bihar, MP, etc. → Hindi
+3 .Return the result → Sends back an object like:
+
+{ language: 'mr', region: 'Maharashtra' }
+
+4 .Fallback safety → If the state isn't in the list, or the API call fails/times out, it just defaults to English (en) instead of crashing.
+
