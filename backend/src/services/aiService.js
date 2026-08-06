@@ -1,8 +1,15 @@
 const Groq = require('groq-sdk');
 
-async function getComprehensiveAnalysis(inputs, recommendedCrops, avoidCrops, shapImportance, technique = 'monocropping', risks = []) {
+async function getComprehensiveAnalysis(inputs, recommendedCrops, avoidCrops, shapImportance, technique = 'monocropping', risks = [], language = 'en') {
     const recNames = recommendedCrops.map(c => c.name.charAt(0).toUpperCase() + c.name.slice(1)).join(', ') || 'None';
     const avoidNames = avoidCrops.map(c => c.name.charAt(0).toUpperCase() + c.name.slice(1)).join(', ') || 'None';
+
+    const languageNames = {
+        en: 'English', hi: 'Hindi', mr: 'Marathi', ta: 'Tamil', te: 'Telugu',
+        kn: 'Kannada', gu: 'Gujarati', bn: 'Bengali', pa: 'Punjabi', ml: 'Malayalam',
+        or: 'Odia', es: 'Spanish', fr: 'French'
+    };
+    const targetLanguage = languageNames[language] || 'English';
 
     try {
         const apiKey = process.env.GROQ_API_KEY;
@@ -52,6 +59,11 @@ For EACH detected risk, write a detailed alert with ALL of the following:
 Use a ⚠️ emoji prefix for each alert and make each one at least 4-5 sentences long.`;
         }
 
+        // --- NEW: Localization instruction ---
+        if (targetLanguage !== 'English') {
+            prompt += `\n\nCRITICAL LANGUAGE INSTRUCTION: Write the ENTIRE report — including all headings, body text, and every alert message — in ${targetLanguage}. Do not include any English except for standard scientific abbreviations (N, P, K, pH) or crop names where there is no common local equivalent. Keep the markdown structure (###, **, etc.) exactly the same, just translate the content.`;
+        }
+
         prompt += `
 
 Return ONLY a valid JSON object exactly matching this structure, with no extra text or markdown blocks:
@@ -67,8 +79,8 @@ Return ONLY a valid JSON object exactly matching this structure, with no extra t
 
         prompt += `\n}`;
 
-        console.log(`[Groq] Fetching comprehensive analysis...`);
-        
+        console.log(`[Groq] Fetching comprehensive analysis in ${targetLanguage}...`);
+
         const response = await groq.chat.completions.create({
             messages: [{ role: 'user', content: prompt }],
             model: 'llama-3.3-70b-versatile',
@@ -81,7 +93,7 @@ Return ONLY a valid JSON object exactly matching this structure, with no extra t
 
     } catch (error) {
         console.error("Error fetching Comprehensive Analysis from Groq:", error.message);
-        
+
         const fallbackAlerts = (risks || []).map(r => ({
             risk: r.risk,
             severity: r.severity,
@@ -99,4 +111,45 @@ ${avoidNames} showed marginal viability. The current conditions present a high r
     }
 }
 
-module.exports = { getComprehensiveAnalysis };
+// --- NEW: Voice input parser ---
+async function parseVoiceInput(transcript) {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) throw new Error("Missing GROQ_API_KEY");
+
+    const groq = new Groq({ apiKey: apiKey });
+
+    const prompt = `You are a data extraction assistant for a farming app. A farmer spoke the following sentence describing their soil and weather conditions. Extract ONLY the parameters they explicitly mentioned into a JSON object.
+
+Farmer's speech: "${transcript}"
+
+Fields to look for (use these exact keys, all optional — only include a field if the farmer clearly mentioned it):
+- N: Nitrogen level in mg/kg (if they say "high nitrogen" without a number, estimate ~90; "low nitrogen" ~20; "medium/moderate" ~50)
+- P: Phosphorus level in mg/kg (high ~80, low ~15, medium ~40)
+- K: Potassium level in mg/kg (high ~120, low ~15, medium ~50)
+- pH: Soil pH, typically 3.5-9.9 (acidic ~5.5, neutral ~7.0, alkaline ~8.5)
+- temperature: Degrees Celsius (hot ~38, cold ~10, mild/moderate ~24). Convert Fahrenheit to Celsius if mentioned.
+- humidity: Percentage 10-100 (humid ~85, dry ~25, moderate ~55)
+- rainfall: Millimeters (heavy rain ~250, light rain ~50, moderate ~120)
+
+Only include a key if the farmer's sentence gives a genuine signal for it — do not invent values for parameters they never mentioned.
+
+Return ONLY a valid JSON object, no extra text:
+{ "extracted": { <only the fields mentioned> }, "summary": "one short sentence confirming what was understood" }`;
+
+    try {
+        const response = await groq.chat.completions.create({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'llama-3.3-70b-versatile',
+            temperature: 0.2,
+            response_format: { type: 'json_object' }
+        });
+
+        const jsonString = response.choices[0]?.message?.content || "{}";
+        return JSON.parse(jsonString);
+    } catch (error) {
+        console.error("Error parsing voice input via Groq:", error.message);
+        return { extracted: {}, summary: "Sorry, I couldn't understand those values. Please try again or use the sliders." };
+    }
+}
+
+module.exports = { getComprehensiveAnalysis, parseVoiceInput };

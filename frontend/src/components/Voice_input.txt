@@ -1,0 +1,28 @@
+===========       Feature No 7  Voice Input (Web Speech API)         ===========
+The Problem: Rural users might struggle with complex sliders and text inputs.
+The Solution: 
+Many farmers may not want to fiddle with sliders and number inputs, or may not know exact numbers off the top of their head. So instead of typing "Nitrogen: 90, Temperature: 38°C," they can just tap a mic and say something like:
+
+"My soil has high nitrogen and it's really hot today."
+
+The app figures out the rest.
+
+Q . How it works, in plain steps
+Farmer taps the mic button. The browser (using its built-in speech recognition, like Chrome's voice typing) 
+listens and converts speech to text in real time — no server needed for this part, it's free and instant.
+
+Farmer taps "Use these values." The spoken sentence gets sent to our backend.
+An AI model (Llama 3.3, via Groq) interprets the sentence. It's smart enough to understand vague, human language — "high nitrogen," "pretty hot,"
+"light rain" — and convert it into actual numeric values the app's crop-recommendation model needs (like N=90 mg/kg, temperature=38°C). 
+It only fills in values for things the farmer actually mentioned — it doesn't guess or invent data for anything unsaid.
+The values auto-fill the form, and the app tells the farmer what it understood, e.g. "Got it — high nitrogen and hot conditions recorded."
+If it fails or nothing was understood, the app doesn't crash — it just asks the farmer to try again or use the sliders manually.
+
+
+Why this matters (the pitch angle)
+Accessibility: Removes a literacy/tech-comfort barrier — many farmers are more comfortable speaking than typing precise numbers into a form.
+Speed: One sentence replaces filling out 4-5 separate input fields.
+Robustness: It's built to fail gracefully — unsupported browsers just hide the feature instead of breaking, and unclear speech gives a helpful error 
+instead of garbage data.
+Combines two AI layers smartly: free, on-device speech recognition for converting audio → text, and a cloud LLM only for the harder job of interpreting
+ meaning → structured data — which keeps it fast and cheap rather than sending raw audio to a server.

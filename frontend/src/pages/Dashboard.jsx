@@ -12,6 +12,22 @@ import { useLocation } from 'react-router-dom';
 
 import axios from 'axios';
 
+const LANGUAGES = [
+  { code: 'en', label: '🇬🇧 English' },
+  { code: 'hi', label: '🇮🇳 हिन्दी (Hindi)' },
+  { code: 'mr', label: '🇮🇳 मराठी (Marathi)' },
+  { code: 'ta', label: '🇮🇳 தமிழ் (Tamil)' },
+  { code: 'te', label: '🇮🇳 తెలుగు (Telugu)' },
+  { code: 'kn', label: '🇮🇳 ಕನ್ನಡ (Kannada)' },
+  { code: 'gu', label: '🇮🇳 ગુજરાતી (Gujarati)' },
+  { code: 'bn', label: '🇮🇳 বাংলা (Bengali)' },
+  { code: 'pa', label: '🇮🇳 ਪੰਜਾਬੀ (Punjabi)' },
+  { code: 'ml', label: '🇮🇳 മലയാളം (Malayalam)' },
+  { code: 'or', label: '🇮🇳 ଓଡ଼ିଆ (Odia)' },
+  { code: 'es', label: '🇪🇸 Español' },
+  { code: 'fr', label: '🇫🇷 Français' }
+];
+
 const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationName }) => {
   const { token } = useAuth();
   const locationState = useLocation().state || {};
@@ -33,6 +49,7 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
   const [isIrrigated, setIsIrrigated] = useState(false);
   const [technique, setTechnique] = useState('monocropping');
   const [soilType, setSoilType] = useState('');
+  const [language, setLanguage] = useState('en');
   
   // UI Toggles for Results
   const [showAI, setShowAI] = useState(false);
@@ -102,7 +119,8 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
         season,
         isIrrigated,
         technique,
-        soilType
+        soilType,
+        language
       };
       
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/predict`, payload, {
@@ -111,6 +129,9 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
       
       clearInterval(intervalId);
       setResults(response.data);
+      if (response.data.detectedLanguage) {
+        setLanguage(response.data.detectedLanguage);
+      }
       toast.success('Prediction generated & saved to database!');
     } catch (error) {
       clearInterval(intervalId);
@@ -159,6 +180,26 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
         >
           Configure your soil parameters and get real-time AI recommendations
         </motion.p>
+
+        <div className="mt-4 flex flex-wrap justify-center items-center gap-2">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <span>🌐 Report Language:</span>
+          </label>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="px-3 py-1.5 rounded-xl text-sm font-medium bg-white/80 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+          >
+            {LANGUAGES.map(lang => (
+              <option key={lang.code} value={lang.code}>{lang.label}</option>
+            ))}
+          </select>
+          {results?.detectedRegion && (
+            <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-semibold border border-emerald-300 dark:border-emerald-700">
+              📍 Auto-detected ({results.detectedRegion})
+            </span>
+          )}
+        </div>
       </header>
 
       <div className="flex flex-col gap-8 items-center w-full mx-auto">
