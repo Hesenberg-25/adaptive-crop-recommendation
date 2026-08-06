@@ -228,11 +228,11 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
         const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
         
-        // 3. Gemini Comprehensive Analysis & Pest Alerts
+        // 3. Groq Comprehensive Analysis & Pest Alerts
         const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });
-        const geminiAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks);
+        const groqAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks);
         
-        const aiAdvice = geminiAnalysis.markdownAdvice;
+        const aiAdvice = groqAnalysis.markdownAdvice;
         
         // 5. Save to Supabase Database
         const predictionRecord = {
@@ -255,7 +255,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             avoidCrops: avoidWithROI,
             shapImportance,
             aiAdvice,
-            alerts: geminiAnalysis.alerts || [],
+            alerts: groqAnalysis.alerts || [],
             weatherUsed: { temperature, humidity, rainfall, windSpeed }
         });
         
