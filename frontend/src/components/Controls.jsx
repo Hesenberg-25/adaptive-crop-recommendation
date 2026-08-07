@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import Tooltip from './Tooltip';
 import CustomSelect from './CustomSelect';
 import VoiceInput from './VoiceInput';
+import { useTranslation } from 'react-i18next';
 
 const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrigated, setIsIrrigated, technique, setTechnique, soilType, setSoilType, cropCategory, setCropCategory, targetCrop, setTargetCrop, language }) => {
+  const { t } = useTranslation();
   const sliders = [
     { 
       name: 'Nitrogen (N) (mg/kg)', key: 'N', min: 0, max: 140, 
@@ -97,10 +99,10 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
       <div className="bg-gradient-to-r from-[#2B1B12] to-[#4A3221] dark:from-[#0F0A07] dark:to-[#2B1B12] px-6 py-4 flex justify-between items-center transition-colors">
         <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
           <FlaskConical className="w-6 h-6 text-farm-accent-gold" />
-          Soil & Environmental Inputs
+          {t('soil_inputs', 'Soil & Environmental Inputs')}
         </h2>
         <div className="text-white/80">
-          <Tooltip text="Adjust the chemical and environmental parameters. Live Weather automatically syncs historical climate data for the selected season." align="right" />
+          <Tooltip text={t('adjust_hint', 'Adjust the chemical and environmental parameters. Live Weather automatically syncs historical climate data for the selected season.')} align="right" />
         </div>
       </div>
       
@@ -198,7 +200,7 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
             className="w-full mt-1 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center gap-2 text-emerald-800 dark:text-emerald-200 text-sm shadow-sm"
           >
             <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span>Selected Soil Profile: <strong className="font-semibold">{soilOptions.find(o => o.value === soilType)?.label || soilType}</strong></span>
+            <span>{t('selected_soil', 'Selected Soil Profile')}: <strong className="font-semibold">{soilOptions.find(o => o.value === soilType)?.label || soilType}</strong></span>
           </motion.div>
         )}
       </div>

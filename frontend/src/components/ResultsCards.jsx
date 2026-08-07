@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sprout, TrendingUp, AlertCircle, IndianRupee, Droplets, Ban } from 'lucide-react';
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 // In-memory cache so we don't re-fetch on every render
 const imageCache = {};
@@ -167,6 +168,7 @@ const CropCard = ({ pred, idx, isRecommended }) => {
 };
 
 const ResultsCards = ({ recommendedCrops, avoidCrops, targetCropResult }) => {
+  const { t } = useTranslation();
   if ((!recommendedCrops || recommendedCrops.length === 0) && (!avoidCrops || avoidCrops.length === 0)) {
     return null;
   }
@@ -189,8 +191,8 @@ const ResultsCards = ({ recommendedCrops, avoidCrops, targetCropResult }) => {
               <span className="text-xl">🎯</span>
             </motion.div>
             <div>
-              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">Your Selected Target Crop</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Viability analysis for your specifically requested crop</p>
+              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">{t('your_selected_target', 'Your Selected Target Crop')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('viability_analysis', 'Viability analysis for your specifically requested crop')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -216,8 +218,8 @@ const ResultsCards = ({ recommendedCrops, avoidCrops, targetCropResult }) => {
               <Sprout className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
             <div>
-              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">Highly Recommended Crops</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Based on your soil chemistry, climate, and market data</p>
+              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">{t('highly_recommended', 'Highly Recommended Crops')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('based_on_soil', 'Based on your soil chemistry, climate, and market data')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -245,8 +247,8 @@ const ResultsCards = ({ recommendedCrops, avoidCrops, targetCropResult }) => {
               <Ban className="w-6 h-6 text-red-600 dark:text-red-400" />
             </motion.div>
             <div>
-              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">Crops to Avoid</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Low probability of success with your current profile</p>
+              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">{t('crops_to_avoid', 'Crops to Avoid')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('low_probability', 'Low probability of success with your current profile')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

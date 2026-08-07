@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import Controls from '../components/Controls';
 import Simulator from '../components/Simulator';
@@ -29,6 +30,7 @@ const LANGUAGES = [
 ];
 
 const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationName }) => {
+  const { t, i18n } = useTranslation();
   const { token } = useAuth();
   const locationState = useLocation().state || {};
   const isJustLoggedIn = locationState.justLoggedIn;
@@ -43,7 +45,7 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
   const location = externalLocation || { lat: null, lon: null };
   const locationName = externalLocationName || '';
   const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState('Run Prediction');
+  const [loadingText, setLoadingText] = useState(t('run_prediction', 'Run Prediction'));
   const [results, setResults] = useState(null);
   const [season, setSeason] = useState('auto');
   const [isIrrigated, setIsIrrigated] = useState(false);
@@ -99,12 +101,12 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
     setLoading(true);
     
     const loadingStates = [
-      "Initializing ML Engine...",
-      "Running K-Nearest Neighbors...",
-      "Calculating SHAP Feature Importance...",
-      "Live Web-Scraping for Market Prices...",
-      "Generating Expert Agronomist Report...",
-      "Finalizing Results..."
+      t('initializing_ml', "Initializing ML Engine..."),
+      t('running_knn', "Running K-Nearest Neighbors..."),
+      t('calculating_shap', "Calculating SHAP Feature Importance..."),
+      t('scraping_market', "Live Web-Scraping for Market Prices..."),
+      t('generating_report', "Generating Expert Agronomist Report..."),
+      t('finalizing', "Finalizing Results...")
     ];
     let stateIndex = 0;
     setLoadingText(loadingStates[stateIndex]);
@@ -141,13 +143,13 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
       if (response.data.detectedLanguage) {
         setLanguage(response.data.detectedLanguage);
       }
-      toast.success('Prediction generated & saved to database!');
+      toast.success(t('prediction_success', 'Prediction generated & saved to database!'));
     } catch (error) {
       clearInterval(intervalId);
-      toast.error(error.response?.data?.error || 'Failed to generate prediction');
+      toast.error(error.response?.data?.error || t('prediction_failed', 'Failed to generate prediction'));
     } finally {
       setLoading(false);
-      setLoadingText('Run Prediction');
+      setLoadingText(t('run_prediction', 'Run Prediction'));
     }
   };
 
@@ -177,8 +179,8 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
           className="text-4xl font-extrabold font-playfair mb-2 flex items-center justify-center gap-4"
         >
           <span>
-            <span className="text-farm-primary dark:text-farm-text-heading transition-colors">Adaptive Crop</span>{' '}
-            <span className="text-farm-accent-orange transition-colors">Dashboard</span>
+            <span className="text-farm-primary dark:text-farm-text-heading transition-colors">{t('adaptive_crop_rec', 'Adaptive Crop')}</span>{' '}
+            <span className="text-farm-accent-orange transition-colors">{t('dashboard', 'Dashboard')}</span>
           </span>
         </motion.h1>
         <motion.p 
@@ -192,11 +194,14 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
 
         <div className="mt-4 flex flex-wrap justify-center items-center gap-2">
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <span>🌐 Report Language:</span>
+            <span>🌐 {t('language', 'Language')}:</span>
           </label>
           <select
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) => {
+              setLanguage(e.target.value);
+              i18n.changeLanguage(e.target.value);
+            }}
             className="px-3 py-1.5 rounded-xl text-sm font-medium bg-white/80 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
           >
             {LANGUAGES.map(lang => (
