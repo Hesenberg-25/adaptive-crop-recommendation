@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sprout, TrendingUp, AlertCircle, IndianRupee, Droplets, Ban } from 'lucide-react';
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 // In-memory cache so we don't re-fetch on every render
 const imageCache = {};
@@ -50,8 +51,33 @@ const useCropImage = (cropName) => {
 
 // Individual crop card
 const CropCard = ({ pred, idx, isRecommended }) => {
+  const { t } = useTranslation();
   const isTop = isRecommended && idx === 0;
   const cropImg = useCropImage(pred.crop || pred.name);
+
+  let translatedAvoidReason = pred.avoidReason;
+  if (translatedAvoidReason) {
+    if (translatedAvoidReason === "Overall climate mismatch.") {
+      translatedAvoidReason = t('overall_climate_mismatch', translatedAvoidReason);
+    } else if (translatedAvoidReason.startsWith("Requires ")) {
+      const match = translatedAvoidReason.match(/Requires (.*) soil, but (.*) soil was provided\./);
+      if (match) {
+        translatedAvoidReason = t('requires_soil', 'Requires %preferred% soil, but %provided% soil was provided.')
+          .replace('%preferred%', match[1])
+          .replace('%provided%', match[2]);
+      }
+    } else {
+      const match = translatedAvoidReason.match(/(.*) \((.*)\) is too (high|low) for (.*) \(ideal (.*)\)\./);
+      if (match) {
+        translatedAvoidReason = t(match[3] === 'high' ? 'feature_too_high' : 'feature_too_low', '%feature% (%input%) is too %direction% for %crop% (ideal %ideal%).')
+          .replace('%feature%', t(match[1].toLowerCase().replace(' ', '_'), match[1]))
+          .replace('%input%', match[2])
+          .replace('%direction%', t(match[3], match[3]))
+          .replace('%crop%', t(match[4].toLowerCase(), match[4]))
+          .replace('%ideal%', match[5]);
+      }
+    }
+  }
 
   return (
     <motion.div
@@ -69,12 +95,12 @@ const CropCard = ({ pred, idx, isRecommended }) => {
     >
       {isTop && (
         <div className="absolute top-0 right-0 text-xs font-bold px-4 py-1.5 rounded-bl-xl z-10 bg-farm-primary text-white">
-          ★ Top Recommendation
+          ★ {t('top_recommendation', 'Top Recommendation')}
         </div>
       )}
       {!isTop && isRecommended && pred.isMarginal && (
         <div className="absolute top-0 right-0 text-xs font-bold px-4 py-1.5 rounded-bl-xl z-10 bg-farm-accent-gold text-[#2B1B12]">
-          Marginal fit
+          {t('marginal_fit', 'Marginal fit')}
         </div>
       )}
 
@@ -99,13 +125,13 @@ const CropCard = ({ pred, idx, isRecommended }) => {
         <div className="flex-grow">
           <div className="flex justify-between items-center">
             <h3 className={clsx('text-xl font-extrabold capitalize font-poppins', isRecommended ? 'text-slate-800 dark:text-white' : 'text-red-800 dark:text-red-200')}>
-              {pred.crop || pred.name}
+              {t((pred.crop || pred.name || '').toLowerCase(), pred.crop || pred.name)}
             </h3>
             <div className="text-right">
               <div className={clsx('text-xl font-bold font-mono', isRecommended ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
                 {pred.confidence}%
               </div>
-              <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Match</div>
+              <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{t('match_percent', 'MATCH')}</div>
             </div>
           </div>
           <div className={clsx('w-full rounded-full h-2 mt-2', isRecommended ? 'bg-slate-200 dark:bg-white/10' : 'bg-red-100 dark:bg-black/30')}>
@@ -123,9 +149,9 @@ const CropCard = ({ pred, idx, isRecommended }) => {
       {pred.roi && (
         <div className="grid grid-cols-3 gap-2 mb-3">
           {[
-            { icon: <TrendingUp className="w-3.5 h-3.5 text-blue-500 icon-pulse" />, label: 'ROI', value: `${parseFloat(pred.roi) > 0 ? '+' : ''}${pred.roi}%`, positive: parseFloat(pred.roi) > 0 },
-            { icon: <IndianRupee className="w-3.5 h-3.5 text-emerald-500 icon-pulse" />, label: 'Net/ha', value: `${pred.netReturnPerHectare > 0 ? '+' : ''}₹${Number(pred.netReturnPerHectare || 0).toLocaleString('en-IN')}`, positive: pred.netReturnPerHectare > 0 },
-            { icon: <Droplets className="w-3.5 h-3.5 text-cyan-500 icon-pulse" />, label: 'Rain Fit', value: pred.rainfallFit || 'N/A', positive: pred.rainfallFit === 'High' },
+            { icon: <TrendingUp className="w-3.5 h-3.5 text-blue-500 icon-pulse" />, label: t('roi_abbr', 'ROI'), value: `${parseFloat(pred.roi) > 0 ? '+' : ''}${pred.roi}%`, positive: parseFloat(pred.roi) > 0 },
+            { icon: <IndianRupee className="w-3.5 h-3.5 text-emerald-500 icon-pulse" />, label: t('net_ha_abbr', 'Net/ha'), value: `${pred.netReturnPerHectare > 0 ? '+' : ''}₹${Number(pred.netReturnPerHectare || 0).toLocaleString('en-IN')}`, positive: pred.netReturnPerHectare > 0 },
+            { icon: <Droplets className="w-3.5 h-3.5 text-cyan-500 icon-pulse" />, label: t('rain_fit_abbr', 'Rain Fit'), value: pred.rainfallFit ? t(pred.rainfallFit.toLowerCase(), pred.rainfallFit) : 'N/A', positive: pred.rainfallFit === 'High' },
           ].map((stat, i) => (
             <div key={i} className="flex flex-col items-center p-2.5 bg-white/70 dark:bg-black/20 rounded-xl border border-slate-100 dark:border-white/5">
               <span className="text-[10px] text-slate-500 mb-1 flex items-center gap-1 font-bold uppercase tracking-wide">
@@ -139,10 +165,10 @@ const CropCard = ({ pred, idx, isRecommended }) => {
         </div>
       )}
 
-      {!isRecommended && pred.avoidReason && (
+      {!isRecommended && translatedAvoidReason && (
         <div className="flex items-start gap-2 text-sm border-l-4 border-red-500 pl-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-r-xl mb-3">
           <Ban className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-          <span className="text-red-800 dark:text-red-200 font-medium">{pred.avoidReason}</span>
+          <span className="text-red-800 dark:text-red-200 font-medium">{translatedAvoidReason}</span>
         </div>
       )}
 
@@ -166,13 +192,39 @@ const CropCard = ({ pred, idx, isRecommended }) => {
   );
 };
 
-const ResultsCards = ({ recommendedCrops, avoidCrops }) => {
+const ResultsCards = ({ recommendedCrops, avoidCrops, targetCropResult }) => {
+  const { t } = useTranslation();
   if ((!recommendedCrops || recommendedCrops.length === 0) && (!avoidCrops || avoidCrops.length === 0)) {
     return null;
   }
 
   return (
     <div className="flex flex-col gap-8 w-full">
+
+      {/* ── Outer Target Crop Section Card ── */}
+      {targetCropResult && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 80 }}
+          className="glass-panel p-6 border-l-4 border-blue-500 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10"
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <motion.div
+              className="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center"
+            >
+              <span className="text-xl">🎯</span>
+            </motion.div>
+            <div>
+              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">{t('your_selected_target', 'Your Selected Target Crop')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('viability_analysis', 'Viability analysis for your specifically requested crop')}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <CropCard pred={targetCropResult} idx={0} isRecommended={targetCropResult.confidence >= 40} />
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Outer Recommended Section Card ── */}
       {recommendedCrops && recommendedCrops.length > 0 && (
@@ -191,8 +243,8 @@ const ResultsCards = ({ recommendedCrops, avoidCrops }) => {
               <Sprout className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
             <div>
-              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">Highly Recommended Crops</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Based on your soil chemistry, climate, and market data</p>
+              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">{t('highly_recommended', 'Highly Recommended Crops')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('based_on_soil', 'Based on your soil chemistry, climate, and market data')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -220,8 +272,8 @@ const ResultsCards = ({ recommendedCrops, avoidCrops }) => {
               <Ban className="w-6 h-6 text-red-600 dark:text-red-400" />
             </motion.div>
             <div>
-              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">Crops to Avoid</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Low probability of success with your current profile</p>
+              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">{t('crops_to_avoid', 'Crops to Avoid')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('low_probability', 'Low probability of success with your current profile')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

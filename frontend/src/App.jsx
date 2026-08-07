@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -18,6 +19,20 @@ import Settings from './pages/Settings';
 import CatalogPage from './pages/CatalogPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
+const LANGUAGES = [
+  { code: 'en', label: '🇬🇧 English' },
+  { code: 'hi', label: '🇮🇳 हिन्दी (Hindi)' },
+  { code: 'mr', label: '🇮🇳 मराठी (Marathi)' },
+  { code: 'ta', label: '🇮🇳 தமிழ் (Tamil)' },
+  { code: 'te', label: '🇮🇳 తెలుగు (Telugu)' },
+  { code: 'kn', label: '🇮🇳 ಕನ್ನಡ (Kannada)' },
+  { code: 'gu', label: '🇮🇳 ગુજરાતી (Gujarati)' },
+  { code: 'bn', label: '🇮🇳 বাংলা (Bengali)' },
+  { code: 'pa', label: '🇮🇳 ਪੰਜਾਬੀ (Punjabi)' },
+  { code: 'ml', label: '🇮🇳 മലയാളം (Malayalam)' },
+  { code: 'or', label: '🇮🇳 ଓଡ଼ିଆ (Odia)' },
+];
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -25,13 +40,22 @@ const ProtectedRoute = ({ children }) => {
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/" /> : children;
+  return isAuthenticated ? <Navigate to="/dashboard" /> : children;
 };
 
 // Inner wrapper so we can access location for public/private layout split
 const AppShell = () => {
+  const { t, i18n } = useTranslation();
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+
+  // Language state — lifted here so TopBar and Dashboard share it
+  const [language, setLanguage] = useState(i18n.language || 'en');
+
+  const handleLanguageChange = useCallback((langCode) => {
+    setLanguage(langCode);
+    i18n.changeLanguage(langCode);
+  }, [i18n]);
 
   // Location/weather state lives here so TopBar and Dashboard share it
   const [useLiveWeather, setUseLiveWeather] = useState(false);
@@ -46,7 +70,7 @@ const AppShell = () => {
         return;
       }
       setLocLoading(true);
-      const loadToast = toast.loading('Getting location…');
+      const loadToast = toast.loading(t('getting_location', 'Getting location…'));
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
@@ -54,18 +78,18 @@ const AppShell = () => {
           setLocationCoords({ lat, lon });
           setUseLiveWeather(true);
           setLocLoading(false);
-          toast.success('Location synced!', { id: loadToast });
+          toast.success(t('location_synced', 'Location synced!'), { id: loadToast });
           axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
             .then(res => {
               const addr = res.data.address || {};
               const city = addr.city || addr.town || addr.village || addr.county || '';
               const state = addr.state || addr.country || '';
-              setLocationName(state ? `${city}, ${state}` : city || 'Your Location');
+              setLocationName(state ? `${city}, ${state}` : city || t('your_location', 'Your Location'));
             })
-            .catch(() => setLocationName('Your Location'));
+            .catch(() => setLocationName(t('your_location', 'Your Location')));
         },
         () => {
-          toast.error('Location access denied', { id: loadToast });
+          toast.error(t('location_denied', 'Location access denied'), { id: loadToast });
           setLocLoading(false);
         }
       );
@@ -74,7 +98,7 @@ const AppShell = () => {
       setLocationCoords({ lat: null, lon: null });
       setLocationName('');
     }
-  }, [useLiveWeather]);
+  }, [useLiveWeather, t]);
 
   const isPublicPage = ['/', '/login', '/signup'].includes(location.pathname);
 
@@ -96,11 +120,14 @@ const AppShell = () => {
             toggleLiveWeather={toggleLiveWeather}
             locationName={locationName}
             locLoading={locLoading}
+            language={language}
+            languages={LANGUAGES}
+            onLanguageChange={handleLanguageChange}
           />
         </>
       )}
 
-      {/* Public layout: old minimal navbar */}
+      {/* Public layout: minimal navbar — never shows "Go to Dashboard" */}
       {(!isAuthenticated || isPublicPage) && (
         <nav className="sticky top-4 z-50 mx-4 md:mx-auto max-w-4xl bg-white/20 dark:bg-[#1B2A17]/30 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.15)] rounded-[2rem] px-6 py-3 flex justify-between items-center mb-8">
           <span className="font-extrabold font-poppins text-farm-primary flex items-center gap-2 text-xl">
@@ -108,19 +135,19 @@ const AppShell = () => {
           </span>
           <div className="flex gap-3 text-sm font-semibold">
             {isAuthenticated ? (
-              <Link to="/dashboard" className="glass-button !py-1.5 !px-4 !text-sm">Go to Dashboard</Link>
+              <Link to="/dashboard" className="glass-button !py-1.5 !px-4 !text-sm">{t('go_to_dashboard', 'Go to Dashboard')}</Link>
             ) : (
               <>
-                <Link to="/login" className="text-slate-700 dark:text-slate-300 hover:text-farm-primary transition-colors px-3 py-1.5">Login</Link>
-                <Link to="/signup" className="glass-button !py-1.5 !px-4 !text-sm">Sign Up</Link>
+                <Link to="/login" className="text-slate-700 dark:text-slate-300 hover:text-farm-primary transition-colors px-3 py-1.5">{t('log_in', 'Login')}</Link>
+                <Link to="/signup" className="glass-button !py-1.5 !px-4 !text-sm">{t('sign_up', 'Sign Up')}</Link>
               </>
             )}
           </div>
         </nav>
       )}
 
-      {/* Page Content */}
-      <main className={isAuthenticated && !isPublicPage ? 'pl-20 pt-32' : ''}>
+      {/* Page Content — responsive padding */}
+      <main className={isAuthenticated && !isPublicPage ? 'pt-24 px-2 md:pl-20 md:pt-32 md:px-0' : ''}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
@@ -131,6 +158,7 @@ const AppShell = () => {
                 externalUseLiveWeather={useLiveWeather}
                 externalLocation={locationCoords}
                 externalLocationName={locationName}
+                language={language}
               />
             </ProtectedRoute>
           } />

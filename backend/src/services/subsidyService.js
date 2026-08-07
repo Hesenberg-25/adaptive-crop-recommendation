@@ -1,58 +1,86 @@
-// backend/src/services/subsidyService.js
+const Groq = require('groq-sdk');
 
-const governmentSchemes = require('../data/governmentSchemes.json');
+async function getDynamicSubsidiesForCrops(cropsArray) {
+    if (!cropsArray || cropsArray.length === 0) return [];
+    
+    const cropNames = cropsArray.map(c => c.name || c);
+    
+    try {
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) throw new Error("Missing GROQ_API_KEY");
 
-/**
- * Matches a recommended crop to all relevant government subsidies & schemes.
- * Returns universal schemes (available to ALL farmers) plus any crop-specific ones.
- *
- * @param {string} cropName - The name of the recommended crop (e.g., "rice", "maize")
- * @returns {{ universal: Array, cropSpecific: Array, totalSchemes: number, estimatedBenefitSummary: string }}
- */
-function getSubsidiesForCrop(cropName) {
-    const normalizedCrop = cropName.toLowerCase().trim();
+        const groq = new Groq({ apiKey: apiKey });
 
-    // 1. Universal schemes every farmer can access
-    const universal = governmentSchemes.universal || [];
+        const prompt = `You are a real-time agricultural economics AI. Provide government schemes and subsidies in India for these specific crops: ${cropNames.join(', ')}.
 
-    // 2. Crop-specific schemes
-    const cropSpecific = governmentSchemes.crop_specific[normalizedCrop] || [];
+Return ONLY a valid JSON object matching this structure:
+{
+  "universal": [
+    { "name": "Scheme Name", "benefitType": "Type (e.g., Financial Assistance)", "details": "Description", "link": "https://official-government-portal-url.gov.in" }
+  ],
+  "crop_specific": {
+    "cropname1": [
+      { "name": "Scheme Name", "benefitType": "Type (e.g., Price Guarantee)", "details": "Description", "link": "https://official-government-portal-url.gov.in" }
+    ],
+    "cropname2": []
+  }
+}
 
-    // 3. Build a human-readable benefit summary
-    const totalSchemes = universal.length + cropSpecific.length;
-    let estimatedBenefitSummary = '';
+Do not include any markdown or text outside the JSON.`;
 
-    if (cropSpecific.length > 0) {
-        const priceGuarantee = cropSpecific.find(s => s.benefitType === 'Price Guarantee');
-        const inputSubsidy = cropSpecific.find(s => s.benefitType === 'Input Subsidy');
+        console.log(`[Groq] Fetching dynamic government schemes...`);
 
-        const parts = [`${totalSchemes} government schemes available`];
-        if (priceGuarantee) parts.push(`MSP price guarantee active`);
-        if (inputSubsidy) parts.push(`input subsidies available`);
-        estimatedBenefitSummary = parts.join(' · ');
-    } else {
-        estimatedBenefitSummary = `${totalSchemes} universal schemes available (no crop-specific schemes found for ${normalizedCrop})`;
+        const response = await groq.chat.completions.create({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'llama-3.3-70b-versatile',
+            temperature: 0.2,
+            response_format: { type: 'json_object' }
+        });
+
+        const jsonString = response.choices[0]?.message?.content || "{}";
+        const governmentSchemes = JSON.parse(jsonString);
+        
+        return cropNames.map(cropName => {
+            const normalizedCrop = cropName.toLowerCase().trim();
+            const universal = governmentSchemes.universal || [];
+            const cropSpecific = (governmentSchemes.crop_specific && governmentSchemes.crop_specific[normalizedCrop]) || [];
+            
+            const totalSchemes = universal.length + cropSpecific.length;
+            let estimatedBenefitSummary = '';
+
+            if (cropSpecific.length > 0) {
+                const priceGuarantee = cropSpecific.find(s => s.benefitType && s.benefitType.toLowerCase().includes('price'));
+                const inputSubsidy = cropSpecific.find(s => s.benefitType && s.benefitType.toLowerCase().includes('input'));
+
+                const parts = [`${totalSchemes} government schemes available`];
+                if (priceGuarantee) parts.push(`MSP price guarantee active`);
+                if (inputSubsidy) parts.push(`input subsidies available`);
+                estimatedBenefitSummary = parts.join(' · ');
+            } else {
+                estimatedBenefitSummary = `${totalSchemes} universal schemes available (no crop-specific schemes found for ${normalizedCrop})`;
+            }
+
+            return {
+                crop: cropName,
+                universal,
+                cropSpecific,
+                totalSchemes,
+                estimatedBenefitSummary
+            };
+        });
+
+    } catch (error) {
+        console.error("Error fetching dynamic subsidies:", error.message);
+        
+        // Fallback
+        return cropNames.map(cropName => ({
+            crop: cropName,
+            universal: [{ "name": "PM-KISAN", "benefitType": "Financial Assistance", "details": "Income support for farmers" }],
+            cropSpecific: [],
+            totalSchemes: 1,
+            estimatedBenefitSummary: "1 universal scheme available"
+        }));
     }
-
-    return {
-        universal,
-        cropSpecific,
-        totalSchemes,
-        estimatedBenefitSummary
-    };
 }
 
-/**
- * Fetches subsidies for multiple crops at once (for Top-3 recommendations).
- *
- * @param {Array<{name: string}>} topCrops - Array of crop objects with a `name` property
- * @returns {Array<{ crop: string, subsidies: object }>}
- */
-function getSubsidiesForMultipleCrops(topCrops) {
-    return topCrops.map(crop => ({
-        crop: crop.name,
-        ...getSubsidiesForCrop(crop.name)
-    }));
-}
-
-module.exports = { getSubsidiesForCrop, getSubsidiesForMultipleCrops };
+module.exports = { getDynamicSubsidiesForCrops };

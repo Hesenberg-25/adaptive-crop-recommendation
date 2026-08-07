@@ -15,11 +15,13 @@
     "axios": "^1.18.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.43.0",
+    "i18next": "^26.3.6",
     "lucide-react": "^1.27.0",
     "postcss": "^8.5.25",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hot-toast": "^2.6.0",
+    "react-i18next": "^17.0.11",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.2",
     "tailwindcss": "^4.3.3"

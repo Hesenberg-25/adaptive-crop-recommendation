@@ -1,6 +1,6 @@
 const Groq = require('groq-sdk');
 
-async function getComprehensiveAnalysis(inputs, recommendedCrops, avoidCrops, shapImportance, technique = 'monocropping', risks = [], language = 'en') {
+async function getComprehensiveAnalysis(inputs, recommendedCrops, avoidCrops, shapImportance, technique = 'monocropping', risks = [], language = 'en', farmSize = null, primaryCrops = null, targetCropResult = null) {
     const recNames = recommendedCrops.map(c => c.name.charAt(0).toUpperCase() + c.name.slice(1)).join(', ') || 'None';
     const avoidNames = avoidCrops.map(c => c.name.charAt(0).toUpperCase() + c.name.slice(1)).join(', ') || 'None';
 
@@ -25,11 +25,16 @@ FARM DATA:
 - Crops to Avoid (low viability / high risk): ${avoidNames}
 - Key Feature Importances from ML Model: ${JSON.stringify(shapImportance)}
 - Farming Technique Selected: ${technique}
+- Farmer's Total Farm Size (Acres): ${farmSize || 'Not specified'}
+- Farmer's Existing Primary Crops: ${primaryCrops || 'Not specified'}
+- Farmer's Specifically Targetted Crop (if any): ${targetCropResult ? targetCropResult.name : 'None'}
 
 IMPORTANT INSTRUCTIONS:
 - Be highly specific and detailed. Do NOT give generic advice.
 - Reference the exact numeric values from the data to justify every recommendation.
 - For each recommended crop, write AT LEAST 3 rich paragraphs covering: (1) why this crop's soil chemistry requirements precisely match the given N/P/K and pH, (2) ideal growth timeline, sowing window, and expected harvesting period for the Indian context, (3) water management strategy given the rainfall level, and (4) current market opportunity and what price this crop fetches.
+- Note how their Farm Size might influence economics of scale for these crops, and if their Existing Primary Crops offer good crop rotation opportunities.
+- If a Target Crop was specified, explicitly address its viability in a separate paragraph.
 - For each crop to avoid, give a thorough explanation of exactly which parameter(s) are out of range and what specific agronomic consequence that will have (e.g., yellowing, root burn, low germination, fungal susceptibility).
 
 Generate a detailed markdown report strictly with these two sections (no intro/outro, no extra commentary):
