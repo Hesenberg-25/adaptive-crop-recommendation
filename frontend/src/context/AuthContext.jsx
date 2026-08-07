@@ -6,12 +6,16 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [user, setUser] = useState(null); // Could decode JWT or fetch user details here
+  const getInitialToken = () => {
+    const t = sessionStorage.getItem('token');
+    return (t && t !== 'null' && t !== 'undefined') ? t : null;
+  };
+  const [token, setToken] = useState(getInitialToken());
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem('token', token);
+      sessionStorage.setItem('token', token);
       axios.get(`${import.meta.env.VITE_API_URL}/api/farmer/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -22,12 +26,12 @@ export const AuthProvider = ({ children }) => {
         console.error("Error fetching user profile", err);
         if (err.response && (err.response.status === 401 || err.response.status === 403)) {
           setToken(null);
-          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
           setUser(null);
         }
       });
     } else {
-      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
       setUser(null);
     }
   }, [token]);
@@ -38,6 +42,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setToken(null);
+    sessionStorage.removeItem('token');
   };
 
   return (

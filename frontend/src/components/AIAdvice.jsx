@@ -2,8 +2,10 @@ import React from 'react';
 import { Sparkles, Leaf } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from 'react-i18next';
 
 const AIAdvice = ({ adviceText }) => {
+  const { t } = useTranslation();
   if (!adviceText) return null;
 
   return (
@@ -22,8 +24,8 @@ const AIAdvice = ({ adviceText }) => {
           <Sparkles className="w-6 h-6 text-white" />
         </motion.div>
         <div>
-          <div className="text-white font-bold text-lg font-poppins">Expert AI Insights</div>
-          <div className="text-emerald-200 text-xs">Powered by AI Agronomist Engine</div>
+          <div className="text-white font-bold text-lg font-poppins">{t('expert_ai_insights', 'Expert AI Insights')}</div>
+          <div className="text-emerald-200 text-xs">{t('powered_by_ai', 'Powered by AI Agronomist Engine')}</div>
         </div>
         <motion.div
           className="ml-auto"

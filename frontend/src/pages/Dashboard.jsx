@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -13,54 +13,55 @@ import { useLocation } from 'react-router-dom';
 
 import axios from 'axios';
 
-const LANGUAGES = [
-  { code: 'en', label: '🇬🇧 English' },
-  { code: 'hi', label: '🇮🇳 हिन्दी (Hindi)' },
-  { code: 'mr', label: '🇮🇳 मराठी (Marathi)' },
-  { code: 'ta', label: '🇮🇳 தமிழ் (Tamil)' },
-  { code: 'te', label: '🇮🇳 తెలుగు (Telugu)' },
-  { code: 'kn', label: '🇮🇳 ಕನ್ನಡ (Kannada)' },
-  { code: 'gu', label: '🇮🇳 ગુજરાતી (Gujarati)' },
-  { code: 'bn', label: '🇮🇳 বাংলা (Bengali)' },
-  { code: 'pa', label: '🇮🇳 ਪੰਜਾਬੀ (Punjabi)' },
-  { code: 'ml', label: '🇮🇳 മലയാളം (Malayalam)' },
-  { code: 'or', label: '🇮🇳 ଓଡ଼ିଆ (Odia)' },
-  { code: 'es', label: '🇪🇸 Español' },
-  { code: 'fr', label: '🇫🇷 Français' }
-];
+// SessionStorage helpers
+const STORAGE_KEY = 'agrivision_dashboard';
+const saveState = (state) => {
+  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+};
+const loadState = () => {
+  try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
+};
 
-const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationName }) => {
+const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationName, language: langProp }) => {
   const { t, i18n } = useTranslation();
   const { token } = useAuth();
   const locationState = useLocation().state || {};
   const isJustLoggedIn = locationState.justLoggedIn;
-  
-  const [inputs, setInputs] = useState({
+
+  // Restore state from sessionStorage
+  const saved = loadState();
+
+  const [inputs, setInputs] = useState(saved?.inputs || {
     N: 90, P: 42, K: 43, pH: 6.5, temperature: 24, humidity: 82, rainfall: 220
   });
-  const [droughtReduction, setDroughtReduction] = useState(0);
+  const [droughtReduction, setDroughtReduction] = useState(saved?.droughtReduction || 0);
   
   // Location/weather — driven by TopBar via props
   const useLiveWeather = externalUseLiveWeather || false;
   const location = externalLocation || { lat: null, lon: null };
   const locationName = externalLocationName || '';
   const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState(t('run_prediction', 'Run Prediction'));
-  const [results, setResults] = useState(null);
-  const [season, setSeason] = useState('auto');
-  const [isIrrigated, setIsIrrigated] = useState(false);
-  const [technique, setTechnique] = useState('monocropping');
-  const [soilType, setSoilType] = useState('');
-  const [language, setLanguage] = useState('en');
+  const [loadingText, setLoadingText] = useState('run_prediction');
+  const [results, setResults] = useState(saved?.results || null);
+  const [season, setSeason] = useState(saved?.season || 'auto');
+  const [isIrrigated, setIsIrrigated] = useState(saved?.isIrrigated || false);
+  const [technique, setTechnique] = useState(saved?.technique || 'monocropping');
+  const [soilType, setSoilType] = useState(saved?.soilType || '');
+  const language = langProp || 'en';
   
-  // New States for Target Crop Feature
-  const [cropCategory, setCropCategory] = useState('');
-  const [targetCrop, setTargetCrop] = useState('');
+  // Target Crop Feature
+  const [cropCategory, setCropCategory] = useState(saved?.cropCategory || '');
+  const [targetCrop, setTargetCrop] = useState(saved?.targetCrop || '');
   const [userProfile, setUserProfile] = useState({});
   
   // UI Toggles for Results
   const [showAI, setShowAI] = useState(false);
   const [showGovt, setShowGovt] = useState(false);
+
+  // Persist state to sessionStorage on changes
+  useEffect(() => {
+    saveState({ inputs, droughtReduction, season, isIrrigated, technique, soilType, cropCategory, targetCrop, results });
+  }, [inputs, droughtReduction, season, isIrrigated, technique, soilType, cropCategory, targetCrop, results]);
 
   // Weather Code helper
   const getWeatherEmoji = (code) => {
@@ -83,8 +84,11 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
         });
         if (response.data) {
           setUserProfile(response.data);
-          if (response.data.soil_type) setSoilType(response.data.soil_type);
-          if (response.data.irrigation_type) setIsIrrigated(response.data.irrigation_type === 'irrigated');
+          // Only set from profile if no saved state
+          if (!saved) {
+            if (response.data.soil_type) setSoilType(response.data.soil_type);
+            if (response.data.irrigation_type) setIsIrrigated(response.data.irrigation_type === 'irrigated');
+          }
         }
       } catch (_error) {
         // Ignored
@@ -101,19 +105,18 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
     setLoading(true);
     
     const loadingStates = [
-      t('initializing_ml', "Initializing ML Engine..."),
-      t('running_knn', "Running K-Nearest Neighbors..."),
-      t('calculating_shap', "Calculating SHAP Feature Importance..."),
-      t('scraping_market', "Live Web-Scraping for Market Prices..."),
-      t('generating_report', "Generating Expert Agronomist Report..."),
-      t('finalizing', "Finalizing Results...")
+      'initializing_ml',
+      'running_knn',
+      'calculating_shap',
+      'scraping_market',
+      'generating_report',
+      'finalizing'
     ];
     let stateIndex = 0;
     setLoadingText(loadingStates[stateIndex]);
     
     const intervalId = setInterval(() => {
       stateIndex = (stateIndex + 1) % loadingStates.length;
-      if (stateIndex === loadingStates.length - 1) clearInterval(intervalId);
       setLoadingText(loadingStates[stateIndex]);
     }, 1200);
 
@@ -140,16 +143,13 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
       
       clearInterval(intervalId);
       setResults(response.data);
-      if (response.data.detectedLanguage) {
-        setLanguage(response.data.detectedLanguage);
-      }
       toast.success(t('prediction_success', 'Prediction generated & saved to database!'));
     } catch (error) {
       clearInterval(intervalId);
       toast.error(error.response?.data?.error || t('prediction_failed', 'Failed to generate prediction'));
     } finally {
       setLoading(false);
-      setLoadingText(t('run_prediction', 'Run Prediction'));
+      setLoadingText('run_prediction');
     }
   };
 
@@ -170,13 +170,13 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
       variants={isJustLoggedIn ? crazyVariants : {}}
       initial={isJustLoggedIn ? "hidden" : false}
       animate={isJustLoggedIn ? "visible" : false}
-      className="container mx-auto px-4 max-w-[85rem] pb-44"
+      className="container mx-auto px-3 md:px-4 max-w-[85rem] pb-28 md:pb-44"
     >
-      <header className="mb-10 text-center">
+      <header className="mb-6 md:mb-10 text-center">
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-extrabold font-playfair mb-2 flex items-center justify-center gap-4"
+          className="text-2xl md:text-4xl font-extrabold font-playfair mb-2 flex items-center justify-center gap-2 md:gap-4"
         >
           <span>
             <span className="text-farm-primary dark:text-farm-text-heading transition-colors">{t('adaptive_crop_rec', 'Adaptive Crop')}</span>{' '}
@@ -187,41 +187,18 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-farm-text-body font-lora text-lg italic"
+          className="text-farm-text-body font-lora text-sm md:text-lg italic"
         >
-          Configure your soil parameters and get real-time AI recommendations
+          {t('configure_soil', 'Configure your soil parameters and get real-time AI recommendations')}
         </motion.p>
-
-        <div className="mt-4 flex flex-wrap justify-center items-center gap-2">
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <span>🌐 {t('language', 'Language')}:</span>
-          </label>
-          <select
-            value={language}
-            onChange={(e) => {
-              setLanguage(e.target.value);
-              i18n.changeLanguage(e.target.value);
-            }}
-            className="px-3 py-1.5 rounded-xl text-sm font-medium bg-white/80 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-          >
-            {LANGUAGES.map(lang => (
-              <option key={lang.code} value={lang.code}>{lang.label}</option>
-            ))}
-          </select>
-          {results?.detectedRegion && (
-            <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-semibold border border-emerald-300 dark:border-emerald-700">
-              📍 Auto-detected ({results.detectedRegion})
-            </span>
-          )}
-        </div>
       </header>
 
-      <div className="flex flex-col gap-8 items-center w-full mx-auto">
+      <div className="flex flex-col gap-6 md:gap-8 items-center w-full mx-auto">
         {/* Top Section - Inputs & Simulator Side-by-Side */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8"
+          className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8"
         >
           {/* Left Column: Inputs */}
           <div className="flex flex-col gap-6">
@@ -259,17 +236,15 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-5 text-xl flex justify-center items-center font-poppins relative overflow-hidden rounded-3xl bg-gradient-to-r from-farm-accent-gold to-farm-accent-orange text-white dark:text-[#10190F] font-bold shadow-[0_8px_32px_rgba(201,118,12,0.4)] hover:shadow-[0_8px_40px_rgba(201,118,12,0.6)] transition-all"
+              className="w-full py-4 md:py-5 text-lg md:text-xl flex justify-center items-center font-poppins relative overflow-hidden rounded-3xl bg-gradient-to-r from-farm-accent-gold to-farm-accent-orange text-white dark:text-[#10190F] font-bold shadow-[0_8px_32px_rgba(201,118,12,0.4)] hover:shadow-[0_8px_40px_rgba(201,118,12,0.6)] transition-all"
             >
               {loading && <Loader2 className="w-6 h-6 animate-spin mr-3" />}
               <span className="flex items-center gap-3">
-                {loadingText} {!loading && <span className="text-2xl">🚀</span>}
+                {t(loadingText)} {!loading && <span className="text-2xl">🚀</span>}
               </span>
             </motion.button>
           </div>
         </motion.div>
-
-
 
         {/* Bottom Section - Results */}
         <motion.div 
@@ -278,29 +253,29 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
           className="w-full flex flex-col gap-6"
         >
           {results ? (
-            <div className="w-full flex flex-col gap-10">
+            <div className="w-full flex flex-col gap-8 md:gap-10">
               
               {/* Extra Data Card */}
-              <div className="glass-panel p-6 bg-gradient-to-r from-farm-primary-light/10 to-transparent border-l-4 border-farm-primary">
-                <h3 className="text-xl font-bold font-poppins text-farm-primary mb-4 flex items-center gap-2">
-                  <span className="text-2xl">📋</span> Cropping Profile
+              <div className="glass-panel p-4 md:p-6 bg-gradient-to-r from-farm-primary-light/10 to-transparent border-l-4 border-farm-primary">
+                <h3 className="text-lg md:text-xl font-bold font-poppins text-farm-primary mb-4 flex items-center gap-2">
+                  <span className="text-2xl">📋</span> {t('cropping_profile', 'Cropping Profile')}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                   <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Season</div>
-                    <div className="text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{results.weatherUsed?.season || season || 'Auto'}</div>
+                    <div className="text-xs text-slate-500 uppercase font-bold">{t('season', 'Season')}</div>
+                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{results.weatherUsed?.season || season || 'Auto'}</div>
                   </div>
                   <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Irrigation</div>
-                    <div className="text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{isIrrigated ? 'Irrigated' : 'Rainfed'}</div>
+                    <div className="text-xs text-slate-500 uppercase font-bold">{t('irrigation', 'Irrigation')}</div>
+                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{isIrrigated ? t('fully_irrigated', 'Irrigated') : t('rainfed', 'Rainfed')}</div>
                   </div>
                   <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Style</div>
-                    <div className="text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{technique}</div>
+                    <div className="text-xs text-slate-500 uppercase font-bold">{t('technique', 'Style')}</div>
+                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{t(technique, technique)}</div>
                   </div>
                   <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Soil Type</div>
-                    <div className="text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{soilType || 'Mixed'}</div>
+                    <div className="text-xs text-slate-500 uppercase font-bold">{t('soil_type', 'Soil Type')}</div>
+                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{soilType || t('mixed', 'Mixed')}</div>
                   </div>
                 </div>
               </div>
@@ -308,17 +283,17 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
               {/* 16-Day Weather Forecast */}
               {results.weatherUsed?.dailyForecast && (
                 <section className="w-full">
-                  <h3 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-3xl">🌤️</span> 16-Day Weather Forecast
+                  <h3 className="text-xl md:text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="text-3xl">🌤️</span> {t('weather_forecast', '16-Day Weather Forecast')}
                   </h3>
-                  <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar">
+                  <div className="flex overflow-x-auto gap-3 md:gap-4 pb-4 snap-x">
                     {results.weatherUsed.dailyForecast.map((day, idx) => (
-                      <div key={idx} className="snap-start shrink-0 w-32 bg-white dark:bg-[#1B2A17] p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm flex flex-col items-center justify-center gap-2">
-                        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                          {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      <div key={idx} className="snap-start shrink-0 w-28 md:w-32 bg-white dark:bg-[#1B2A17] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm flex flex-col items-center justify-center gap-2">
+                        <span className="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400">
+                          {new Date(day.date).toLocaleDateString(i18n.language || 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                         </span>
-                        <span className="text-4xl my-2">{getWeatherEmoji(day.weatherCode)}</span>
-                        <div className="flex gap-3 text-sm font-bold font-mono">
+                        <span className="text-3xl md:text-4xl my-1 md:my-2">{getWeatherEmoji(day.weatherCode)}</span>
+                        <div className="flex gap-2 md:gap-3 text-sm font-bold font-mono">
                           <span className="text-red-500">{Math.round(day.maxTemp)}°</span>
                           <span className="text-blue-500">{Math.round(day.minTemp)}°</span>
                         </div>
@@ -340,19 +315,19 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
                 />
               </section>
               
-              {/* Pest & Disease Alerts (Standalone Card) */}
+              {/* Pest & Disease Alerts */}
               {results.alerts && results.alerts.length > 0 && (
                 <section className="w-full">
-                  <h3 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-3xl">🐛</span> Pest & Disease Risk
+                  <h3 className="text-xl md:text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="text-3xl">🐛</span> {t('pest_disease_risk', 'Pest & Disease Risk')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {results.alerts.map((alert, idx) => (
-                      <div key={idx} className={`p-5 rounded-2xl border-l-4 shadow-md ${alert.severity === 'high' ? 'bg-red-50 dark:bg-[#2A1414] border-red-500' : 'bg-amber-50 dark:bg-[#2B2212] border-amber-500'}`}>
-                        <div className="font-bold mb-3 flex items-center justify-between text-lg">
+                      <div key={idx} className={`p-4 md:p-5 rounded-2xl border-l-4 shadow-md ${alert.severity === 'high' ? 'bg-red-50 dark:bg-[#2A1414] border-red-500' : 'bg-amber-50 dark:bg-[#2B2212] border-amber-500'}`}>
+                        <div className="font-bold mb-3 flex items-center justify-between text-base md:text-lg">
                           <span className={alert.severity === 'high' ? 'text-red-800 dark:text-red-400' : 'text-amber-800 dark:text-amber-400'}>{alert.risk}</span>
                           <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider ${alert.severity === 'high' ? 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-200' : 'bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200'}`}>
-                            {alert.severity} RISK
+                            {alert.severity} {t('risk', 'RISK')}
                           </span>
                         </div>
                         <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
@@ -365,18 +340,22 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
               )}
 
               {/* Action Buttons (AI & Govt Schemes) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
                 <button 
                   onClick={() => { setShowAI(!showAI); setShowGovt(false); }}
-                  className={`py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${showAI ? 'bg-emerald-600 text-white shadow-inner shadow-black/20' : 'bg-white dark:bg-[#1B2A17] text-slate-800 dark:text-white border-2 border-emerald-500/30 hover:border-emerald-500 shadow-md'}`}
+                  className={`py-3 md:py-4 px-4 md:px-6 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 transition-all ${showAI ? 'bg-emerald-600 text-white shadow-inner shadow-black/20' : 'bg-white dark:bg-[#1B2A17] text-slate-800 dark:text-white border-2 border-emerald-500/30 hover:border-emerald-500 shadow-md'}`}
                 >
-                  🤖 {showAI ? 'Hide AI Advice' : 'View AI Predictions & Advice'}
+                  <span className="flex items-center gap-2">
+                    🤖 {showAI ? t('hide_ai_advice', 'Hide AI Advice') : t('view_ai_predictions', 'View AI Predictions & Advice')}
+                  </span>
                 </button>
                 <button 
                   onClick={() => { setShowGovt(!showGovt); setShowAI(false); }}
-                  className={`py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${showGovt ? 'bg-blue-600 text-white shadow-inner shadow-black/20' : 'bg-white dark:bg-[#1B2A17] text-slate-800 dark:text-white border-2 border-blue-500/30 hover:border-blue-500 shadow-md'}`}
+                  className={`py-3 md:py-4 px-4 md:px-6 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 transition-all ${showGovt ? 'bg-blue-600 text-white shadow-inner shadow-black/20' : 'bg-white dark:bg-[#1B2A17] text-slate-800 dark:text-white border-2 border-blue-500/30 hover:border-blue-500 shadow-md'}`}
                 >
-                  🏛️ {showGovt ? 'Hide Govt Schemes' : 'View Govt Schemes'}
+                  <span className="flex items-center gap-2">
+                    🏛️ {showGovt ? t('hide_govt_schemes', 'Hide Govt Schemes') : t('view_govt_schemes', 'View Govt Schemes')}
+                  </span>
                 </button>
               </div>
 
@@ -387,8 +366,8 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
                   animate={{ opacity: 1, height: 'auto' }} 
                   className="w-full overflow-hidden"
                 >
-                  <h3 className="text-2xl font-bold font-poppins text-emerald-700 dark:text-emerald-400 mb-4 flex items-center gap-2">
-                    Expert AI Insights
+                  <h3 className="text-xl md:text-2xl font-bold font-poppins text-emerald-700 dark:text-emerald-400 mb-4 flex items-center gap-2">
+                    {t('expert_ai_insights', 'Expert AI Insights')}
                   </h3>
                   <AIAdvice adviceText={results.aiAdvice} />
                 </motion.section>
@@ -400,8 +379,8 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
                   animate={{ opacity: 1, height: 'auto' }} 
                   className="w-full overflow-hidden"
                 >
-                  <h3 className="text-2xl font-bold font-poppins text-blue-700 dark:text-blue-400 mb-4 flex items-center gap-2">
-                    Government Schemes & Subsidies
+                  <h3 className="text-xl md:text-2xl font-bold font-poppins text-blue-700 dark:text-blue-400 mb-4 flex items-center gap-2">
+                    {t('government_schemes', 'Government Schemes & Subsidies')}
                   </h3>
                   <GovernmentSchemes subsidyData={results.governmentSubsidies?.[0]} />
                 </motion.section>
@@ -409,8 +388,8 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
 
             </div>
           ) : (
-            <div className="glass-panel h-full min-h-[400px] flex items-center justify-center text-slate-500 dark:text-slate-400 font-lora italic">
-              Run a prediction to see AI results here.
+            <div className="glass-panel h-full min-h-[250px] md:min-h-[400px] flex items-center justify-center text-slate-500 dark:text-slate-400 font-lora italic text-sm md:text-base">
+              {t('run_prediction_hint', 'Run a prediction to see AI results here.')}
             </div>
           )}
         </motion.div>

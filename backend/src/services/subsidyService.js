@@ -16,11 +16,11 @@ async function getDynamicSubsidiesForCrops(cropsArray) {
 Return ONLY a valid JSON object matching this structure:
 {
   "universal": [
-    { "name": "Scheme Name", "benefitType": "Type (e.g., Financial Assistance)", "details": "Description" }
+    { "name": "Scheme Name", "benefitType": "Type (e.g., Financial Assistance)", "details": "Description", "link": "https://official-government-portal-url.gov.in" }
   ],
   "crop_specific": {
     "cropname1": [
-      { "name": "Scheme Name", "benefitType": "Type (e.g., Price Guarantee)", "details": "Description" }
+      { "name": "Scheme Name", "benefitType": "Type (e.g., Price Guarantee)", "details": "Description", "link": "https://official-government-portal-url.gov.in" }
     ],
     "cropname2": []
   }

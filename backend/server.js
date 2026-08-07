@@ -259,7 +259,49 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             const targetLower = targetCrop.toLowerCase();
             const foundRec = recommendedWithROI.find(c => c.name.toLowerCase() === targetLower);
             const foundAvoid = avoidWithROI.find(c => c.name.toLowerCase() === targetLower);
-            targetCropResult = foundRec || foundAvoid || null;
+            if (foundRec) {
+                targetCropResult = foundRec;
+            } else if (foundAvoid) {
+                targetCropResult = foundAvoid;
+            } else {
+                let foundAny = allCropsWithROI.find(c => c.name.toLowerCase() === targetLower);
+                if (foundAny) {
+                    foundAny = { ...foundAny, isMarginal: foundAny.confidence < threshold };
+                    if (!foundAny.isMarginal) {
+                        targetCropResult = foundAny;
+                    } else {
+                        const cropData = trainingData.filter(d => d.label.toLowerCase() === foundAny.name.toLowerCase());
+                        let avoidReason = "Overall climate mismatch.";
+                        const data = marketPrices[foundAny.name.toLowerCase()] || marketPrices['default'];
+                        if (soilType && data.preferredSoil && !data.preferredSoil.includes(soilType.toLowerCase())) {
+                            avoidReason = `Requires ${data.preferredSoil.join(" or ")} soil, but ${soilType} soil was provided.`;
+                        } else if (cropData.length > 0) {
+                            let minMax = { N: { min: Infinity, max: -Infinity }, P: { min: Infinity, max: -Infinity }, K: { min: Infinity, max: -Infinity }, temperature: { min: Infinity, max: -Infinity }, humidity: { min: Infinity, max: -Infinity }, ph: { min: Infinity, max: -Infinity }, rainfall: { min: Infinity, max: -Infinity } };
+                            cropData.forEach(d => {
+                                for (let key in minMax) {
+                                    if (d.features[key] < minMax[key].min) minMax[key].min = d.features[key];
+                                    if (d.features[key] > minMax[key].max) minMax[key].max = d.features[key];
+                                }
+                            });
+                            let maxDeviation = 0; let worstFeature = null; let worstDirection = null;
+                            const inputMapping = { N, P, K, temperature, humidity, ph: pH, rainfall };
+                            for (let key in minMax) {
+                                const val = inputMapping[key];
+                                let dev = 0; let dir = null;
+                                if (val < minMax[key].min) { dev = (minMax[key].min - val) / (minMax[key].min || 1); dir = 'low'; }
+                                else if (val > minMax[key].max) { dev = (val - minMax[key].max) / (minMax[key].max || 1); dir = 'high'; }
+                                if (dev > maxDeviation) { maxDeviation = dev; worstFeature = key; worstDirection = dir; }
+                            }
+                            if (worstFeature) {
+                                const featureNames = { N: "Nitrogen", P: "Phosphorus", K: "Potassium", temperature: "Temperature", humidity: "Humidity", ph: "Soil pH", rainfall: "Rainfall" };
+                                const rangeStr = `${Math.round(minMax[worstFeature].min)}-${Math.round(minMax[worstFeature].max)}`;
+                                avoidReason = `${featureNames[worstFeature]} (${inputMapping[worstFeature]}) is too ${worstDirection === 'high' ? 'high' : 'low'} for ${foundAny.name.charAt(0).toUpperCase() + foundAny.name.slice(1)} (ideal ${rangeStr}).`;
+                            }
+                        }
+                        targetCropResult = { ...foundAny, avoidReason };
+                    }
+                }
+            }
         }
 
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');

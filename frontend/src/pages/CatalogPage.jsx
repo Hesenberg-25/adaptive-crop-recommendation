@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, ChevronDown, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const CROPS = [
   { name: 'Rice',         emoji: '🌾', category: 'Cereal' },
@@ -61,6 +62,7 @@ const categoryColors = {
 };
 
 const CatalogPage = () => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const categories = ['All', ...Object.keys(categoryColors)];
@@ -86,13 +88,13 @@ const CatalogPage = () => {
           >
             <BookOpen className="w-7 h-7 text-farm-primary" />
           </motion.div>
-          <h1 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white">Crop Catalog</h1>
+          <h1 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white">{t('crop_catalog', 'Crop Catalog')}</h1>
           <span className="ml-2 text-xs bg-farm-primary/10 text-farm-primary px-2.5 py-1 rounded-full font-semibold">
-            {CROPS.length} crops
+            {CROPS.length} {t('crops', 'crops')}
           </span>
         </div>
         <p className="text-slate-500 dark:text-slate-400 text-sm">
-          All crops the AI model can recommend. Configure your soil & climate on the Dashboard, then run a prediction.
+          {t('crop_catalog_desc', 'All crops the AI model can recommend. Configure your soil & climate on the Dashboard, then run a prediction.')}
         </p>
       </motion.div>
 
@@ -107,7 +109,7 @@ const CatalogPage = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search crops…"
+            placeholder={t('search_crops', 'Search crops…')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="glass-input w-full pl-9 py-2"
@@ -124,7 +126,7 @@ const CatalogPage = () => {
                   : 'bg-white/40 dark:bg-white/10 border-white/30 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/20'
                 }`}
             >
-              {cat}
+              {cat === 'All' ? t('all', 'All') : cat}
             </button>
           ))}
         </div>
@@ -154,13 +156,13 @@ const CatalogPage = () => {
             ))}
           </AnimatePresence>
           {filtered.length === 0 && (
-            <p className="text-slate-400 italic text-sm py-4 w-full text-center">No crops match your search.</p>
+            <p className="text-slate-400 italic text-sm py-4 w-full text-center">{t('no_crops_match', 'No crops match your search.')}</p>
           )}
         </div>
 
         {/* Legend */}
         <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-white/10">
-          <span className="text-xs text-slate-400 self-center font-medium">Categories:</span>
+          <span className="text-xs text-slate-400 self-center font-medium">{t('categories', 'Categories')}:</span>
           {Object.entries(categoryColors).map(([cat, cls]) => (
             <span key={cat} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${cls}`}>
               {cat}
