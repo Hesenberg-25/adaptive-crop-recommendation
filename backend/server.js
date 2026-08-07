@@ -5,7 +5,8 @@ const cors = require('cors');
 const { getWeather, getClimateForecast } = require('./src/services/weatherService');
 const { getComprehensiveAnalysis, parseVoiceInput } = require('./src/services/aiService');
 const { reverseGeocodeToLanguage } = require('./src/services/geoService');
-const { getSubsidiesForCrop } = require('./src/services/subsidyService');
+const { getDynamicSubsidiesForCrops } = require('./src/services/subsidyService');
+const { getDynamicMarketPrices } = require('./src/services/marketDataService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
 const { evaluateRisk } = require('./src/services/pestDiseaseRules');
@@ -53,7 +54,7 @@ app.post('/api/auth/signin', async (req, res) => {
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
     try {
-        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique, soilType, language: requestedLanguage } = req.body;
+        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique, soilType, language: requestedLanguage, targetCrop, farmSize, primaryCrops } = req.body;
 
         let language = requestedLanguage || 'en';
         let detectedRegion = null;
@@ -105,7 +106,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
 
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
 
-        const marketPrices = require('./src/data/marketPrices.json');
+        const marketPrices = await getDynamicMarketPrices();
 
         // 2. ML Logic
         const mlPredictions = cropModel.predict(inputs);
@@ -252,18 +253,24 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             return { ...crop, avoidReason };
         });
 
+        // 3a. Extract Target Crop if specified
+        let targetCropResult = null;
+        if (targetCrop) {
+            const targetLower = targetCrop.toLowerCase();
+            const foundRec = recommendedWithROI.find(c => c.name.toLowerCase() === targetLower);
+            const foundAvoid = avoidWithROI.find(c => c.name.toLowerCase() === targetLower);
+            targetCropResult = foundRec || foundAvoid || null;
+        }
+
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
         const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
 
         // 3b. Government Subsidies & Schemes
-        const governmentSubsidies = recommendedWithROI.map(crop => ({
-            crop: crop.name,
-            ...getSubsidiesForCrop(crop.name)
-        }));
+        const governmentSubsidies = await getDynamicSubsidiesForCrops(recommendedWithROI);
 
         // 3. Gemini Comprehensive Analysis & Pest Alerts
         const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });
-        const geminiAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks, language);
+        const geminiAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks, language, farmSize, primaryCrops, targetCropResult);
 
         const aiAdvice = geminiAnalysis.markdownAdvice;
 
@@ -291,6 +298,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         res.json({
             recommendedCrops: recommendedWithROI,
             avoidCrops: avoidWithROI,
+            targetCropResult,
             shapImportance,
             governmentSubsidies,
             aiAdvice,
@@ -416,7 +424,7 @@ app.get('/api/predictions/history', authenticateUser, async (req, res) => {
 
 async function runSanityCheck() {
     console.log("[Data Validation] Running startup sanity check...");
-    const marketPrices = require('./src/data/marketPrices.json');
+    const marketPrices = await getDynamicMarketPrices();
     let allKnownLabels = Object.keys(marketPrices).filter(k => k !== 'default');
 
     const attachFinancials = (crop) => {

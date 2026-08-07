@@ -166,13 +166,38 @@ const CropCard = ({ pred, idx, isRecommended }) => {
   );
 };
 
-const ResultsCards = ({ recommendedCrops, avoidCrops }) => {
+const ResultsCards = ({ recommendedCrops, avoidCrops, targetCropResult }) => {
   if ((!recommendedCrops || recommendedCrops.length === 0) && (!avoidCrops || avoidCrops.length === 0)) {
     return null;
   }
 
   return (
     <div className="flex flex-col gap-8 w-full">
+
+      {/* ── Outer Target Crop Section Card ── */}
+      {targetCropResult && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 80 }}
+          className="glass-panel p-6 border-l-4 border-blue-500 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/10"
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <motion.div
+              className="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center"
+            >
+              <span className="text-xl">🎯</span>
+            </motion.div>
+            <div>
+              <h2 className="text-xl font-bold font-poppins text-slate-800 dark:text-white">Your Selected Target Crop</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Viability analysis for your specifically requested crop</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <CropCard pred={targetCropResult} idx={0} isRecommended={targetCropResult.confidence >= 40} />
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Outer Recommended Section Card ── */}
       {recommendedCrops && recommendedCrops.length > 0 && (

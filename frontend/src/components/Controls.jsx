@@ -5,7 +5,7 @@ import Tooltip from './Tooltip';
 import CustomSelect from './CustomSelect';
 import VoiceInput from './VoiceInput';
 
-const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrigated, setIsIrrigated, technique, setTechnique, soilType, setSoilType }) => {
+const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrigated, setIsIrrigated, technique, setTechnique, soilType, setSoilType, cropCategory, setCropCategory, targetCrop, setTargetCrop, language }) => {
   const sliders = [
     { 
       name: 'Nitrogen (N) (mg/kg)', key: 'N', min: 0, max: 140, 
@@ -53,6 +53,26 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
     { value: "laterite", label: "Laterite (Ghats)" }
   ];
 
+  const categoryOptions = [
+    { value: "Cereals & Grains", label: "Cereals & Grains" },
+    { value: "Pulses & Beans", label: "Pulses & Beans" },
+    { value: "Vegetables", label: "Vegetables" },
+    { value: "Fruits", label: "Fruits" },
+    { value: "Cash Crops & Others", label: "Cash Crops & Others" }
+  ];
+
+  const categoryToCrops = {
+    "Cereals & Grains": ["wheat", "rice", "maize", "millet"],
+    "Pulses & Beans": ["chickpea", "kidneybeans", "pigeonpeas", "mothbeans", "mungbean", "blackgram", "lentil"],
+    "Vegetables": ["carrot", "tomato", "potato"],
+    "Fruits": ["pomegranate", "banana", "mango", "grapes", "watermelon", "muskmelon", "apple", "orange", "papaya", "coconut"],
+    "Cash Crops & Others": ["cotton", "sugarcane", "jute", "coffee", "soybean", "mustard"]
+  };
+
+  const cropOptions = cropCategory && categoryToCrops[cropCategory] 
+    ? categoryToCrops[cropCategory].map(c => ({ value: c, label: c.charAt(0).toUpperCase() + c.slice(1) }))
+    : [];
+
   const handleSoilTypeChange = (e) => {
     const type = e.target.value;
     if (setSoilType) setSoilType(type);
@@ -86,7 +106,7 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
       
       {/* Body */}
       <div className="p-6 flex flex-col gap-6">
-        <VoiceInput onValuesExtracted={(extracted) => {
+        <VoiceInput language={language} onValuesExtracted={(extracted) => {
           Object.entries(extracted).forEach(([key, val]) => {
             if (val !== undefined && val !== null) {
               onChange(key, val);
@@ -97,7 +117,7 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
         <div className="flex flex-col gap-4 mb-2">
 
         {/* Extensions Controls */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 w-full">
           
           {/* Soil Type Dropdown */}
           <CustomSelect 
@@ -146,6 +166,27 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
               { value: "strip", label: "Strip Cropping" },
               { value: "mixed", label: "Mixed Cropping" }
             ]}
+          />
+
+          {/* Crop Category Dropdown */}
+          <CustomSelect 
+            value={cropCategory}
+            onChange={(val) => {
+              setCropCategory(val);
+              setTargetCrop(''); // reset selected crop on category change
+            }}
+            placeholder="Target Category (Optional)..."
+            icon={<Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+            options={categoryOptions}
+          />
+
+          {/* Target Crop Dropdown */}
+          <CustomSelect 
+            value={targetCrop}
+            onChange={(val) => setTargetCrop(val)}
+            placeholder="Target Crop..."
+            icon={<CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+            options={cropOptions}
           />
 
         </div>

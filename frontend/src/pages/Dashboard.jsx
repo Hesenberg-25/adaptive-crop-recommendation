@@ -43,13 +43,18 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
   const location = externalLocation || { lat: null, lon: null };
   const locationName = externalLocationName || '';
   const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState('Run AI Prediction');
+  const [loadingText, setLoadingText] = useState('Run Prediction');
   const [results, setResults] = useState(null);
   const [season, setSeason] = useState('auto');
   const [isIrrigated, setIsIrrigated] = useState(false);
   const [technique, setTechnique] = useState('monocropping');
   const [soilType, setSoilType] = useState('');
   const [language, setLanguage] = useState('en');
+  
+  // New States for Target Crop Feature
+  const [cropCategory, setCropCategory] = useState('');
+  const [targetCrop, setTargetCrop] = useState('');
+  const [userProfile, setUserProfile] = useState({});
   
   // UI Toggles for Results
   const [showAI, setShowAI] = useState(false);
@@ -75,6 +80,7 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data) {
+          setUserProfile(response.data);
           if (response.data.soil_type) setSoilType(response.data.soil_type);
           if (response.data.irrigation_type) setIsIrrigated(response.data.irrigation_type === 'irrigated');
         }
@@ -120,7 +126,10 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
         isIrrigated,
         technique,
         soilType,
-        language
+        language,
+        targetCrop: targetCrop || null,
+        farmSize: userProfile.farm_size || null,
+        primaryCrops: userProfile.primary_crops || null
       };
       
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/predict`, payload, {
@@ -138,7 +147,7 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
       toast.error(error.response?.data?.error || 'Failed to generate prediction');
     } finally {
       setLoading(false);
-      setLoadingText('Run AI Prediction');
+      setLoadingText('Run Prediction');
     }
   };
 
@@ -223,6 +232,11 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
               setTechnique={setTechnique}
               soilType={soilType}
               setSoilType={setSoilType}
+              cropCategory={cropCategory}
+              setCropCategory={setCropCategory}
+              targetCrop={targetCrop}
+              setTargetCrop={setTargetCrop}
+              language={language}
             />
           </div>
 
@@ -314,7 +328,11 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
 
               {/* ML Predictions & Crop Analysis */}
               <section className="w-full">
-                <ResultsCards recommendedCrops={results.recommendedCrops} avoidCrops={results.avoidCrops} />
+                <ResultsCards 
+                  recommendedCrops={results.recommendedCrops} 
+                  avoidCrops={results.avoidCrops} 
+                  targetCropResult={results.targetCropResult}
+                />
               </section>
               
               {/* Pest & Disease Alerts (Standalone Card) */}

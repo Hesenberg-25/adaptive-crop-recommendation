@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
-const VoiceInput = ({ onValuesExtracted }) => {
+const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
   const { token } = useAuth();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -25,7 +25,20 @@ const VoiceInput = ({ onValuesExtracted }) => {
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = 'en-IN'; // farmer likely speaks English or code-switches; browser handles common accents well
+    const langMap = {
+      'en': 'en-IN',
+      'hi': 'hi-IN',
+      'mr': 'mr-IN',
+      'ta': 'ta-IN',
+      'te': 'te-IN',
+      'kn': 'kn-IN',
+      'gu': 'gu-IN',
+      'bn': 'bn-IN',
+      'pa': 'pa-IN',
+      'ml': 'ml-IN',
+      'or': 'or-IN'
+    };
+    recognition.lang = langMap[language] || 'en-IN';
 
     recognition.onresult = (event) => {
       let text = '';

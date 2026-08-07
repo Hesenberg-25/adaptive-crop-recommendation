@@ -18,7 +18,14 @@ export const AuthProvider = ({ children }) => {
       .then(res => {
         if (res.data) setUser(res.data);
       })
-      .catch(err => console.error("Error fetching user profile", err));
+      .catch(err => {
+        console.error("Error fetching user profile", err);
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          setToken(null);
+          localStorage.removeItem('token');
+          setUser(null);
+        }
+      });
     } else {
       localStorage.removeItem('token');
       setUser(null);
