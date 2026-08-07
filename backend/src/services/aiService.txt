@@ -1,0 +1,30 @@
+
+
+                                                         -----  SUMMARY OF aiService.js ------
+
+This file has two exported functions that both call the Groq API (an LLM inference service, using Llama 3.3 70B) to generate farming advice.
+
+1. getComprehensiveAnalysis(inputs, recommendedCrops, avoidCrops, shapImportance, technique, risks, language)
+
+This takes output from an upstream ML model (soil N/P/K/pH values, a list of recommended crops, a list of crops to avoid,
+SHAP feature importances explaining the model's reasoning, an optional farming technique like intercropping, and any detected pest/disease risks) and builds a large,
+detailed prompt asking an LLM to act as a "Senior AI Agronomist" and write a structured markdown report explaining:
+
+Section 1  Recommended Crops: for each crop, why the soil chemistry fits, growth timeline, water needs, and market value.
+Section 2  Crops Needing Extra Care: which parameters are out of range, what symptoms will appear, and how to fix them.
+Section 3 (conditional) Pest & Disease Risk Alerts: if risks were passed in, generates detailed alerts (symptoms, affected crops, treatment products, prevention) for each one.
+Section 4 (conditional) Technique Implementation: if a non-monocropping technique was chosen (e.g. intercropping), explains how to combine crops for it.
+
+If a non-English language is specified, it appends an instruction to translate the entire report into that language while keeping markdown formatting intact
+ (supports Hindi, Marathi, Tamil, Telugu, and several other languages, mainly aimed at Indian farmers).
+
+It requests the response as strict JSON ({ markdownAdvice, alerts }) via Groq's response_format: json_object, then parses and returns it. If anything fails
+ (missing API key, network error, bad JSON), it falls back to a simple templated response built from the input data rather than crashing.
+
+
+2. parseVoiceInput(transcript)
+
+Takes a spoken/transcribed sentence from a farmer (e.g. "my soil has low nitrogen and it's pretty hot") and asks the LLM to extract structured soil/climate values 
+(N, P, K, pH, temperature, humidity, rainfall) from vague qualitative language, using rough numeric heuristics for terms like "high," "low," or "moderate."
+ It only fills in fields the farmer actually mentioned, returning { extracted: {...}, summary: "..." }. 
+ This looks like it's meant to power a voice-input feature so farmers can speak their conditions instead of using sliders/forms.

@@ -23,7 +23,7 @@ const AIAdvice = ({ adviceText }) => {
         </motion.div>
         <div>
           <div className="text-white font-bold text-lg font-poppins">Expert AI Insights</div>
-          <div className="text-emerald-200 text-xs">Powered by Google Gemini</div>
+          <div className="text-emerald-200 text-xs">Powered by AI Agronomist Engine</div>
         </div>
         <motion.div
           className="ml-auto"

@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require('cors');
 
 const { getWeather, getClimateForecast } = require('./src/services/weatherService');
-const { getComprehensiveAnalysis } = require('./src/services/aiService');
+const { getComprehensiveAnalysis, parseVoiceInput } = require('./src/services/aiService');
+const { reverseGeocodeToLanguage } = require('./src/services/geoService');
 const { getSubsidiesForCrop } = require('./src/services/subsidyService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
@@ -52,7 +53,15 @@ app.post('/api/auth/signin', async (req, res) => {
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
     try {
-        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique, soilType } = req.body;
+        const { N, P, K, pH, lat, lon, useLiveWeather, temperature: manualTemp, humidity: manualHumidity, rainfall: manualRainfall, season, isIrrigated, technique, soilType, language: requestedLanguage } = req.body;
+
+        let language = requestedLanguage || 'en';
+        let detectedRegion = null;
+        if (!requestedLanguage && lat && lon) {
+            const geo = await reverseGeocodeToLanguage(lat, lon);
+            language = geo.language;
+            detectedRegion = geo.region;
+        }
 
         // 1. Get Environmental Inputs
         let temperature, humidity, rainfall, windSpeed, dailyForecast;
@@ -254,7 +263,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
 
         // 3. Gemini Comprehensive Analysis & Pest Alerts
         const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });
-        const geminiAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks);
+        const geminiAnalysis = await getComprehensiveAnalysis(inputs, recommendedWithROI, avoidWithROI, shapImportance, technique, risks, language);
 
         const aiAdvice = geminiAnalysis.markdownAdvice;
 
@@ -286,7 +295,9 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             governmentSubsidies,
             aiAdvice,
             alerts: geminiAnalysis.alerts || [],
-            weatherUsed: { temperature, humidity, rainfall, windSpeed, dailyForecast }
+            weatherUsed: { temperature, humidity, rainfall, windSpeed, dailyForecast },
+            detectedLanguage: language,
+            detectedRegion
         });
 
     } catch (error) {
@@ -366,6 +377,20 @@ app.delete('/api/farmer/profile', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error("Profile delete error:", error);
         res.status(500).json({ error: "Failed to delete account" });
+    }
+});
+
+app.post('/api/parse-voice', authenticateUser, async (req, res) => {
+    try {
+        const { transcript } = req.body;
+        if (!transcript) {
+            return res.status(400).json({ error: "Missing transcript" });
+        }
+        const result = await parseVoiceInput(transcript);
+        res.json(result);
+    } catch (error) {
+        console.error("Voice parse route error:", error);
+        res.status(500).json({ error: "Failed to parse voice input" });
     }
 });
 
