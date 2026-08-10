@@ -1,17 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Leaf, LayoutDashboard, History, BookOpen, Settings } from 'lucide-react';
+import { Leaf, LayoutDashboard, History, BookOpen, Settings, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 
 const Sidebar = () => {
-  const { t } = useTranslation();
-
+  
   const navItems = [
-    { to: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('dashboard', 'Dashboard') },
-    { to: '/catalog',   icon: <BookOpen className="w-5 h-5" />,        label: t('crop_catalog', 'Crop Catalog') },
-    { to: '/history',   icon: <History className="w-5 h-5" />,         label: t('history', 'History') },
-    { to: '/settings',  icon: <Settings className="w-5 h-5" />,        label: t('settings', 'Settings') },
+    { to: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard' },
+    { to: '/market',    icon: <TrendingUp className="w-5 h-5" />,      label: 'Live Market' },
+    { to: '/catalog',   icon: <BookOpen className="w-5 h-5" />,        label: 'Crop Catalog' },
+    { to: '/history',   icon: <History className="w-5 h-5" />,         label: 'History' },
+    { to: '/settings',  icon: <Settings className="w-5 h-5" />,        label: 'Settings' },
   ];
 
   return (

@@ -4,8 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { useTranslation } from 'react-i18next';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -17,6 +16,7 @@ import Profile from './pages/Profile';
 import History from './pages/History';
 import Settings from './pages/Settings';
 import CatalogPage from './pages/CatalogPage';
+import Market from './pages/Market';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const LANGUAGES = [
@@ -45,17 +45,27 @@ const PublicRoute = ({ children }) => {
 
 // Inner wrapper so we can access location for public/private layout split
 const AppShell = () => {
-  const { t, i18n } = useTranslation();
   const { isAuthenticated } = useAuth();
+  const { theme } = useTheme();
   const location = useLocation();
 
   // Language state — lifted here so TopBar and Dashboard share it
-  const [language, setLanguage] = useState(i18n.language || 'en');
+  const [language, setLanguage] = useState(localStorage.getItem('preferred_language') || 'en');
 
   const handleLanguageChange = useCallback((langCode) => {
     setLanguage(langCode);
-    i18n.changeLanguage(langCode);
-  }, [i18n]);
+    localStorage.setItem('preferred_language', langCode);
+    
+    // Trigger Google Translate
+    setTimeout(() => {
+      const select = document.querySelector('.goog-te-combo');
+      if (select) {
+        select.value = langCode;
+        select.dispatchEvent(new Event('change'));
+      }
+    }, 100);
+  }, []);
+
 
   // Location/weather state lives here so TopBar and Dashboard share it
   const [useLiveWeather, setUseLiveWeather] = useState(false);
@@ -70,7 +80,7 @@ const AppShell = () => {
         return;
       }
       setLocLoading(true);
-      const loadToast = toast.loading(t('getting_location', 'Getting location…'));
+      const loadToast = toast.loading('Getting location…');
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
@@ -78,18 +88,18 @@ const AppShell = () => {
           setLocationCoords({ lat, lon });
           setUseLiveWeather(true);
           setLocLoading(false);
-          toast.success(t('location_synced', 'Location synced!'), { id: loadToast });
+          toast.success('Location synced!', { id: loadToast });
           axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
             .then(res => {
               const addr = res.data.address || {};
               const city = addr.city || addr.town || addr.village || addr.county || '';
               const state = addr.state || addr.country || '';
-              setLocationName(state ? `${city}, ${state}` : city || t('your_location', 'Your Location'));
+              setLocationName(state ? `${city}, ${state}` : city || 'Your Location');
             })
-            .catch(() => setLocationName(t('your_location', 'Your Location')));
+            .catch(() => setLocationName('Your Location'));
         },
         () => {
-          toast.error(t('location_denied', 'Location access denied'), { id: loadToast });
+          toast.error('Location access denied', { id: loadToast });
           setLocLoading(false);
         }
       );
@@ -98,18 +108,14 @@ const AppShell = () => {
       setLocationCoords({ lat: null, lon: null });
       setLocationName('');
     }
-  }, [useLiveWeather, t]);
+  }, [useLiveWeather]);
 
   const isPublicPage = ['/', '/login', '/signup'].includes(location.pathname);
 
   return (
-    <div className="min-h-screen text-farm-text-body relative">
-      {/* Background */}
-      <div className="fixed inset-0 z-[-1]">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center bg-no-repeat" />
-        <div className="absolute inset-0 bg-transparent dark:bg-[#10190F]/85 transition-colors duration-500" />
-        <div className="absolute inset-0 bg-[#FAF3E0]/20 dark:bg-transparent transition-colors duration-500" />
-      </div>
+    <div className="min-h-screen text-farm-text-body relative overflow-x-hidden">
+      {/* Background Layered Spatial Design */}
+      <div className={`fixed inset-0 z-[-1] transition-colors duration-1000 mesh-bg-${theme}`} />
 
       {/* Authenticated layout: Sidebar + TopBar */}
       {isAuthenticated && !isPublicPage && (
@@ -135,11 +141,11 @@ const AppShell = () => {
           </span>
           <div className="flex gap-3 text-sm font-semibold">
             {isAuthenticated ? (
-              <Link to="/dashboard" className="glass-button !py-1.5 !px-4 !text-sm">{t('go_to_dashboard', 'Go to Dashboard')}</Link>
+              <Link to="/dashboard" className="glass-button !py-1.5 !px-4 !text-sm">Go to Dashboard</Link>
             ) : (
               <>
-                <Link to="/login" className="text-slate-700 dark:text-slate-300 hover:text-farm-primary transition-colors px-3 py-1.5">{t('log_in', 'Login')}</Link>
-                <Link to="/signup" className="glass-button !py-1.5 !px-4 !text-sm">{t('sign_up', 'Sign Up')}</Link>
+                <Link to="/login" className="text-slate-700 dark:text-slate-300 hover:text-farm-primary transition-colors px-3 py-1.5">Login</Link>
+                <Link to="/signup" className="glass-button !py-1.5 !px-4 !text-sm">Sign Up</Link>
               </>
             )}
           </div>
@@ -166,6 +172,7 @@ const AppShell = () => {
           <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/market" element={<ProtectedRoute><Market /></ProtectedRoute>} />
         </Routes>
       </main>
 

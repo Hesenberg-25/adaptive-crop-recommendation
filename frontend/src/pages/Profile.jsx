@@ -6,23 +6,23 @@ import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CustomSelect from '../components/CustomSelect';
-import { useTranslation } from 'react-i18next';
+
 
 const Profile = () => {
-  const { t } = useTranslation();
+  
   const { token } = useAuth();
   const locationState = useLocation().state || {};
   const isNewUser = locationState.isNewUser;
   
   const soilOptions = [
-    { value: "alluvial", label: t('alluvial_desc', "Alluvial (Rich, fertile, river basins)") },
-    { value: "black", label: t('black_desc', "Black / Regur (Cotton-friendly, high moisture retention)") },
-    { value: "red", label: t('red_desc', "Red / Yellow (Iron-rich, needs fertilizers)") },
-    { value: "laterite", label: t('laterite_desc', "Laterite (Acidic, good for tea/coffee/cashew)") },
-    { value: "arid", label: t('arid_desc', "Arid / Desert (Sandy, saline, requires irrigation)") },
-    { value: "mountain", label: t('mountain_desc', "Mountain / Forest (Rich in humus, acidic)") },
-    { value: "saline", label: t('saline_desc', "Saline / Alkaline (High salt content, needs treatment)") },
-    { value: "peaty", label: t('peaty_desc', "Peaty / Marshy (High organic matter, heavy)") }
+    { value: "alluvial", label: "Alluvial (Rich, fertile, river basins)" },
+    { value: "black", label: "Black / Regur (Cotton-friendly, high moisture retention)" },
+    { value: "red", label: "Red / Yellow (Iron-rich, needs fertilizers)" },
+    { value: "laterite", label: "Laterite (Acidic, good for tea/coffee/cashew)" },
+    { value: "arid", label: "Arid / Desert (Sandy, saline, requires irrigation)" },
+    { value: "mountain", label: "Mountain / Forest (Rich in humus, acidic)" },
+    { value: "saline", label: "Saline / Alkaline (High salt content, needs treatment)" },
+    { value: "peaty", label: "Peaty / Marshy (High organic matter, heavy)" }
   ];
 
   const [loading, setLoading] = useState(false);
@@ -74,9 +74,9 @@ const Profile = () => {
       await axios.put(`${import.meta.env.VITE_API_URL}/api/farmer/profile`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(t('profile_saved', 'Profile saved successfully!'));
+      toast.success('Profile saved successfully!');
     } catch (error) {
-      toast.error(error.response?.data?.error || t('save_failed', 'Failed to save profile. Please try again.'));
+      toast.error(error.response?.data?.error || 'Failed to save profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,7 @@ const Profile = () => {
             transition={{ delay: 0.5 }}
             className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 font-poppins"
           >
-            {t('welcome_agrivision', 'Welcome to AgriVision! 🌾')}
+            Welcome to AgriVision! 🌾
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -120,8 +120,8 @@ const Profile = () => {
             transition={{ delay: 1 }}
             className="text-slate-500 dark:text-slate-400 mt-2 text-lg"
           >
-            <h2 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-2">{t('new_user_setup', 'New User Setup')}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">{t('new_user_setup_desc', 'Please complete your profile to unlock the full potential of AI-driven crop recommendations.')}</p>
+            <h2 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-2">New User Setup</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Please complete your profile to unlock the full potential of AI-driven crop recommendations.</p>
           </motion.p>
         </div>
       )}
@@ -133,13 +133,13 @@ const Profile = () => {
       >
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2 font-poppins relative after:absolute after:bottom-[-8px] after:left-0 after:w-16 after:h-[2px] after:bg-gradient-to-r after:from-farm-accent-gold after:to-farm-primary">
           <UserIcon className="w-6 h-6 text-farm-primary" />
-          {t('farmer_profile', 'Farmer Profile')}
+          Farmer Profile
         </h2>
         
         <form onSubmit={handleSave} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('full_name', 'Full Name')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <UserIcon className="w-4 h-4 text-farm-primary-light" />
@@ -150,14 +150,14 @@ const Profile = () => {
                   value={profile.name || ''}
                   onChange={handleChange}
                   className="w-full pl-9 pr-3 py-2 glass-input"
-                  placeholder={t('john_doe', 'John Doe')}
+                  placeholder="John Doe"
                   required
                 />
               </div>
             </div>
             
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('phone_number', 'Phone Number')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Phone className="w-4 h-4 text-farm-primary-light" />
@@ -174,7 +174,7 @@ const Profile = () => {
             </div>
 
             <div className="flex flex-col gap-1 md:col-span-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('email_address', 'Email Address')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="w-4 h-4 text-farm-primary-light" />
@@ -192,7 +192,7 @@ const Profile = () => {
             </div>
 
             <div className="flex flex-col gap-1 md:col-span-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('farm_location', 'Farm Location (Village/District/State)')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Farm Location (Village/District/State)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MapPin className="w-4 h-4 text-farm-primary-light" />
@@ -209,7 +209,7 @@ const Profile = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('farm_size', 'Farm Size (Acres)')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Farm Size (Acres)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Maximize className="w-4 h-4 text-farm-primary-light" />
@@ -228,7 +228,7 @@ const Profile = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('primary_crops_placeholder', 'Primary Crops')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Primary Crops</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Wheat className="w-4 h-4 text-farm-primary-light" />
@@ -245,26 +245,26 @@ const Profile = () => {
             </div>
 
             <div className="flex flex-col gap-1 z-20">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('soil_profile', 'Soil Type')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Soil Type</label>
               <CustomSelect 
                 value={profile.soil_type || ''}
                 onChange={(val) => setProfile(prev => ({ ...prev, soil_type: val }))}
-                placeholder={t('select_soil_profile', 'Select Soil Profile...')}
+                placeholder="Select Soil Profile..."
                 icon={<Map className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                 options={soilOptions}
               />
             </div>
 
             <div className="flex flex-col gap-1 z-10">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('irrigation', 'Irrigation')}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Irrigation</label>
               <CustomSelect 
                 value={profile.irrigation_type || 'rainfed'}
                 onChange={(val) => setProfile(prev => ({ ...prev, irrigation_type: val }))}
-                placeholder={t('irrigation', 'Irrigation...')}
+                placeholder="Irrigation..."
                 icon={<Droplet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                 options={[
-                  { value: "rainfed", label: t('rainfed', 'Rainfed') },
-                  { value: "irrigated", label: t('fully_irrigated', 'Fully Irrigated') }
+                  { value: "rainfed", label: 'Rainfed' },
+                  { value: "irrigated", label: 'Fully Irrigated' }
                 ]}
               />
             </div>
@@ -277,7 +277,7 @@ const Profile = () => {
               className="glass-button py-2 px-6 flex items-center gap-2"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {t('save_profile', 'Save Profile')}
+              Save Profile
             </button>
           </div>
         </form>

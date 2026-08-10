@@ -1,13 +1,16 @@
-import React from 'react';
-import { Droplets, Thermometer, FlaskConical, Wind, Leaf, Map, Calendar, Droplet, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Droplets, Thermometer, FlaskConical, Wind, Leaf, Map, Calendar, Droplet, CheckCircle2, Camera, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Tooltip from './Tooltip';
 import CustomSelect from './CustomSelect';
 import VoiceInput from './VoiceInput';
-import { useTranslation } from 'react-i18next';
+import ScanSoilModal from './ScanSoilModal';
+
 
 const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrigated, setIsIrrigated, technique, setTechnique, soilType, setSoilType, cropCategory, setCropCategory, targetCrop, setTargetCrop, language }) => {
-  const { t } = useTranslation();
+  const [isScanning, setIsScanning] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const sliders = [
     { 
       name: 'Nitrogen (N) (mg/kg)', key: 'N', min: 0, max: 140, 
@@ -49,10 +52,14 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
   const isWeatherKey = (key) => ['temperature', 'humidity', 'rainfall'].includes(key);
 
   const soilOptions = [
-    { value: "alluvial", label: "Alluvial (Northern)" },
-    { value: "black", label: "Black (Deccan)" },
-    { value: "red", label: "Red (East)" },
-    { value: "laterite", label: "Laterite (Ghats)" }
+    { value: "alluvial", label: "Alluvial (Northern Plains)" },
+    { value: "black", label: "Black / Regur (Deccan)" },
+    { value: "red", label: "Red / Yellow (Eastern)" },
+    { value: "laterite", label: "Laterite (Western Ghats)" },
+    { value: "arid", label: "Arid / Desert (Sandy)" },
+    { value: "mountain", label: "Mountain / Forest (Hilly)" },
+    { value: "saline", label: "Saline / Alkaline (Coastal)" },
+    { value: "peaty", label: "Peaty / Marshy (Organic)" },
   ];
 
   const categoryOptions = [
@@ -79,10 +86,14 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
     const type = e.target.value;
     if (setSoilType) setSoilType(type);
     const baselines = {
-      alluvial: { N: 60, P: 40, K: 40, pH: 7.0 },
-      black: { N: 40, P: 40, K: 60, pH: 7.8 },
-      red: { N: 30, P: 30, K: 40, pH: 6.0 },
-      laterite: { N: 20, P: 20, K: 20, pH: 5.0 }
+      alluvial:  { N: 60,  P: 40, K: 40, pH: 7.0 },  // Fertile river-deposited soil, neutral pH
+      black:     { N: 40,  P: 40, K: 60, pH: 7.8 },  // High clay, moisture-retentive, slightly alkaline
+      red:       { N: 30,  P: 30, K: 40, pH: 6.0 },  // Iron-rich, slightly acidic, low fertility
+      laterite:  { N: 20,  P: 20, K: 20, pH: 5.0 },  // Heavily leached, acidic, low nutrients
+      arid:      { N: 15,  P: 15, K: 30, pH: 8.2 },  // Sandy, alkaline, very low organic matter
+      mountain:  { N: 50,  P: 35, K: 35, pH: 5.5 },  // Rich humus, acidic, moderate fertility
+      saline:    { N: 25,  P: 20, K: 45, pH: 8.5 },  // High salt, strongly alkaline, stressed crops
+      peaty:     { N: 70,  P: 15, K: 25, pH: 4.5 },  // Very high organic matter, acidic, waterlogged
     };
     
     if (baselines[type]) {
@@ -93,146 +104,125 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
     }
   };
 
+
   const handleVoiceResult = (extracted) => {
     Object.entries(extracted).forEach(([key, val]) => {
       if (val !== undefined && val !== null) onChange(key, val);
     });
   };
 
+  const handleScanSoil = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleScanComplete = (data) => {
+    // We expect { N, P, K, pH, soilType }
+    if (data.soilType) {
+      // Find the closest matching option or just lowercase it
+      const types = ['black', 'red', 'alluvial', 'laterite', 'sandy', 'loamy', 'clay'];
+      let matchedType = types.find(t => data.soilType.toLowerCase().includes(t));
+      if (matchedType) setSoilType(matchedType);
+    }
+    if (data.N !== undefined) onChange('N', parseFloat(data.N));
+    if (data.P !== undefined) onChange('P', parseFloat(data.P));
+    if (data.K !== undefined) onChange('K', parseFloat(data.K));
+    if (data.pH !== undefined) onChange('pH', parseFloat(data.pH));
+  };
+
   return (
-    <div className="glass-panel flex flex-col w-full relative overflow-hidden">
-      <div className="bg-gradient-to-r from-[#2B1B12] to-[#4A3221] dark:from-[#0F0A07] dark:to-[#2B1B12] px-6 py-4 flex justify-between items-center transition-colors">
-        <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
-          <FlaskConical className="w-6 h-6 text-farm-accent-gold" />
-          {t('soil_inputs', 'Soil & Environmental Inputs')}
-        </h2>
-        <div className="text-white/80">
-          <Tooltip text={t('adjust_hint', 'Adjust the chemical and environmental parameters. Live Weather automatically syncs historical climate data for the selected season.')} align="right" />
-        </div>
-      </div>
-      
-      <div className="p-6 flex flex-col gap-6">
-        <VoiceInput 
-          onValuesExtracted={handleVoiceResult} 
-          placeholder={t('tap_mic', 'Tap the mic and describe your soil, e.g. "high nitrogen and very hot today"')}
-          language={language}
-        />
-
-        <div className="flex flex-col gap-4 mb-2">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 w-full">
-          <CustomSelect 
-            value={soilType || ""}
-            onChange={(val) => handleSoilTypeChange({ target: { value: val } })}
-            placeholder={t('soil_profile', "Soil Profile...")}
-            icon={<Map className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-            options={soilOptions}
-          />
-
-          <CustomSelect 
-            value={season}
-            onChange={(val) => setSeason(val)}
-            placeholder={t('season', "Season...")}
-            icon={<Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-            options={[
-              { value: "auto", label: t('auto_current_date', "Auto (Current Date)") },
-              { value: "kharif", label: t('kharif', "Kharif (Monsoon)") },
-              { value: "rabi", label: t('rabi', "Rabi (Winter)") },
-              { value: "zaid", label: t('zaid', "Zaid (Summer)") }
-            ]}
-          />
-
-          <CustomSelect 
-            value={isIrrigated ? 'irrigated' : 'rainfed'}
-            onChange={(val) => setIsIrrigated(val === 'irrigated')}
-            placeholder={t('irrigation', "Irrigation...")}
-            icon={<Droplet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-            options={[
-              { value: "rainfed", label: t('rainfed', "Rainfed") },
-              { value: "irrigated", label: t('fully_irrigated', "Fully Irrigated") }
-            ]}
-          />
-
-          <CustomSelect 
-            value={technique}
-            onChange={(val) => setTechnique(val)}
-            placeholder={t('technique', "Technique...")}
-            icon={<Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-            options={[
-              { value: "monocropping", label: t('monocropping', "Monocropping") },
-              { value: "intercropping", label: t('intercropping', "Intercropping") },
-              { value: "strip", label: t('strip_cropping', "Strip Cropping") },
-              { value: "mixed", label: t('mixed_cropping', "Mixed Cropping") }
-            ]}
-          />
-
-          <CustomSelect 
-            value={cropCategory}
-            onChange={(val) => {
-              setCropCategory(val);
-              setTargetCrop('');
-            }}
-            placeholder={t('target_category', "Target Category (Optional)...")}
-            icon={<Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-            options={categoryOptions}
-          />
-
-          <CustomSelect 
-            value={targetCrop}
-            onChange={(val) => setTargetCrop(val)}
-            placeholder={t('target_crop', "Target Crop...")}
-            icon={<CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
-            options={cropOptions}
+    <div className="w-full flex flex-col gap-4">
+      {/* 1. Top Section: AI Inputs (Voice & Vision) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2 glass-panel p-4 flex items-center bg-white/40 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-3xl">
+          <VoiceInput 
+            onValuesExtracted={handleVoiceResult} 
+            placeholder='Describe your farm, e.g. "high nitrogen, very hot"'
+            language={language}
           />
         </div>
-
-        {soilType && (
-          <motion.div 
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full mt-1 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center gap-2 text-emerald-800 dark:text-emerald-200 text-sm shadow-sm"
-          >
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span>{t('selected_soil', 'Selected Soil Profile')}: <strong className="font-semibold">{soilOptions.find(o => o.value === soilType)?.label || soilType}</strong></span>
-          </motion.div>
-        )}
+        <button
+          onClick={handleScanSoil}
+          disabled={isScanning}
+          className="md:col-span-1 glass-panel p-4 flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 border border-emerald-500/30 rounded-3xl transition-all group"
+        >
+          {isScanning ? (
+            <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
+          ) : (
+            <Camera className="w-6 h-6 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+          )}
+          <span className="font-bold text-emerald-700 dark:text-emerald-300">
+            {isScanning ? "Scanning Soil..." : "AI Scan Soil"}
+          </span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {sliders.map((s) => {
-          const locked = useLiveWeather && isWeatherKey(s.key);
-          const isNPK = ['N', 'P', 'K'].includes(s.key);
-          const isPH = s.key === 'pH';
-          const trackGradient = isNPK ? 'linear-gradient(to right, #A8C98A, #4A7C3A)' : isPH ? 'linear-gradient(to right, #E8A33D, #B23A1D)' : '#E8DCC0';
+      <ScanSoilModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onScanComplete={handleScanComplete} 
+      />
 
-          return (
-            <div key={s.key} className={`flex flex-col gap-2 relative ${locked ? 'opacity-60' : ''}`}>
-              <div className="flex justify-between items-center text-sm">
-                <label className="flex items-center gap-2 text-farm-text-body font-medium">
-                  {s.icon} {s.name}
-                  {s.tooltip && <Tooltip text={s.tooltip} align="center" />}
-                </label>
-                <span className="font-bold text-farm-primary dark:text-farm-accent-gold transition-colors text-lg">
-                  {locked ? t('live', 'Live') : (values[s.key] ?? s.min)}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={s.min}
-                max={s.max}
-                step={s.step || 1}
-                value={values[s.key] ?? s.min}
-                onChange={(e) => onChange(s.key, parseFloat(e.target.value))}
-                disabled={locked}
-                className={`w-full h-2 rounded-lg custom-range-slider transition-colors ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                style={{ background: trackGradient }}
-              />
-            </div>
-          );
-        })}
+      {/* 2. Context Box (Dropdowns) - Moved ABOVE NPK inputs */}
+      <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/40 dark:bg-black/20 relative z-50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+          <CustomSelect value={soilType || ""} onChange={(val) => handleSoilTypeChange({ target: { value: val } })} placeholder="Soil Profile" icon={<Map className="w-4 h-4 text-emerald-500" />} options={soilOptions} />
+          <CustomSelect value={season} onChange={setSeason} placeholder="Season" icon={<Calendar className="w-4 h-4 text-emerald-500" />} options={[{ value: "auto", label: "Auto" }, { value: "kharif", label: "Kharif" }, { value: "rabi", label: "Rabi" }, { value: "zaid", label: "Zaid" }]} />
+          <CustomSelect value={isIrrigated ? 'irrigated' : 'rainfed'} onChange={(val) => setIsIrrigated(val === 'irrigated')} placeholder="Irrigation" icon={<Droplet className="w-4 h-4 text-emerald-500" />} options={[{ value: "rainfed", label: "Rainfed" }, { value: "irrigated", label: "Irrigated" }]} />
+          <CustomSelect value={technique} onChange={setTechnique} placeholder="Technique" icon={<Leaf className="w-4 h-4 text-emerald-500" />} options={[{ value: "monocropping", label: "Monocrop" }, { value: "intercropping", label: "Intercrop" }, { value: "strip", label: "Strip" }, { value: "mixed", label: "Mixed" }]} />
+          <CustomSelect value={cropCategory} onChange={(val) => { setCropCategory(val); setTargetCrop(''); }} placeholder="Category" icon={<Leaf className="w-4 h-4 text-emerald-500" />} options={categoryOptions} />
+        </div>
       </div>
+
+      {/* 3. Bento Grid for Sliders */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nutrients Box */}
+        <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/40 dark:bg-black/20 flex flex-col gap-5">
+          <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-2">
+            <Leaf className="w-5 h-5 text-emerald-500" /> Soil Nutrients
+          </h3>
+          {sliders.filter(s => ['N', 'P', 'K'].includes(s.key)).map(s => (
+            <SliderRow key={s.key} s={s} values={values} onChange={onChange} locked={false} trackGradient='linear-gradient(to right, #A8C98A, #4A7C3A)' />
+          ))}
+        </div>
+
+        {/* Environment Box */}
+        <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/40 dark:bg-black/20 flex flex-col gap-5">
+          <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-2">
+            <Wind className="w-5 h-5 text-blue-500" /> Environment & pH
+          </h3>
+          {sliders.filter(s => !['N', 'P', 'K'].includes(s.key)).map(s => {
+            const locked = useLiveWeather && isWeatherKey(s.key);
+            const isPH = s.key === 'pH';
+            const trackGradient = isPH ? 'linear-gradient(to right, #E8A33D, #B23A1D)' : '#E8DCC0';
+            return <SliderRow key={s.key} s={s} values={values} onChange={onChange} locked={locked} trackGradient={trackGradient} />;
+          })}
+        </div>
+      </div>
+
     </div>
-  </div>
   );
 };
+
+// Extracted small component for slider rows
+const SliderRow = ({ s, values, onChange, locked, trackGradient }) => (
+  <div className={`flex flex-col gap-2 relative ${locked ? 'opacity-60' : ''}`}>
+    <div className="flex justify-between items-center text-sm">
+      <label className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium font-inter">
+        {s.name.split(' ')[0]} {/* Simplified name */}
+        {s.tooltip && <Tooltip text={s.tooltip} align="center" />}
+      </label>
+      <span className="font-extrabold text-slate-900 dark:text-white transition-colors text-base font-poppins">
+        {locked ? 'Live' : (values[s.key] ?? s.min)}
+      </span>
+    </div>
+    <input
+      type="range" min={s.min} max={s.max} step={s.step || 1}
+      value={values[s.key] ?? s.min} onChange={(e) => onChange(s.key, parseFloat(e.target.value))}
+      disabled={locked}
+      className={`w-full h-2 rounded-lg custom-range-slider transition-colors ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+      style={{ background: trackGradient }}
+    />
+  </div>
+);
 
 export default Controls;

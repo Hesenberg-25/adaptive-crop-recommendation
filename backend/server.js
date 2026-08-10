@@ -6,14 +6,16 @@ const { getWeather, getClimateForecast } = require('./src/services/weatherServic
 const { getComprehensiveAnalysis, parseVoiceInput } = require('./src/services/aiService');
 const { reverseGeocodeToLanguage } = require('./src/services/geoService');
 const { getDynamicSubsidiesForCrops } = require('./src/services/subsidyService');
-const { getDynamicMarketPrices } = require('./src/services/marketDataService');
+const { getDynamicMarketPrices, fetchRawMandiRecords } = require('./src/services/marketDataService');
+const { analyzeSoilImage } = require('./src/services/visionService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
 const { evaluateRisk } = require('./src/services/pestDiseaseRules');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(
@@ -39,17 +41,69 @@ const authenticateUser = async (req, res, next) => {
 
 app.post('/api/auth/signup', async (req, res) => {
     const { email, password } = req.body;
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    let { data, error } = await supabase.auth.signUp({ email, password });
+    
+    if (error && error.message.toLowerCase().includes('already registered')) {
+        // Attempt to sign in to see if it's a deactivated account
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError && signInData?.user) {
+            const { data: profile } = await supabase.from('profiles').select('id').eq('id', signInData.user.id).single();
+            if (!profile) {
+                // It's a deactivated account, let's treat this sign in as a sign up!
+                return res.json({
+                    message: "Signup successful (Account restored)",
+                    user: signInData.user,
+                    token: signInData.session?.access_token,
+                    refresh_token: signInData.session?.refresh_token
+                });
+            } else {
+                return res.status(400).json({ error: "User already registered" });
+            }
+        }
+    }
+
     if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: "Signup successful", user: data.user, token: data.session?.access_token });
+    res.json({
+        message: "Signup successful",
+        user: data.user,
+        token: data.session?.access_token,
+        refresh_token: data.session?.refresh_token
+    });
 });
 
 app.post('/api/auth/signin', async (req, res) => {
     const { email, password } = req.body;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: "Signin successful", token: data.session.access_token });
+
+    // Check if profile exists
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', data.user.id).single();
+    if (!profile) {
+        return res.status(403).json({ error: "Account deactivated. Please sign up again to restore it.", isDeactivated: true });
+    }
+
+    res.json({
+        message: "Signin successful",
+        token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+    });
 });
+
+// Token refresh endpoint — prevents session expiry
+app.post('/api/auth/refresh', async (req, res) => {
+    const { refresh_token } = req.body;
+    if (!refresh_token) return res.status(400).json({ error: "Missing refresh_token" });
+
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token });
+    if (error || !data.session) {
+        return res.status(401).json({ error: error?.message || "Failed to refresh session" });
+    }
+    res.json({
+        token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+    });
+});
+
 
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
@@ -58,10 +112,12 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
 
         let language = requestedLanguage || 'en';
         let detectedRegion = null;
-        if (!requestedLanguage && lat && lon) {
+        let detectedDistrict = null;
+        if (lat && lon) {
             const geo = await reverseGeocodeToLanguage(lat, lon);
-            language = geo.language;
+            if (!requestedLanguage) language = geo.language;
             detectedRegion = geo.region;
+            detectedDistrict = geo.district;
         }
 
         // 1. Get Environmental Inputs
@@ -106,7 +162,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
 
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
 
-        const marketPrices = await getDynamicMarketPrices();
+        const marketPrices = await getDynamicMarketPrices(detectedRegion, detectedDistrict);
 
         // 2. ML Logic
         const mlPredictions = cropModel.predict(inputs);
@@ -173,7 +229,8 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
                 avgCostPerHectare,
                 expectedRevenue,
                 netReturnPerHectare,
-                rainfallFit
+                rainfallFit,
+                isRealTimePrice: data.isRealTimePrice || false
             };
         };
 
@@ -376,6 +433,36 @@ app.get('/api/farmer/profile', authenticateUser, async (req, res) => {
     }
 });
 
+// Market Data Routes
+app.post('/api/market/prices', authenticateUser, async (req, res) => {
+    try {
+        const { state, district, commodity, limit, offset } = req.body;
+        const data = await fetchRawMandiRecords({ state, district, commodity, limit, offset });
+        if (data.error) return res.status(400).json({ error: data.error });
+        res.json(data);
+    } catch (error) {
+        console.error("Market API Error:", error);
+        res.status(500).json({ error: "Failed to fetch market data" });
+    }
+});
+
+// Soil Image Analysis Route
+app.post('/api/vision/analyze-soil', authenticateUser, async (req, res) => {
+    try {
+        const { image, mimeType } = req.body;
+        if (!image) return res.status(400).json({ error: "Missing image data" });
+
+        // Strip the Base64 header if present (e.g. data:image/jpeg;base64,...)
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        
+        const result = await analyzeSoilImage(base64Data, mimeType || 'image/jpeg');
+        res.json(result);
+    } catch (error) {
+        console.error("Vision API Error:", error);
+        res.status(500).json({ error: "Failed to analyze soil image" });
+    }
+});
+
 app.put('/api/farmer/profile', authenticateUser, async (req, res) => {
     try {
         const profileData = {
@@ -427,6 +514,78 @@ app.delete('/api/farmer/profile', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error("Profile delete error:", error);
         res.status(500).json({ error: "Failed to delete account" });
+    }
+});
+
+// ── Favorite Crops ──
+app.get('/api/farmer/favorite-crops', authenticateUser, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('favorite_crops')
+            .select('crop_name, created_at')
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching favorite crops:", error);
+            return res.status(500).json({ error: "Failed to fetch favorite crops" });
+        }
+        res.json(data || []);
+    } catch (error) {
+        console.error("Favorite crops fetch error:", error);
+        res.status(500).json({ error: "Failed to fetch favorite crops" });
+    }
+});
+
+app.post('/api/farmer/favorite-crops', authenticateUser, async (req, res) => {
+    try {
+        const { crop_name } = req.body;
+        if (!crop_name) return res.status(400).json({ error: "Missing crop_name" });
+
+        const { data, error } = await supabase
+            .from('favorite_crops')
+            .upsert({ user_id: req.user.id, crop_name }, { onConflict: 'user_id,crop_name' })
+            .select();
+
+        if (error) {
+            console.error("Error saving favorite crop:", error);
+            return res.status(500).json({ error: error.message || "Failed to save favorite crop" });
+        }
+        res.json(data?.[0] || { crop_name });
+    } catch (error) {
+        console.error("Favorite crop save error:", error);
+        res.status(500).json({ error: "Failed to save favorite crop" });
+    }
+});
+
+app.delete('/api/farmer/favorite-crops/:cropName', authenticateUser, async (req, res) => {
+    try {
+        const cropName = decodeURIComponent(req.params.cropName);
+        const { error } = await supabase
+            .from('favorite_crops')
+            .delete()
+            .eq('user_id', req.user.id)
+            .eq('crop_name', cropName);
+
+        if (error) {
+            console.error("Error removing favorite crop:", error);
+            return res.status(500).json({ error: "Failed to remove favorite crop" });
+        }
+        res.json({ message: "Favorite removed" });
+    } catch (error) {
+        console.error("Favorite crop remove error:", error);
+        res.status(500).json({ error: "Failed to remove favorite crop" });
+    }
+});
+
+app.post('/api/market/prices', authenticateUser, async (req, res) => {
+    try {
+        const filters = req.body;
+        const data = await fetchRawMandiRecords(filters);
+        res.json(data);
+    } catch (error) {
+        console.error("Market API Error:", error.message);
+        res.status(500).json({ error: "Failed to fetch market data" });
     }
 });
 

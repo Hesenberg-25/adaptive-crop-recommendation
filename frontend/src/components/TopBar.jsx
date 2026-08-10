@@ -3,13 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Sun, Moon, Bell, User as UserIcon, LogOut, MapPin, Loader2, Leaf, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TopBar = ({ useLiveWeather, toggleLiveWeather, locationName, locLoading, language, languages, onLanguageChange }) => {
   const [showNotifs, setShowNotifs] = useState(false);
-  const { t } = useTranslation();
-  const { user, logout } = useAuth();
+    const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -28,10 +26,10 @@ const TopBar = ({ useLiveWeather, toggleLiveWeather, locationName, locLoading, l
     >
       {/* Left — Brand */}
       <div className="flex items-center gap-2 md:gap-4">
-        <div className="flex items-center gap-2 text-farm-primary dark:text-farm-text-heading font-extrabold font-poppins text-base md:text-lg select-none">
+        <Link to="/" className="flex items-center gap-2 text-farm-primary dark:text-farm-text-heading font-extrabold font-poppins text-base md:text-lg select-none hover:scale-105 transition-transform cursor-pointer">
           <Leaf className="w-5 h-5 text-farm-primary" />
           <span className="hidden sm:inline">AgriVision</span>
-        </div>
+        </Link>
       </div>
 
       {/* Right — Actions */}
@@ -41,7 +39,7 @@ const TopBar = ({ useLiveWeather, toggleLiveWeather, locationName, locLoading, l
           <div className="hidden lg:flex items-center gap-3 bg-white/30 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl px-4 py-1.5 mr-2">
             <MapPin className="w-4 h-4 text-farm-accent-gold flex-shrink-0" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 leading-none">{t('live_weather', 'Live Location')}</span>
+              <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 leading-none">Live Location</span>
               <AnimatePresence mode="wait">
                 {useLiveWeather && locationName ? (
                   <motion.span
@@ -55,10 +53,10 @@ const TopBar = ({ useLiveWeather, toggleLiveWeather, locationName, locLoading, l
                   </motion.span>
                 ) : locLoading ? (
                   <motion.span key="loading" className="text-xs text-slate-400 flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" /> {t('fetching', 'Fetching…')}
+                    <Loader2 className="w-3 h-3 animate-spin" /> Fetching…
                   </motion.span>
                 ) : (
-                  <motion.span key="off" className="text-xs text-slate-400">{t('off', 'Off')}</motion.span>
+                  <motion.span key="off" className="text-xs text-slate-400">Off</motion.span>
                 )}
               </AnimatePresence>
             </div>
@@ -114,7 +112,7 @@ const TopBar = ({ useLiveWeather, toggleLiveWeather, locationName, locLoading, l
               <UserIcon className="w-4 h-4 text-white" />
             </div>
             <span className="hidden md:block text-sm font-semibold text-slate-800 dark:text-white max-w-[80px] truncate">
-              {user?.name || t('profile', 'Farmer')}
+              {user?.name || 'Farmer'}
             </span>
           </motion.div>
         </Link>
@@ -125,7 +123,7 @@ const TopBar = ({ useLiveWeather, toggleLiveWeather, locationName, locLoading, l
           whileTap={{ scale: 0.9 }}
           onClick={handleLogout}
           className="w-9 h-9 rounded-2xl flex items-center justify-center bg-red-500/10 border border-red-400/20 hover:bg-red-500/20 text-red-500 transition-all"
-          title={t('logout', 'Logout')}
+          title="Logout"
         >
           <LogOut className="w-4 h-4" />
         </motion.button>

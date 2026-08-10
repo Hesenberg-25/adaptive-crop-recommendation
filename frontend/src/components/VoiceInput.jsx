@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useTranslation } from 'react-i18next';
+
 
 const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
-  const { t } = useTranslation();
+  
   const { token } = useAuth();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -19,7 +19,7 @@ const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
 
   const startListening = () => {
     if (!isSupported) {
-      toast.error(t('voice_not_supported', 'Voice input is not supported in this browser. Try Chrome.'));
+      toast.error('Voice input is not supported in this browser. Try Chrome.');
       return;
     }
 
@@ -52,7 +52,7 @@ const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      toast.error(t('voice_error', 'Could not hear you clearly. Please try again.'));
+      toast.error('Could not hear you clearly. Please try again.');
       setIsListening(false);
     };
 
@@ -85,13 +85,13 @@ const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
       const { extracted, summary } = response.data;
       if (extracted && Object.keys(extracted).length > 0) {
         onValuesExtracted(extracted);
-        toast.success(summary || t('voice_success', 'Values updated from voice input!'));
+        toast.success(summary || 'Values updated from voice input!');
         setTranscript('');
       } else {
-        toast.error(summary || t('voice_no_values', "Didn't catch any specific values — try mentioning a parameter like nitrogen or temperature."));
+        toast.error(summary || "Didn't catch any specific values — try mentioning a parameter like nitrogen or temperature.");
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || t('voice_failed', 'Failed to process voice input'));
+      toast.error(error.response?.data?.error || 'Failed to process voice input');
     } finally {
       setProcessing(false);
     }
@@ -117,7 +117,7 @@ const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
         </motion.button>
 
         <div className="flex-1 min-h-[3rem] px-4 py-2 rounded-xl bg-white/60 dark:bg-black/20 border border-white/20 flex items-center text-sm text-slate-700 dark:text-slate-300 font-lora italic">
-          {transcript || (isListening ? t('listening', 'Listening...') : t('tap_mic', 'Tap the mic and describe your soil, e.g. "high nitrogen and very hot today"'))}
+          {transcript || (isListening ? 'Listening...' : 'Tap the mic and describe your soil, e.g. "high nitrogen and very hot today"')}
         </div>
       </div>
 
@@ -133,7 +133,7 @@ const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
             className="w-full py-2.5 rounded-xl bg-farm-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
             {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {processing ? t('understanding', 'Understanding...') : t('use_these_values', 'Use these values')}
+            {processing ? 'Understanding...' : 'Use these values'}
           </motion.button>
         )}
       </AnimatePresence>

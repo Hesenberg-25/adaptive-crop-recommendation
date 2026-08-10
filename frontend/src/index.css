@@ -29,9 +29,48 @@
     --track-npk: linear-gradient(to right, #33422E, #6FA657);
     --track-ph: linear-gradient(to right, #E08A3C, #C0432A);
   }
+
+  .high-sunlight {
+    --color-bg: #FFFFFF;
+    --color-surface: #FFFFFF;
+    --color-primary: #000000;
+    --color-primary-light: #333333;
+    --color-accent-gold: #000000;
+    --color-accent-orange: #000000;
+    --color-text-heading: #000000;
+    --color-text-body: #000000;
+    --color-border: #000000;
+    --track-npk: linear-gradient(to right, #000000, #333333);
+    --track-ph: linear-gradient(to right, #000000, #666666);
+  }
   
   body {
     @apply antialiased text-farm-text-body font-inter transition-colors duration-300;
+    /* Force override Google Translate body positioning */
+    top: 0 !important;
+    position: relative !important;
+  }
+  
+  /* Hide Google Translate UI elements completely */
+  .goog-te-banner-frame.skiptranslate, 
+  .goog-te-gadget-icon,
+  #goog-gt-tt,
+  .goog-te-spinner-pos,
+  .goog-te-spinner-animation {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Prevent Google Translate from messing with the body layout */
+  body {
+    top: 0px !important;
+  }
+  
+  /* Remove hover tooltips from Google Translate */
+  .goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }
 
@@ -94,6 +133,35 @@
     border: 2px solid white;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
+
+/* Mesh Gradients */
+.mesh-bg-light {
+  background-color: #FAF3E0;
+  background-image: 
+    radial-gradient(at 40% 20%, hsla(88,59%,74%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(189,100%,56%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355,100%,93%,0.5) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(340,100%,76%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(22,100%,77%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(242,100%,70%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(343,100%,76%,0.2) 0px, transparent 50%);
+}
+
+.mesh-bg-dark {
+  background-color: #10190F;
+  background-image: 
+    radial-gradient(at 40% 20%, hsla(88,59%,24%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(189,100%,26%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355,100%,23%,0.5) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(340,100%,26%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(22,100%,27%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(242,100%,30%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(343,100%,26%,0.2) 0px, transparent 50%);
+}
+
+.mesh-bg-high-sunlight {
+  background: white;
+}
   
   .dark .custom-range-slider::-moz-range-thumb {
     border-color: var(--color-accent-gold);

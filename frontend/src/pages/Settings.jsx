@@ -3,13 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon, User, ChevronRight, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
-  const { t } = useTranslation();
-  const { user, token, logout } = useAuth();
+    const { user, token, logout } = useAuth();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,8 +33,8 @@ const Settings = () => {
   const items = [
     {
       icon: <User className="w-5 h-5 text-emerald-500" />,
-      label: t('edit_profile', 'Edit Profile'),
-      desc: t('edit_profile_desc', 'Update your name, farm size, soil preferences'),
+      label: 'Edit Profile',
+      desc: 'Update your name, farm size, soil preferences',
       to: '/profile',
       bg: 'bg-emerald-100 dark:bg-emerald-900/30',
     },
@@ -51,9 +49,9 @@ const Settings = () => {
       >
         <div className="flex items-center gap-3 mb-1">
           <SettingsIcon className="w-7 h-7 text-farm-primary" />
-          <h1 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white">{t('settings', 'Settings')}</h1>
+          <h1 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white">Settings</h1>
         </div>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings_desc', 'Manage your account and app preferences.')}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">Manage your account and app preferences.</p>
       </motion.div>
 
       <motion.div
@@ -89,7 +87,7 @@ const Settings = () => {
         className="glass-panel overflow-hidden border border-red-500/20"
       >
         <div className="p-5 border-b border-red-500/10 bg-red-50/50 dark:bg-red-900/10">
-          <h3 className="font-bold text-red-600 dark:text-red-400">{t('danger_zone', 'Danger Zone')}</h3>
+          <h3 className="font-bold text-red-600 dark:text-red-400">Danger Zone</h3>
         </div>
         <div 
           onClick={() => setShowConfirm(true)}
@@ -99,8 +97,8 @@ const Settings = () => {
             <Trash2 className="w-5 h-5 text-red-500" />
           </div>
           <div className="flex-grow">
-            <div className="font-semibold text-red-600 dark:text-red-400">{t('delete_account', 'Delete Account')}</div>
-            <div className="text-xs text-red-400/80 mt-0.5">{t('delete_account_desc', 'Permanently delete your data and account')}</div>
+            <div className="font-semibold text-red-600 dark:text-red-400">Delete Account</div>
+            <div className="text-xs text-red-400/80 mt-0.5">Permanently delete your data and account</div>
           </div>
         </div>
       </motion.div>
@@ -119,23 +117,23 @@ const Settings = () => {
               <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4 text-red-500">
                 <AlertTriangle className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold font-poppins text-slate-800 dark:text-white mb-2">{t('delete_account_confirm', 'Delete Account?')}</h3>
+              <h3 className="text-xl font-bold font-poppins text-slate-800 dark:text-white mb-2">Delete Account?</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">
-                {t('delete_account_warning', 'This action cannot be undone. All your predictions, history, and profile data will be permanently removed.')}
+                This action cannot be undone. All your predictions, history, and profile data will be permanently removed.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirm(false)}
                   className="flex-1 py-2.5 rounded-xl font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 >
-                  {t('cancel', 'Cancel')}
+                  Cancel
                 </button>
                 <button
                   onClick={handleDeleteAccount}
                   disabled={loading}
                   className="flex-1 py-2.5 rounded-xl font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center justify-center"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('yes_delete', 'Yes, Delete')}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Yes, Delete'}
                 </button>
               </div>
             </motion.div>
