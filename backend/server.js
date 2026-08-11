@@ -41,28 +41,19 @@ const authenticateUser = async (req, res, next) => {
 
 app.post('/api/auth/signup', async (req, res) => {
     const { email, password } = req.body;
-    let { data, error } = await supabase.auth.signUp({ email, password });
-    
-    if (error && error.message.toLowerCase().includes('already registered')) {
-        // Attempt to sign in to see if it's a deactivated account
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (!signInError && signInData?.user) {
-            const { data: profile } = await supabase.from('profiles').select('id').eq('id', signInData.user.id).single();
-            if (!profile) {
-                // It's a deactivated account, let's treat this sign in as a sign up!
-                return res.json({
-                    message: "Signup successful (Account restored)",
-                    user: signInData.user,
-                    token: signInData.session?.access_token,
-                    refresh_token: signInData.session?.refresh_token
-                });
-            } else {
-                return res.status(400).json({ error: "User already registered" });
-            }
-        }
-    }
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) return res.status(400).json({ error: error.message });
+
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({ id: data.user.id, email }, { onConflict: 'id' });
+
+    if (profileError) {
+        console.error('Error creating profile after signup:', profileError.message);
+        // We still return signup success because auth completed
+    }
+
     res.json({
         message: "Signup successful",
         user: data.user,
@@ -75,12 +66,6 @@ app.post('/api/auth/signin', async (req, res) => {
     const { email, password } = req.body;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return res.status(400).json({ error: error.message });
-
-    // Check if profile exists
-    const { data: profile } = await supabase.from('profiles').select('id').eq('id', data.user.id).single();
-    if (!profile) {
-        return res.status(403).json({ error: "Account deactivated. Please sign up again to restore it.", isDeactivated: true });
-    }
 
     res.json({
         message: "Signin successful",
@@ -465,7 +450,8 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             ph: pH,
             lat,
             lon,
-            advice: adviceWithPayload
+            advice: adviceWithPayload,
+            full_results: fullResponseJson
         };
         const { error: dbError } = await supabase.from('predictions').insert([predictionRecord]);
         if (dbError) console.error("Failed to save prediction to DB:", dbError.message);
