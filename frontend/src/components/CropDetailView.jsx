@@ -55,11 +55,15 @@ const CropDetailView = ({ crop, onBack, isFavorite, onToggleFavorite }) => {
     const detail = CROP_DETAILS[crop.name];
   const [activeImageIdx, setActiveImageIdx] = useState(0);
 
-  const images = useMultiCropImages(
+  const fetchedImages = useMultiCropImages(
     crop.name,
     detail?.unsplashQuery,
     5
   );
+
+  const images = detail?.imageUrl 
+    ? [detail.imageUrl, ...fetchedImages.filter(img => img !== detail.imageUrl)] 
+    : fetchedImages;
 
   const nextImage = useCallback(() => {
     if (images.length > 0) setActiveImageIdx(i => (i + 1) % images.length);

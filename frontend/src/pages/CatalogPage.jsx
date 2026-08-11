@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import CropDetailView from '../components/CropDetailView';
+import CROP_DETAILS from '../data/cropDetailData';
 
 const CROPS = [
   { name: 'Rice',         emoji: '🌾', category: 'Cereal' },
@@ -202,7 +203,11 @@ const CatalogPage = () => {
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold border shadow-sm cursor-pointer transition-all hover:shadow-md ${categoryColors[crop.category]}`}
                   >
                     <Heart className="w-3 h-3 text-red-500 fill-red-500" />
-                    <span className="text-base">{crop.emoji}</span>
+                    {CROP_DETAILS[crop.name]?.imageUrl ? (
+                      <img src={CROP_DETAILS[crop.name].imageUrl} alt={crop.name} className="w-5 h-5 rounded-full object-cover shadow-sm border border-white/20" />
+                    ) : (
+                      <span className="text-base">{crop.emoji}</span>
+                    )}
                     {crop.name}
                   </motion.button>
                 ))}
@@ -263,7 +268,11 @@ const CatalogPage = () => {
                     onClick={() => setSelectedCrop(crop)}
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold border shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-95 ${categoryColors[crop.category]}`}
                   >
-                    <span className="text-base">{crop.emoji}</span>
+                    {CROP_DETAILS[crop.name]?.imageUrl ? (
+                      <img src={CROP_DETAILS[crop.name].imageUrl} alt={crop.name} className="w-5 h-5 rounded-full object-cover shadow-sm border border-white/20" />
+                    ) : (
+                      <span className="text-base">{crop.emoji}</span>
+                    )}
                     {crop.name}
                     {favorites.includes(crop.name) && (
                       <Heart className="w-3 h-3 text-red-500 fill-red-500 ml-0.5" />
