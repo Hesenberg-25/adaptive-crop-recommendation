@@ -87,7 +87,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
         
         // 2. ML Logic
-        const topCrops = cropModel.predict(inputs);
+        const topCrops = await cropModel.predict(inputs);
         const shapImportance = shapEngine.calculate(inputs, topCrops[0].name);
         
         // 3. Financial ROI
