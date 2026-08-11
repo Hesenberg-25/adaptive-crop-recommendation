@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Sprout, Activity, DollarSign, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTranslation } from 'react-i18next';
+
 
 const Home = () => {
-  const { t } = useTranslation();
+  
   const { isAuthenticated } = useAuth();
   const containerRef = useRef(null);
   
@@ -50,7 +50,7 @@ const Home = () => {
             animate={{ scale: 1, opacity: 1, rotateY: 0 }}
             transition={{ type: "spring", stiffness: 100, damping: 20, duration: 1 }}
           >
-            <h1 className="text-6xl md:text-8xl font-black font-playfair tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 via-teal-300 to-cyan-500 mb-6 drop-shadow-2xl" dangerouslySetInnerHTML={{ __html: t('home_title', 'Farm Smarter.<br/>Not Harder.') }}>
+            <h1 className="text-6xl md:text-8xl font-black font-playfair tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 via-teal-300 to-cyan-500 mb-6 drop-shadow-2xl" dangerouslySetInnerHTML={{ __html: 'Farm Smarter.<br/>Not Harder.' }}>
             </h1>
           </motion.div>
           
@@ -60,7 +60,7 @@ const Home = () => {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-10 font-lora italic leading-relaxed"
           >
-            {t('home_subtitle', 'Experience the future of agriculture with an AI-driven engine tailored to your exact soil chemistry, live hyper-local weather, and real-time market economics.')}
+            Experience the future of agriculture with an AI-driven engine tailored to your exact soil chemistry, live hyper-local weather, and real-time market economics.
           </motion.p>
           
           <motion.div
@@ -71,7 +71,7 @@ const Home = () => {
             <Link to={isAuthenticated ? "/dashboard" : "/signup"} className="group relative inline-flex items-center justify-center px-10 py-5 font-bold text-white transition-all duration-300 bg-emerald-600 rounded-full shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:shadow-[0_0_60px_rgba(16,185,129,0.7)] hover:-translate-y-1 overflow-hidden">
               <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black"></span>
               <span className="relative text-lg font-poppins flex items-center gap-3">
-                {isAuthenticated ? t('go_to_dashboard', 'Go to Dashboard') : t('start_predicting_now', 'Start Predicting Now')}
+                {isAuthenticated ? 'Go to Dashboard' : 'Start Predicting Now'}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </span>
             </Link>
@@ -85,20 +85,20 @@ const Home = () => {
         >
           <FeatureCard 
             icon={<Sprout className="w-12 h-12 text-emerald-500" />}
-            title={t('hybrid_ml_ai', 'Hybrid ML + AI Engine')}
-            desc={t('hybrid_ml_ai_desc', 'Mathematical Machine Learning predicts viability, while Gemini LLM designs advanced Intercropping geometries.')}
+            title="Hybrid ML + AI Engine"
+            desc="Mathematical Machine Learning predicts viability, while Gemini LLM designs advanced Intercropping geometries."
             delay={0.1}
           />
           <FeatureCard 
             icon={<Activity className="w-12 h-12 text-cyan-500" />}
-            title={t('live_weather_sync', 'Live Weather Sync')}
-            desc={t('live_weather_sync_desc', 'Automatically syncs 3-year historical climate averages and applies seasonal and irrigation offsets.')}
+            title="Live Weather Sync"
+            desc="Automatically syncs 3-year historical climate averages and applies seasonal and irrigation offsets."
             delay={0.3}
           />
           <FeatureCard 
             icon={<DollarSign className="w-12 h-12 text-amber-500" />}
-            title={t('autonomous_web_scraping', 'Autonomous Web Scraping')}
-            desc={t('autonomous_web_scraping_desc', 'Google Search Grounding scrapes the live internet to calculate absolute real-time ROI for 47 Indian crops.')}
+            title="Autonomous Web Scraping"
+            desc="Google Search Grounding scrapes the live internet to calculate absolute real-time ROI for 47 Indian crops."
             delay={0.5}
           />
         </motion.div>

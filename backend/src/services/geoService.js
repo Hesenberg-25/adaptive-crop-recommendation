@@ -20,19 +20,21 @@ const STATE_LANGUAGE_MAP = {
 async function reverseGeocodeToLanguage(lat, lon) {
     try {
         const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
-            params: { lat, lon, format: 'json', zoom: 5 },
+            params: { lat, lon, format: 'json', zoom: 10 },
             headers: { 'User-Agent': 'AdaptiveCropRecommendation/1.0' },
             timeout: 5000
         });
 
         const state = response.data?.address?.state?.toLowerCase();
+        const district = response.data?.address?.state_district || response.data?.address?.county;
+        
         if (state && STATE_LANGUAGE_MAP[state]) {
-            return { language: STATE_LANGUAGE_MAP[state], region: response.data.address.state };
+            return { language: STATE_LANGUAGE_MAP[state], region: response.data.address.state, district: district };
         }
-        return { language: 'en', region: state || null };
+        return { language: 'en', region: state || null, district: district || null };
     } catch (error) {
         console.error("Reverse geocoding failed:", error.message);
-        return { language: 'en', region: null };
+        return { language: 'en', region: null, district: null };
     }
 }
 

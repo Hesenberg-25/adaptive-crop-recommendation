@@ -6,14 +6,16 @@ const { getWeather, getClimateForecast } = require('./src/services/weatherServic
 const { getComprehensiveAnalysis, parseVoiceInput } = require('./src/services/aiService');
 const { reverseGeocodeToLanguage } = require('./src/services/geoService');
 const { getDynamicSubsidiesForCrops } = require('./src/services/subsidyService');
-const { getDynamicMarketPrices } = require('./src/services/marketDataService');
+const { getDynamicMarketPrices, fetchRawMandiRecords } = require('./src/services/marketDataService');
+const { analyzeSoilImage } = require('./src/services/visionService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
 const { evaluateRisk } = require('./src/services/pestDiseaseRules');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(
@@ -40,16 +42,71 @@ const authenticateUser = async (req, res, next) => {
 app.post('/api/auth/signup', async (req, res) => {
     const { email, password } = req.body;
     const { data, error } = await supabase.auth.signUp({ email, password });
+
     if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: "Signup successful", user: data.user, token: data.session?.access_token });
+
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({ id: data.user.id, email }, { onConflict: 'id' });
+
+    if (profileError) {
+        console.error('Error creating profile after signup:', profileError.message);
+        // We still return signup success because auth completed
+    }
+
+    res.json({
+        message: "Signup successful",
+        user: data.user,
+        token: data.session?.access_token,
+        refresh_token: data.session?.refresh_token
+    });
 });
 
 app.post('/api/auth/signin', async (req, res) => {
     const { email, password } = req.body;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: "Signin successful", token: data.session.access_token });
+
+    res.json({
+        message: "Signin successful",
+        token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+    });
 });
+
+// Token refresh endpoint — prevents session expiry
+app.post('/api/auth/refresh', async (req, res) => {
+    const { refresh_token } = req.body;
+    if (!refresh_token) return res.status(400).json({ error: "Missing refresh_token" });
+
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token });
+    if (error || !data.session) {
+        return res.status(401).json({ error: error?.message || "Failed to refresh session" });
+    }
+    res.json({
+        token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+    });
+});
+
+// Public endpoint to fetch subsidies for given crops and optional region
+app.get('/api/subsidies', async (req, res) => {
+    try {
+        const cropsQuery = req.query.crops || req.query.crop || '';
+        const crops = Array.isArray(cropsQuery) ? cropsQuery : (cropsQuery ? cropsQuery.split(',').map(s => s.trim()).filter(Boolean) : []);
+        const state = req.query.state || req.query.region || '';
+        const district = req.query.district || '';
+
+        if (!crops || crops.length === 0) return res.status(400).json({ error: 'Provide ?crops=rice,wheat or JSON body { crops: [...] }' });
+
+        const result = await getDynamicSubsidiesForCrops(crops, { state, district });
+        res.json({ crops, state, district, data: result });
+    } catch (e) {
+        console.error('Subsidies endpoint error:', e);
+        res.status(500).json({ error: 'Failed to retrieve subsidies' });
+    }
+});
+
 
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
@@ -58,10 +115,12 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
 
         let language = requestedLanguage || 'en';
         let detectedRegion = null;
-        if (!requestedLanguage && lat && lon) {
+        let detectedDistrict = null;
+        if (lat && lon) {
             const geo = await reverseGeocodeToLanguage(lat, lon);
-            language = geo.language;
+            if (!requestedLanguage) language = geo.language;
             detectedRegion = geo.region;
+            detectedDistrict = geo.district;
         }
 
         // 1. Get Environmental Inputs
@@ -106,7 +165,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
 
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
 
-        const marketPrices = await getDynamicMarketPrices();
+        const marketPrices = await getDynamicMarketPrices(detectedRegion, detectedDistrict);
 
         // 2. ML Logic
         const mlPredictions = cropModel.predict(inputs);
@@ -173,7 +232,8 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
                 avgCostPerHectare,
                 expectedRevenue,
                 netReturnPerHectare,
-                rainfallFit
+                rainfallFit,
+                isRealTimePrice: data.isRealTimePrice || false
             };
         };
 
@@ -200,8 +260,67 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             avoidWithROI = allCropsWithROI.slice(mid).reverse();
         }
 
+        // Crop calendar for sow/harvest display
+        const cropCalendar = {
+            rice: { sow: 'Jun', harvest: 'Nov' }, wheat: { sow: 'Nov', harvest: 'Apr' },
+            maize: { sow: 'Jun', harvest: 'Sep' }, cotton: { sow: 'Apr', harvest: 'Oct' },
+            jute: { sow: 'Mar', harvest: 'Jul' }, coconut: { sow: 'Jun', harvest: 'Dec' },
+            papaya: { sow: 'Feb', harvest: 'Dec' }, orange: { sow: 'Jul', harvest: 'Feb' },
+            apple: { sow: 'Dec', harvest: 'Sep' }, muskmelon: { sow: 'Feb', harvest: 'May' },
+            watermelon: { sow: 'Jan', harvest: 'May' }, grapes: { sow: 'Jan', harvest: 'Jun' },
+            mango: { sow: 'Jul', harvest: 'Jun' }, banana: { sow: 'Feb', harvest: 'Nov' },
+            pomegranate: { sow: 'Jul', harvest: 'Feb' }, lentil: { sow: 'Oct', harvest: 'Mar' },
+            blackgram: { sow: 'Jul', harvest: 'Oct' }, mungbean: { sow: 'Mar', harvest: 'Jun' },
+            mothbeans: { sow: 'Jul', harvest: 'Oct' }, pigeonpeas: { sow: 'Jun', harvest: 'Dec' },
+            kidneybeans: { sow: 'Jun', harvest: 'Oct' }, chickpea: { sow: 'Oct', harvest: 'Mar' },
+            coffee: { sow: 'Jun', harvest: 'Dec' },
+        };
+
+        // Attach per-crop SHAP, NPK status, and season data
+        const attachCropSpecificData = (crop) => {
+            const cropShap = shapEngine.calculate(inputs, crop.name, trainingData);
+            // Convert shap object to array for frontend
+            const shapArray = [];
+            for (const [key, val] of Object.entries(cropShap)) {
+                if (key === 'topFeature') continue;
+                const match = val.match(/([+-]?\d+)% Impact \((.*)\)/);
+                if (match) {
+                    const pct = parseInt(match[1], 10);
+                    const dir = match[2]; // "Optimal", "Low", "Excessive"
+                    shapArray.push({
+                        feature: key,
+                        value: dir === 'Optimal' ? pct : -pct,
+                        direction: dir
+                    });
+                }
+            }
+            shapArray.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+            // NPK status based on shap direction
+            const npkStatus = {};
+            ['N', 'P', 'K'].forEach(nutrient => {
+                const entry = shapArray.find(s => s.feature.toUpperCase() === nutrient.toUpperCase() || s.feature === nutrient);
+                if (entry) {
+                    npkStatus[nutrient] = entry.direction; // "Optimal", "Low", "Excessive"
+                } else {
+                    npkStatus[nutrient] = 'Optimal';
+                }
+            });
+
+            const cal = cropCalendar[crop.name.toLowerCase()] || { sow: '—', harvest: '—' };
+
+            return {
+                ...crop,
+                shap: shapArray.slice(0, 5), // top 5 drivers
+                npkStatus,
+                sowMonth: cal.sow,
+                harvestMonth: cal.harvest,
+                topFeature: cropShap.topFeature
+            };
+        };
+
         recommendedWithROI = recommendedWithROI.map(c => ({
-            ...c,
+            ...attachCropSpecificData(c),
             isMarginal: c.confidence < threshold
         }));
 
@@ -250,7 +369,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
                     avoidReason = `${featureNames[worstFeature]} (${inputMapping[worstFeature]}) is too ${worstDirection === 'high' ? 'high' : 'low'} for ${crop.name.charAt(0).toUpperCase() + crop.name.slice(1)} (ideal ${rangeStr}).`;
                 }
             }
-            return { ...crop, avoidReason };
+            return { ...attachCropSpecificData(crop), avoidReason };
         });
 
         // 3a. Extract Target Crop if specified
@@ -307,8 +426,8 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
         const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
 
-        // 3b. Government Subsidies & Schemes
-        const governmentSubsidies = await getDynamicSubsidiesForCrops(recommendedWithROI);
+        // 3b. Government Subsidies & Schemes (region-aware)
+        const governmentSubsidies = await getDynamicSubsidiesForCrops(recommendedWithROI, { state: detectedRegion, district: detectedDistrict });
 
         // 3. Gemini Comprehensive Analysis & Pest Alerts
         const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });
@@ -321,23 +440,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             .map(c => c.name)
             .join(', ');
 
-        // 5. Save to Supabase Database
-        const predictionRecord = {
-            user_id: req.user.id,
-            recommended_crop: topThreeCrops,
-            soil_n: N,
-            soil_p: P,
-            soil_k: K,
-            ph: pH,
-            lat,
-            lon,
-            advice: aiAdvice
-        };
-        const { error: dbError } = await supabase.from('predictions').insert([predictionRecord]);
-        if (dbError) console.error("Failed to save prediction to DB:", dbError.message);
-
-        // 6. Single JSON Response
-        res.json({
+        const fullResponseJson = {
             recommendedCrops: recommendedWithROI,
             avoidCrops: avoidWithROI,
             targetCropResult,
@@ -348,7 +451,31 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             weatherUsed: { temperature, humidity, rainfall, windSpeed, dailyForecast },
             detectedLanguage: language,
             detectedRegion
-        });
+        };
+
+        // Embed the full JSON payload invisibly inside the advice string
+        // so that the History page can parse it out and render the full UI without a schema change.
+        const encodedPayload = `\n\n<!--_RESULTS_PAYLOAD_START_${JSON.stringify(fullResponseJson)}_RESULTS_PAYLOAD_END_-->`;
+        const adviceWithPayload = aiAdvice + encodedPayload;
+
+        // 5. Save to Supabase Database
+        const predictionRecord = {
+            user_id: req.user.id,
+            recommended_crop: topThreeCrops,
+            soil_n: N,
+            soil_p: P,
+            soil_k: K,
+            ph: pH,
+            lat,
+            lon,
+            advice: adviceWithPayload,
+            full_results: fullResponseJson
+        };
+        const { error: dbError } = await supabase.from('predictions').insert([predictionRecord]);
+        if (dbError) console.error("Failed to save prediction to DB:", dbError.message);
+
+        // 6. Single JSON Response
+        res.json(fullResponseJson);
 
     } catch (error) {
         console.error("Prediction error:", error);
@@ -373,6 +500,36 @@ app.get('/api/farmer/profile', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error("Profile fetch error:", error);
         res.status(500).json({ error: "Failed to fetch profile" });
+    }
+});
+
+// Market Data Routes
+app.post('/api/market/prices', authenticateUser, async (req, res) => {
+    try {
+        const { state, district, commodity, limit, offset } = req.body;
+        const data = await fetchRawMandiRecords({ state, district, commodity, limit, offset });
+        if (data.error) return res.status(400).json({ error: data.error });
+        res.json(data);
+    } catch (error) {
+        console.error("Market API Error:", error);
+        res.status(500).json({ error: "Failed to fetch market data" });
+    }
+});
+
+// Soil Image Analysis Route
+app.post('/api/vision/analyze-soil', authenticateUser, async (req, res) => {
+    try {
+        const { image, mimeType } = req.body;
+        if (!image) return res.status(400).json({ error: "Missing image data" });
+
+        // Strip the Base64 header if present (e.g. data:image/jpeg;base64,...)
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        
+        const result = await analyzeSoilImage(base64Data, mimeType || 'image/jpeg');
+        res.json(result);
+    } catch (error) {
+        console.error("Vision API Error:", error);
+        res.status(500).json({ error: "Failed to analyze soil image" });
     }
 });
 
@@ -430,6 +587,67 @@ app.delete('/api/farmer/profile', authenticateUser, async (req, res) => {
     }
 });
 
+// ── Favorite Crops ──
+app.get('/api/farmer/favorite-crops', authenticateUser, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('favorite_crops')
+            .select('crop_name, created_at')
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching favorite crops:", error);
+            return res.status(500).json({ error: "Failed to fetch favorite crops" });
+        }
+        res.json(data || []);
+    } catch (error) {
+        console.error("Favorite crops fetch error:", error);
+        res.status(500).json({ error: "Failed to fetch favorite crops" });
+    }
+});
+
+app.post('/api/farmer/favorite-crops', authenticateUser, async (req, res) => {
+    try {
+        const { crop_name } = req.body;
+        if (!crop_name) return res.status(400).json({ error: "Missing crop_name" });
+
+        const { data, error } = await supabase
+            .from('favorite_crops')
+            .upsert({ user_id: req.user.id, crop_name }, { onConflict: 'user_id,crop_name' })
+            .select();
+
+        if (error) {
+            console.error("Error saving favorite crop:", error);
+            return res.status(500).json({ error: error.message || "Failed to save favorite crop" });
+        }
+        res.json(data?.[0] || { crop_name });
+    } catch (error) {
+        console.error("Favorite crop save error:", error);
+        res.status(500).json({ error: "Failed to save favorite crop" });
+    }
+});
+
+app.delete('/api/farmer/favorite-crops/:cropName', authenticateUser, async (req, res) => {
+    try {
+        const cropName = decodeURIComponent(req.params.cropName);
+        const { error } = await supabase
+            .from('favorite_crops')
+            .delete()
+            .eq('user_id', req.user.id)
+            .eq('crop_name', cropName);
+
+        if (error) {
+            console.error("Error removing favorite crop:", error);
+            return res.status(500).json({ error: "Failed to remove favorite crop" });
+        }
+        res.json({ message: "Favorite removed" });
+    } catch (error) {
+        console.error("Favorite crop remove error:", error);
+        res.status(500).json({ error: "Failed to remove favorite crop" });
+    }
+});
+
 app.post('/api/parse-voice', authenticateUser, async (req, res) => {
     try {
         const { transcript } = req.body;
@@ -461,6 +679,26 @@ app.get('/api/predictions/history', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error("History fetch error:", error);
         res.status(500).json({ error: "Failed to fetch prediction history" });
+    }
+});
+
+app.delete('/api/predictions/history/:id', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase
+            .from('predictions')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', req.user.id);
+
+        if (error) {
+            console.error("Error deleting history record:", error);
+            return res.status(500).json({ error: "Failed to delete prediction record" });
+        }
+        res.json({ message: "Prediction record deleted successfully" });
+    } catch (error) {
+        console.error("History delete error:", error);
+        res.status(500).json({ error: "Failed to delete prediction record" });
     }
 });
 

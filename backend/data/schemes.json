@@ -1,0 +1,70 @@
+{
+  "universal": [
+    {
+      "id": "pmkisan",
+      "name": "PM-KISAN",
+      "benefitType": "Income Support",
+      "details": "Direct income support scheme providing ₹6000/year to eligible farmers in three equal installments.",
+      "eligibility": "All small and marginal landholding farmer families with valid land records (see official portal for exclusions).",
+      "implementingAgency": "Ministry of Agriculture & Farmers Welfare",
+      "link": "https://pmkisan.gov.in/",
+      "officialDocumentLinks": ["https://pmkisan.gov.in/"],
+      "lastUpdated": "2024-01-01",
+      "source": "official"
+    },
+    {
+      "id": "soil-health-card",
+      "name": "Soil Health Card (SHC)",
+      "benefitType": "Soil Testing & Advisory",
+      "details": "Provides soil testing and nutrient-based recommendations to farmers via state labs and mobile soil testing vans.",
+      "eligibility": "All farmers can apply for soil testing and receive a soil health card.",
+      "implementingAgency": "Department of Agriculture & Farmers Welfare",
+      "link": "https://soilhealth.dac.gov.in/",
+      "officialDocumentLinks": ["https://soilhealth.dac.gov.in/"],
+      "lastUpdated": "2023-09-10",
+      "source": "official"
+    },
+    {
+      "id": "pmfby",
+      "name": "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+      "benefitType": "Financial Assistance",
+      "details": "Crop insurance scheme providing financial support to farmers in case of crop loss due to natural calamities.",
+      "eligibility": "Farmers who have insurable crops and have paid/pending premium per scheme rules.",
+      "implementingAgency": "Ministry of Agriculture & Farmers Welfare",
+      "link": "https://pmfby.gov.in/",
+      "officialDocumentLinks": ["https://pmfby.gov.in/"],
+      "lastUpdated": "2024-02-01",
+      "source": "official"
+    }
+  ],
+  "crop_specific": {
+    "rice": [
+      {
+        "id": "rkvyrice",
+        "name": "Rashtriya Krishi Vikas Yojana (RKVY)",
+        "benefitType": "Project Funding",
+        "details": "Provides funds to states for agricultural infrastructure and targeted schemes; may include rice productivity projects.",
+        "eligibility": "State implementing agencies; farmer groups for supported projects.",
+        "implementingAgency": "Department of Agriculture & Farmers Welfare / State Agriculture Departments",
+        "link": "https://agricoop.nic.in/",
+        "officialDocumentLinks": ["https://agricoop.nic.in/"],
+        "lastUpdated": "2022-11-12",
+        "source": "official"
+      }
+    ],
+    "wheat": [
+      {
+        "id": "nwkcwheat",
+        "name": "National Food Security Mission (NFSM) - Wheat",
+        "benefitType": "Productivity Support",
+        "details": "Targeted interventions to increase wheat yield including subsidies for quality seed and micronutrients.",
+        "eligibility": "Farmers participating in NFSM programs in targeted districts.",
+        "implementingAgency": "Department of Agriculture & Farmers Welfare",
+        "link": "https://agricoop.nic.in/",
+        "officialDocumentLinks": ["https://agricoop.nic.in/"],
+        "lastUpdated": "2022-07-01",
+        "source": "official"
+      }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
+
 import { 
   Landmark, 
   ChevronDown, 
@@ -33,7 +33,7 @@ const iconMap = {
 const SchemeCard = ({ scheme, index, isUniversal }) => {
   const [expanded, setExpanded] = useState(false);
   const IconComponent = iconMap[scheme.icon] || Landmark;
-  const { t } = useTranslation();
+  
 
   return (
     <motion.div
@@ -76,6 +76,11 @@ const SchemeCard = ({ scheme, index, isUniversal }) => {
             `}>
               {scheme.benefitType}
             </span>
+            {scheme.source && (
+              <span className={`text-[10px] ml-2 px-2 py-0.5 rounded-full font-semibold ${scheme.source === 'official' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}>
+                {scheme.source === 'official' ? 'Official' : scheme.source}
+              </span>
+            )}
           </div>
           
           <div className="flex items-center gap-2 mt-1">
@@ -110,7 +115,7 @@ const SchemeCard = ({ scheme, index, isUniversal }) => {
               
               <div className="flex items-start gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                <span><strong className="text-slate-700 dark:text-slate-300">{t('eligibility', 'Eligibility:')}</strong> {scheme.eligibility || scheme.details || scheme.description}</span>
+                <span><strong className="text-slate-700 dark:text-slate-300">Eligibility:</strong> {scheme.eligibility || scheme.details || scheme.description}</span>
               </div>
               
               <a
@@ -126,7 +131,7 @@ const SchemeCard = ({ scheme, index, isUniversal }) => {
                   }
                 `}
               >
-                {t('apply_official', 'Apply on Official Portal')} <ExternalLink className="w-3 h-3" />
+                Apply on Official Portal <ExternalLink className="w-3 h-3" />
               </a>
             </div>
           </motion.div>
@@ -137,14 +142,27 @@ const SchemeCard = ({ scheme, index, isUniversal }) => {
 };
 
 const GovernmentSchemes = ({ subsidyData }) => {
-  const { t } = useTranslation();
+  
   const [showAll, setShowAll] = useState(false);
 
-  if (!subsidyData) return null;
+  if (!subsidyData) {
+    return (
+      <div className="glass-panel p-6 w-full text-center text-slate-600 dark:text-slate-400 rounded-3xl border border-slate-200/40 dark:border-white/10">
+        <p className="text-sm font-semibold">Unable to process your request currently.</p>
+        <p className="mt-2 text-xs">Government subsidy details are unavailable right now. Please try again later.</p>
+      </div>
+    );
+  }
 
   const { universal = [], cropSpecific = [], totalSchemes, estimatedBenefitSummary, crop } = subsidyData;
-  const allSchemes = [...cropSpecific, ...universal];
+  const allSchemes = [...(cropSpecific || []), ...(universal || [])];
   const displayedSchemes = showAll ? allSchemes : allSchemes.slice(0, 3);
+
+  // Detect whether any scheme mentions MSP/price guarantee to avoid hardcoded claims
+  const hasPriceGuarantee = allSchemes.some(s => {
+    const text = `${s.name || ''} ${s.benefitType || ''} ${s.details || ''}`.toLowerCase();
+    return text.includes('msp') || text.includes('price guarantee') || text.includes('minimum support price');
+  });
 
   return (
     <motion.div
@@ -156,37 +174,34 @@ const GovernmentSchemes = ({ subsidyData }) => {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold flex items-center gap-2 text-amber-600 dark:text-amber-400">
           <Landmark className="w-6 h-6" />
-          {t('government_schemes', 'Government Schemes & Subsidies')}
+          Government Schemes & Subsidies
         </h2>
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-4 h-4 text-amber-500" />
           <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-            {totalSchemes} {t('found', 'Found')}
+            {totalSchemes} Found
           </span>
         </div>
       </div>
 
       {/* Summary Banner */}
       <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-amber-500/5 dark:via-emerald-500/5 dark:to-indigo-500/5 border border-amber-200/40 dark:border-amber-500/20 rounded-xl px-4 py-3">
-        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-          <span className="font-semibold text-amber-700 dark:text-amber-300">
-            💰 {t('for_farmers', 'For %crop% farmers:').replace('%crop%', t((crop || '').toLowerCase(), crop?.charAt(0).toUpperCase() + crop?.slice(1)))}
-          </span>{' '}
-          {(estimatedBenefitSummary || '').replace(
-            /(\d+) government schemes available/g, 
-            (_, count) => `${count} ${t('government_schemes_available', 'government schemes available')}`
-          ).replace(
-            'MSP price guarantee active',
-            t('msp_price_guarantee', 'MSP price guarantee active')
-          )}
-        </p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <span className="font-semibold text-amber-700 dark:text-amber-300">
+              💰 For {crop?.charAt(0).toUpperCase() + crop?.slice(1)} farmers:
+            </span>{' '}
+            <span>{estimatedBenefitSummary || `${allSchemes.length} schemes available`}</span>
+            {hasPriceGuarantee && (
+              <span className="ml-2 text-[11px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold">MSP / Price Guarantee detected</span>
+            )}
+          </p>
       </div>
 
       {/* Crop-Specific Schemes Section */}
       {cropSpecific.length > 0 && (
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-2 ml-1">
-            🎯 {t('crop_specific_schemes', 'Crop-Specific Schemes')}
+            🎯 Crop-Specific Schemes
           </h3>
           <div className="flex flex-col gap-2">
             {cropSpecific.map((scheme, idx) => (
@@ -204,7 +219,7 @@ const GovernmentSchemes = ({ subsidyData }) => {
       {/* Universal Schemes Section */}
       <div>
         <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2 ml-1">
-          🇮🇳 {t('universal_schemes', 'Universal Schemes (All Farmers)')}
+          🇮🇳 Universal Schemes (All Farmers)
         </h3>
         <div className="flex flex-col gap-2">
           {(showAll ? universal : universal.slice(0, cropSpecific.length > 0 ? 1 : 3)).map((scheme, idx) => (

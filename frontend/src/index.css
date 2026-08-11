@@ -29,9 +29,48 @@
     --track-npk: linear-gradient(to right, #33422E, #6FA657);
     --track-ph: linear-gradient(to right, #E08A3C, #C0432A);
   }
+
+  .high-sunlight {
+    --color-bg: #FFFFFF;
+    --color-surface: #FFFFFF;
+    --color-primary: #000000;
+    --color-primary-light: #333333;
+    --color-accent-gold: #000000;
+    --color-accent-orange: #000000;
+    --color-text-heading: #000000;
+    --color-text-body: #000000;
+    --color-border: #000000;
+    --track-npk: linear-gradient(to right, #000000, #333333);
+    --track-ph: linear-gradient(to right, #000000, #666666);
+  }
   
   body {
     @apply antialiased text-farm-text-body font-inter transition-colors duration-300;
+    /* Force override Google Translate body positioning */
+    top: 0 !important;
+    position: relative !important;
+  }
+  
+  /* Hide Google Translate UI elements completely */
+  .goog-te-banner-frame.skiptranslate, 
+  .goog-te-gadget-icon,
+  #goog-gt-tt,
+  .goog-te-spinner-pos,
+  .goog-te-spinner-animation {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Prevent Google Translate from messing with the body layout */
+  body {
+    top: 0px !important;
+  }
+  
+  /* Remove hover tooltips from Google Translate */
+  .goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }
 
@@ -60,6 +99,63 @@
   /* Glass Button Primary */
   .glass-button {
     @apply bg-gradient-to-r from-farm-primary to-farm-primary-light hover:brightness-110 hover:scale-[1.02] text-white font-medium py-3 px-6 rounded-2xl transition-all shadow-[0_4px_14px_rgba(47,75,38,0.39)] dark:shadow-[0_0_20px_rgba(232,185,74,0.25)] border border-transparent dark:border-white/10 dark:border-t-white/20;
+  }
+
+  /* AI Predict Button - semi-transparent with animated conic-gradient border */
+  .ai-predict-button {
+    position: relative;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: white;
+    z-index: 0;
+    box-shadow: 0 0 40px rgba(144,238,144,0.06);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .ai-predict-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 48px rgba(144,238,144,0.09);
+  }
+
+  .ai-predict-button > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .ai-predict-button::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: 1;
+    border-radius: inherit;
+    /* Slow linear gradient motion from light green to gold */
+    background: linear-gradient(90deg, rgba(189, 247, 216, 0.95) 0%, rgba(173,255,160,0.95) 35%, rgba(255,215,120,0.95) 100%);
+    background-size: 200% 200%;
+    filter: blur(4px);
+    opacity: 0.9;
+    animation: ai-gradient 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .ai-predict-button::after {
+    /* cover the center so the gradient appears only as a soft border */
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: rgba(0,0,0,0.0);
+    z-index: 2;
+    border-radius: calc(1rem - 1px);
+    pointer-events: none;
+  }
+
+  @keyframes ai-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
   
   /* Custom Range Slider */
@@ -94,6 +190,35 @@
     border: 2px solid white;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
+
+/* Mesh Gradients */
+.mesh-bg-light {
+  background-color: #FAF3E0;
+  background-image: 
+    radial-gradient(at 40% 20%, hsla(88,59%,74%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(189,100%,56%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355,100%,93%,0.5) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(340,100%,76%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(22,100%,77%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(242,100%,70%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(343,100%,76%,0.2) 0px, transparent 50%);
+}
+
+.mesh-bg-dark {
+  background-color: #10190F;
+  background-image: 
+    radial-gradient(at 40% 20%, hsla(88,59%,24%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(189,100%,26%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355,100%,23%,0.5) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(340,100%,26%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(22,100%,27%,0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(242,100%,30%,0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(343,100%,26%,0.2) 0px, transparent 50%);
+}
+
+.mesh-bg-high-sunlight {
+  background: white;
+}
   
   .dark .custom-range-slider::-moz-range-thumb {
     border-color: var(--color-accent-gold);
@@ -137,3 +262,39 @@
   animation: border-glow 3s ease-in-out infinite;
 }
 
+/* ── Refined Organic Glass Panel ── */
+.glass-panel-refined {
+  @apply bg-white/5 dark:bg-[#1B2A17]/30 backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] rounded-[24px];
+  border-left: 4px solid transparent;
+  border-image: linear-gradient(to bottom, #10b981, #3b82f6) 1;
+}
+
+/* ── High Intensity Pulse Alert ── */
+@keyframes pulse-alert {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.pulse-alert {
+  animation: pulse-alert 2s infinite;
+}
+
+/* ── Shimmer Effect for AI Header ── */
+@keyframes shimmer-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.shimmer-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: shimmer-slide 3s ease-in-out infinite;
+}
