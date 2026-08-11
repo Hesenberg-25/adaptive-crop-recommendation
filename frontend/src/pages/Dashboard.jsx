@@ -39,7 +39,7 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
   const location = externalLocation || { lat: null, lon: null };
   const locationName = externalLocationName || '';
   const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState('Run Prediction');
+  const [loadingText, setLoadingText] = useState('');
   const [results, setResults] = useState(saved?.results || null);
   const [season, setSeason] = useState(saved?.season || 'auto');
   const [isIrrigated, setIsIrrigated] = useState(saved?.isIrrigated || false);
@@ -269,27 +269,50 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
           {results ? (
             <div className="w-full flex flex-col gap-8 md:gap-10">
 
-              {/* Extra Data Card */}
-              <div className="glass-panel p-4 md:p-6 bg-gradient-to-r from-farm-primary-light/10 to-transparent border-l-4 border-farm-primary">
+              {/* 1. Cropping Profile (Horizontal Stat Bar) */}
+              <div className="glass-panel-refined p-4 md:p-6 bg-gradient-to-r from-farm-primary-light/10 to-transparent">
                 <h3 className="text-lg md:text-xl font-bold font-poppins text-farm-primary mb-4 flex items-center gap-2">
-                  <span className="text-2xl">📋</span> Cropping Profile
+                  <span className="text-2xl">📋</span> Current Status
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Season</div>
-                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{results.weatherUsed?.season || season || 'Auto'}</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="flex items-center gap-3 bg-white/50 dark:bg-black/20 p-3 rounded-2xl border border-white/20 hover:bg-white/70 dark:hover:bg-white/10 transition-colors cursor-help group" title="Season determines day length and temperature baselines">
+                    <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Season</div>
+                      <div className="text-sm md:text-base font-semibold capitalize text-slate-800 dark:text-slate-200">{results.weatherUsed?.season || season || 'Auto'}</div>
+                    </div>
                   </div>
-                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Irrigation</div>
-                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{isIrrigated ? 'Irrigated' : 'Rainfed'}</div>
+                  
+                  <div className="flex items-center gap-3 bg-white/50 dark:bg-black/20 p-3 rounded-2xl border border-white/20 hover:bg-white/70 dark:hover:bg-white/10 transition-colors cursor-help group" title="Irrigation status impacts root depth and drought resilience">
+                    <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Water</div>
+                      <div className="text-sm md:text-base font-semibold capitalize text-slate-800 dark:text-slate-200">{isIrrigated ? 'Irrigated' : 'Rainfed'}</div>
+                    </div>
                   </div>
-                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Style</div>
-                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{technique}</div>
+
+                  <div className="flex items-center gap-3 bg-white/50 dark:bg-black/20 p-3 rounded-2xl border border-white/20 hover:bg-white/70 dark:hover:bg-white/10 transition-colors cursor-help group" title="Cropping style changes nutrient absorption rates">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Style</div>
+                      <div className="text-sm md:text-base font-semibold capitalize text-slate-800 dark:text-slate-200">{technique}</div>
+                    </div>
                   </div>
-                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-white/20">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Soil Type</div>
-                    <div className="text-base md:text-lg font-semibold capitalize text-slate-800 dark:text-slate-200">{soilType || 'Mixed'}</div>
+
+                  <div className="flex items-center gap-3 bg-white/50 dark:bg-black/20 p-3 rounded-2xl border border-white/20 hover:bg-white/70 dark:hover:bg-white/10 transition-colors cursor-help group" title="Soil type affects drainage and pH buffering">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-700 dark:text-amber-500 group-hover:scale-110 transition-transform">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Soil Profile</div>
+                      <div className="text-sm md:text-base font-semibold capitalize text-slate-800 dark:text-slate-200">{soilType || 'Mixed'}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -329,7 +352,7 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
                 />
               </section>
 
-              {/* Pest & Disease Alerts */}
+              {/* 3. Pest & Disease Alerts (Actionable Cards) */}
               {results.alerts && results.alerts.length > 0 && (
                 <section className="w-full">
                   <h3 className="text-xl md:text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-4 flex items-center gap-2">
@@ -337,16 +360,28 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {results.alerts.map((alert, idx) => (
-                      <div key={idx} className={`p-4 md:p-5 rounded-2xl border-l-4 shadow-md ${alert.severity === 'high' ? 'bg-red-50 dark:bg-[#2A1414] border-red-500' : 'bg-amber-50 dark:bg-[#2B2212] border-amber-500'}`}>
-                        <div className="font-bold mb-3 flex items-center justify-between text-base md:text-lg">
-                          <span className={alert.severity === 'high' ? 'text-red-800 dark:text-red-400' : 'text-amber-800 dark:text-amber-400'}>{alert.risk}</span>
-                          <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider ${alert.severity === 'high' ? 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-200' : 'bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200'}`}>
+                      <div key={idx} className={`p-5 rounded-3xl border-l-[6px] shadow-lg flex flex-col gap-3 ${alert.severity === 'high' ? 'bg-red-50 dark:bg-[#1F0F0F] border-red-500' : 'bg-amber-50 dark:bg-[#2B2212] border-amber-500'}`}>
+                        <div className="flex items-center justify-between">
+                          <span className={`font-bold text-lg md:text-xl ${alert.severity === 'high' ? 'text-red-800 dark:text-red-400' : 'text-amber-800 dark:text-amber-400'}`}>{alert.risk}</span>
+                          <span className={`text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest ${alert.severity === 'high' ? 'bg-red-500 text-white pulse-alert shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-amber-500 text-white'}`}>
                             {alert.severity} RISK
                           </span>
                         </div>
-                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                          {alert.message}
-                        </p>
+                        
+                        <div className="bg-white/60 dark:bg-black/20 p-4 rounded-xl border border-white/20 flex-grow">
+                           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Quick Actions</h4>
+                           <ul className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 space-y-2">
+                             {/* Splitting message by periods to create checklist if it's long, otherwise just one item */}
+                             {alert.message.split('. ').filter(s => s.trim().length > 0).map((step, i) => (
+                               <li key={i} className="flex gap-2 items-start">
+                                 <div className={`mt-0.5 rounded-full p-0.5 ${alert.severity === 'high' ? 'bg-red-200 text-red-600' : 'bg-amber-200 text-amber-600'}`}>
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                 </div>
+                                 <span>{step.endsWith('.') ? step : step + '.'}</span>
+                               </li>
+                             ))}
+                           </ul>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -356,7 +391,16 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
               {/* Action Buttons (AI & Govt Schemes) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
                 <button
-                  onClick={() => { setShowAI(!showAI); setShowGovt(false); }}
+                  onClick={() => {
+                    const toggle = () => { setShowAI(!showAI); setShowGovt(false); };
+                    if (document.startViewTransition) {
+                      document.startViewTransition(toggle);
+                    } else {
+                      toggle();
+                    }
+                    // Haptic feedback for mobile
+                    if (navigator.vibrate) navigator.vibrate(10);
+                  }}
                   className={`py-3 md:py-4 px-4 md:px-6 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 transition-all ${showAI ? 'bg-emerald-600 text-white shadow-inner shadow-black/20' : 'bg-white dark:bg-[#1B2A17] text-slate-800 dark:text-white border-2 border-emerald-500/30 hover:border-emerald-500 shadow-md'}`}
                 >
                   <span className="flex items-center gap-2">
@@ -364,7 +408,15 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
                   </span>
                 </button>
                 <button
-                  onClick={() => { setShowGovt(!showGovt); setShowAI(false); }}
+                  onClick={() => {
+                    const toggle = () => { setShowGovt(!showGovt); setShowAI(false); };
+                    if (document.startViewTransition) {
+                      document.startViewTransition(toggle);
+                    } else {
+                      toggle();
+                    }
+                    if (navigator.vibrate) navigator.vibrate(10);
+                  }}
                   className={`py-3 md:py-4 px-4 md:px-6 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-3 transition-all ${showGovt ? 'bg-blue-600 text-white shadow-inner shadow-black/20' : 'bg-white dark:bg-[#1B2A17] text-slate-800 dark:text-white border-2 border-blue-500/30 hover:border-blue-500 shadow-md'}`}
                 >
                   <span className="flex items-center gap-2">

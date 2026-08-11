@@ -116,7 +116,7 @@ const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
           {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
         </motion.button>
 
-        <div className="flex-1 min-h-[3rem] px-4 py-2 rounded-xl bg-white/60 dark:bg-black/20 border border-white/20 flex items-center text-sm text-slate-700 dark:text-slate-300 font-lora italic">
+        <div translate="no" className="flex-1 min-h-[3rem] px-4 py-2 rounded-xl bg-white/60 dark:bg-black/20 border border-white/20 flex items-center text-sm text-slate-700 dark:text-slate-300 font-lora italic notranslate">
           {transcript || (isListening ? 'Listening...' : 'Tap the mic and describe your soil, e.g. "high nitrogen and very hot today"')}
         </div>
       </div>
@@ -133,7 +133,7 @@ const VoiceInput = ({ onValuesExtracted, language = 'en' }) => {
             className="w-full py-2.5 rounded-xl bg-farm-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
             {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {processing ? 'Understanding...' : 'Use these values'}
+            <span>{processing ? 'Understanding...' : 'Use these values'}</span>
           </motion.button>
         )}
       </AnimatePresence>

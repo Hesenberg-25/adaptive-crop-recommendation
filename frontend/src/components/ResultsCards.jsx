@@ -49,20 +49,9 @@ const useCropImage = (cropName) => {
 };
 
 // Individual crop card
-const CropCard = ({ pred, idx, isRecommended }) => {
+export const CropCard = ({ pred, isRecommended, idx }) => {
   const isTop = isRecommended && idx === 0;
   const cropImg = useCropImage(pred.crop || pred.name);
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const handleExpand = () => {
-    if (!document.startViewTransition) {
-      setIsExpanded(!isExpanded);
-      return;
-    }
-    document.startViewTransition(() => {
-      setIsExpanded(!isExpanded);
-    });
-  };
 
   let translatedAvoidReason = pred.avoidReason;
   if (translatedAvoidReason) {
@@ -93,13 +82,9 @@ const CropCard = ({ pred, idx, isRecommended }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.1, type: 'spring', stiffness: 50 }}
-      onClick={handleExpand}
       style={{ viewTransitionName: `crop-card-${(pred.crop || pred.name).replace(/\s+/g, '-')}` }}
       className={clsx(
-        'group cursor-pointer relative overflow-hidden flex flex-col rounded-3xl transition-all duration-300 @container/card',
-        isExpanded 
-          ? 'fixed inset-4 md:inset-10 z-[100] shadow-[0_0_100px_rgba(0,0,0,0.5)] !h-auto'
-          : 'shadow-lg hover:shadow-xl hover:-translate-y-1 h-full',
+        'group relative overflow-hidden flex flex-col rounded-3xl transition-all duration-300 @container/card shadow-lg hover:shadow-xl hover:-translate-y-1 h-full',
         isRecommended 
           ? 'bg-gradient-to-br from-white to-slate-50 dark:from-[#1B2A17] dark:to-[#10190F] border border-emerald-100 dark:border-emerald-900/30' 
           : 'bg-gradient-to-br from-white to-red-50/30 dark:from-red-950/20 dark:to-black/20 border border-red-100 dark:border-red-900/30'
@@ -117,12 +102,11 @@ const CropCard = ({ pred, idx, isRecommended }) => {
       )}
 
       {/* Top Header - Uses container queries to switch layout */}
-      <div className={clsx("p-5 flex gap-4 items-center z-10", isExpanded ? "flex-col @md/card:flex-row" : "flex-row")}>
+      <div className="p-5 flex gap-4 items-center z-10 flex-row">
         <motion.div
           whileHover={{ scale: 1.05, rotate: -5 }}
           className={clsx(
-            'rounded-full overflow-hidden border-4 shadow-md flex-shrink-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center border-glow',
-            isExpanded ? 'w-32 h-32' : 'w-20 h-20',
+            'rounded-full overflow-hidden border-4 shadow-md flex-shrink-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center border-glow w-20 h-20',
             isRecommended
               ? 'border-emerald-400 dark:border-farm-primary'
               : 'border-red-400 dark:border-red-800'
@@ -135,25 +119,23 @@ const CropCard = ({ pred, idx, isRecommended }) => {
           )}
         </motion.div>
 
-        <div className="flex-grow w-full">
-          <div className="flex justify-between items-center w-full">
-            <h3 className={clsx('font-extrabold capitalize font-poppins', isExpanded ? 'text-3xl' : 'text-xl', isRecommended ? 'text-slate-800 dark:text-white' : 'text-red-800 dark:text-red-200')}>
+        <div className="flex-grow w-full flex justify-between items-center">
+          <div>
+            <h3 className="font-extrabold capitalize font-poppins text-xl text-slate-800 dark:text-white">
               {pred.crop || pred.name}
             </h3>
-            <div className="text-right">
-              <div className={clsx('font-bold font-mono', isExpanded ? 'text-3xl' : 'text-xl', isRecommended ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
-                {pred.confidence}%
+            {isRecommended && (
+              <div className="flex gap-2 mt-2">
+                 <div className="bg-slate-100 dark:bg-white/10 px-2 py-1 rounded text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">🌱 Sow: {pred.sowMonth || '—'}</div>
+                 <div className="bg-slate-100 dark:bg-white/10 px-2 py-1 rounded text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">🌾 Reap: {pred.harvestMonth || '—'}</div>
               </div>
-              <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">MATCH</div>
-            </div>
+            )}
           </div>
-          <div className={clsx('w-full rounded-full mt-2', isExpanded ? 'h-3' : 'h-2', isRecommended ? 'bg-slate-200 dark:bg-white/10' : 'bg-red-100 dark:bg-black/30')}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${pred.confidence}%` }}
-              transition={{ duration: 1, delay: idx * 0.12 + 0.3 }}
-              className={clsx('rounded-full h-full', isRecommended ? 'bg-gradient-to-r from-emerald-400 to-farm-primary' : 'bg-gradient-to-r from-red-400 to-red-600')}
-            />
+          <div className="text-right">
+            <div className={clsx('font-bold font-mono text-xl', isRecommended ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
+              {pred.confidence}%
+            </div>
+            <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">MATCH</div>
           </div>
         </div>
       </div>
@@ -215,57 +197,25 @@ const CropCard = ({ pred, idx, isRecommended }) => {
         </div>
       )}
 
-      {/* Expanded View Extra Details */}
-      {isExpanded && (
-        <motion.div 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          className="p-5 border-t border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/10 z-10 flex-1 overflow-y-auto"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-4">
-              <h4 className="text-lg font-bold text-slate-800 dark:text-white">Growth Timeline & Weather Impact</h4>
-              <div className="relative border-l-2 border-emerald-500 pl-4 py-2 space-y-4">
-                <div>
-                  <div className="absolute -left-[5px] w-2 h-2 bg-emerald-500 rounded-full mt-1"></div>
-                  <div className="text-sm font-bold text-slate-700 dark:text-slate-300">Phase 1: Sowing</div>
-                  <div className="text-xs text-slate-500">Perfect conditions. 3.3mm rain forecast aligns with initial moisture needs.</div>
-                </div>
-                <div>
-                  <div className="absolute -left-[5px] w-2 h-2 bg-emerald-500 rounded-full mt-1"></div>
-                  <div className="text-sm font-bold text-slate-700 dark:text-slate-300">Phase 2: Vegetative Growth</div>
-                  <div className="text-xs text-slate-500">Expected high temperatures might require supplementary irrigation.</div>
-                </div>
+      {/* NPK Color-Coded Pills */}
+      {isRecommended && pred.roi && (
+        <div className="flex flex-wrap gap-2 px-5 pb-5 pt-2">
+          {[
+            { label: 'N', key: 'N', color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' },
+            { label: 'P', key: 'P', color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' },
+            { label: 'K', key: 'K', color: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' },
+          ].map((pill) => {
+            const status = pred.npkStatus ? pred.npkStatus[pill.key] : 'Optimal';
+            return (
+              <div key={pill.label} className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${pill.color}`}>
+                <span className="font-black">{pill.label}</span>
+                <span className="opacity-70">{status}</span>
               </div>
-            </div>
-            
-            <div className="flex flex-col gap-4">
-               <h4 className="text-lg font-bold text-slate-800 dark:text-white">AI Viability Chart</h4>
-               <div className="w-full h-32 bg-slate-200 dark:bg-slate-800 rounded-xl relative overflow-hidden flex items-end justify-between px-4 pb-2">
-                 <div className="w-6 bg-emerald-400 rounded-t-sm h-[40%]"></div>
-                 <div className="w-6 bg-emerald-500 rounded-t-sm h-[60%]"></div>
-                 <div className="w-6 bg-emerald-400 rounded-t-sm h-[50%]"></div>
-                 <div className="w-6 bg-emerald-600 rounded-t-sm h-[90%]"></div>
-                 <div className="w-6 bg-emerald-500 rounded-t-sm h-[75%] relative">
-                    <span className="absolute -top-6 -left-4 text-xs font-bold text-blue-500 whitespace-nowrap">💧 Rain Event</span>
-                 </div>
-               </div>
-            </div>
-          </div>
+            );
+          })}
+        </div>
+      )}
 
-          <button 
-            onClick={(e) => { e.stopPropagation(); handleExpand(); }}
-            className="mt-6 w-full py-3 bg-slate-200 dark:bg-slate-800 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
-          >
-            Close Details
-          </button>
-        </motion.div>
-      )}
-      
-      {/* Overlay background when expanded to obscure the rest of the app */}
-      {isExpanded && (
-        <div className="fixed inset-0 bg-black/60 z-[-1]" onClick={(e) => { e.stopPropagation(); handleExpand(); }} />
-      )}
     </motion.div>
   );
 };

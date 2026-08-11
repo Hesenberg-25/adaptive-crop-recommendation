@@ -163,13 +163,22 @@ const Controls = ({ values, onChange, useLiveWeather, season, setSeason, isIrrig
       />
 
       {/* 2. Context Box (Dropdowns) - Moved ABOVE NPK inputs */}
-      <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/40 dark:bg-black/20 relative z-50">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+      <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/40 dark:bg-black/20 relative z-20">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${cropCategory ? 'xl:grid-cols-6' : 'xl:grid-cols-5'} gap-3`}>
           <CustomSelect value={soilType || ""} onChange={(val) => handleSoilTypeChange({ target: { value: val } })} placeholder="Soil Profile" icon={<Map className="w-4 h-4 text-emerald-500" />} options={soilOptions} />
           <CustomSelect value={season} onChange={setSeason} placeholder="Season" icon={<Calendar className="w-4 h-4 text-emerald-500" />} options={[{ value: "auto", label: "Auto" }, { value: "kharif", label: "Kharif" }, { value: "rabi", label: "Rabi" }, { value: "zaid", label: "Zaid" }]} />
           <CustomSelect value={isIrrigated ? 'irrigated' : 'rainfed'} onChange={(val) => setIsIrrigated(val === 'irrigated')} placeholder="Irrigation" icon={<Droplet className="w-4 h-4 text-emerald-500" />} options={[{ value: "rainfed", label: "Rainfed" }, { value: "irrigated", label: "Irrigated" }]} />
           <CustomSelect value={technique} onChange={setTechnique} placeholder="Technique" icon={<Leaf className="w-4 h-4 text-emerald-500" />} options={[{ value: "monocropping", label: "Monocrop" }, { value: "intercropping", label: "Intercrop" }, { value: "strip", label: "Strip" }, { value: "mixed", label: "Mixed" }]} />
           <CustomSelect value={cropCategory} onChange={(val) => { setCropCategory(val); setTargetCrop(''); }} placeholder="Category" icon={<Leaf className="w-4 h-4 text-emerald-500" />} options={categoryOptions} />
+          {cropCategory && (
+            <CustomSelect 
+              value={targetCrop} 
+              onChange={setTargetCrop} 
+              placeholder="Target Crop" 
+              icon={<Leaf className="w-4 h-4 text-emerald-500" />} 
+              options={cropOptions} 
+            />
+          )}
         </div>
       </div>
 

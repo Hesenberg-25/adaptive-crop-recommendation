@@ -257,8 +257,67 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             avoidWithROI = allCropsWithROI.slice(mid).reverse();
         }
 
+        // Crop calendar for sow/harvest display
+        const cropCalendar = {
+            rice: { sow: 'Jun', harvest: 'Nov' }, wheat: { sow: 'Nov', harvest: 'Apr' },
+            maize: { sow: 'Jun', harvest: 'Sep' }, cotton: { sow: 'Apr', harvest: 'Oct' },
+            jute: { sow: 'Mar', harvest: 'Jul' }, coconut: { sow: 'Jun', harvest: 'Dec' },
+            papaya: { sow: 'Feb', harvest: 'Dec' }, orange: { sow: 'Jul', harvest: 'Feb' },
+            apple: { sow: 'Dec', harvest: 'Sep' }, muskmelon: { sow: 'Feb', harvest: 'May' },
+            watermelon: { sow: 'Jan', harvest: 'May' }, grapes: { sow: 'Jan', harvest: 'Jun' },
+            mango: { sow: 'Jul', harvest: 'Jun' }, banana: { sow: 'Feb', harvest: 'Nov' },
+            pomegranate: { sow: 'Jul', harvest: 'Feb' }, lentil: { sow: 'Oct', harvest: 'Mar' },
+            blackgram: { sow: 'Jul', harvest: 'Oct' }, mungbean: { sow: 'Mar', harvest: 'Jun' },
+            mothbeans: { sow: 'Jul', harvest: 'Oct' }, pigeonpeas: { sow: 'Jun', harvest: 'Dec' },
+            kidneybeans: { sow: 'Jun', harvest: 'Oct' }, chickpea: { sow: 'Oct', harvest: 'Mar' },
+            coffee: { sow: 'Jun', harvest: 'Dec' },
+        };
+
+        // Attach per-crop SHAP, NPK status, and season data
+        const attachCropSpecificData = (crop) => {
+            const cropShap = shapEngine.calculate(inputs, crop.name, trainingData);
+            // Convert shap object to array for frontend
+            const shapArray = [];
+            for (const [key, val] of Object.entries(cropShap)) {
+                if (key === 'topFeature') continue;
+                const match = val.match(/([+-]?\d+)% Impact \((.*)\)/);
+                if (match) {
+                    const pct = parseInt(match[1], 10);
+                    const dir = match[2]; // "Optimal", "Low", "Excessive"
+                    shapArray.push({
+                        feature: key,
+                        value: dir === 'Optimal' ? pct : -pct,
+                        direction: dir
+                    });
+                }
+            }
+            shapArray.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+            // NPK status based on shap direction
+            const npkStatus = {};
+            ['N', 'P', 'K'].forEach(nutrient => {
+                const entry = shapArray.find(s => s.feature.toUpperCase() === nutrient.toUpperCase() || s.feature === nutrient);
+                if (entry) {
+                    npkStatus[nutrient] = entry.direction; // "Optimal", "Low", "Excessive"
+                } else {
+                    npkStatus[nutrient] = 'Optimal';
+                }
+            });
+
+            const cal = cropCalendar[crop.name.toLowerCase()] || { sow: '—', harvest: '—' };
+
+            return {
+                ...crop,
+                shap: shapArray.slice(0, 5), // top 5 drivers
+                npkStatus,
+                sowMonth: cal.sow,
+                harvestMonth: cal.harvest,
+                topFeature: cropShap.topFeature
+            };
+        };
+
         recommendedWithROI = recommendedWithROI.map(c => ({
-            ...c,
+            ...attachCropSpecificData(c),
             isMarginal: c.confidence < threshold
         }));
 
@@ -307,7 +366,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
                     avoidReason = `${featureNames[worstFeature]} (${inputMapping[worstFeature]}) is too ${worstDirection === 'high' ? 'high' : 'low'} for ${crop.name.charAt(0).toUpperCase() + crop.name.slice(1)} (ideal ${rangeStr}).`;
                 }
             }
-            return { ...crop, avoidReason };
+            return { ...attachCropSpecificData(crop), avoidReason };
         });
 
         // 3a. Extract Target Crop if specified
@@ -378,23 +437,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             .map(c => c.name)
             .join(', ');
 
-        // 5. Save to Supabase Database
-        const predictionRecord = {
-            user_id: req.user.id,
-            recommended_crop: topThreeCrops,
-            soil_n: N,
-            soil_p: P,
-            soil_k: K,
-            ph: pH,
-            lat,
-            lon,
-            advice: aiAdvice
-        };
-        const { error: dbError } = await supabase.from('predictions').insert([predictionRecord]);
-        if (dbError) console.error("Failed to save prediction to DB:", dbError.message);
-
-        // 6. Single JSON Response
-        res.json({
+        const fullResponseJson = {
             recommendedCrops: recommendedWithROI,
             avoidCrops: avoidWithROI,
             targetCropResult,
@@ -405,7 +448,30 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             weatherUsed: { temperature, humidity, rainfall, windSpeed, dailyForecast },
             detectedLanguage: language,
             detectedRegion
-        });
+        };
+
+        // Embed the full JSON payload invisibly inside the advice string
+        // so that the History page can parse it out and render the full UI without a schema change.
+        const encodedPayload = `\n\n<!--_RESULTS_PAYLOAD_START_${JSON.stringify(fullResponseJson)}_RESULTS_PAYLOAD_END_-->`;
+        const adviceWithPayload = aiAdvice + encodedPayload;
+
+        // 5. Save to Supabase Database
+        const predictionRecord = {
+            user_id: req.user.id,
+            recommended_crop: topThreeCrops,
+            soil_n: N,
+            soil_p: P,
+            soil_k: K,
+            ph: pH,
+            lat,
+            lon,
+            advice: adviceWithPayload
+        };
+        const { error: dbError } = await supabase.from('predictions').insert([predictionRecord]);
+        if (dbError) console.error("Failed to save prediction to DB:", dbError.message);
+
+        // 6. Single JSON Response
+        res.json(fullResponseJson);
 
     } catch (error) {
         console.error("Prediction error:", error);
@@ -578,17 +644,6 @@ app.delete('/api/farmer/favorite-crops/:cropName', authenticateUser, async (req,
     }
 });
 
-app.post('/api/market/prices', authenticateUser, async (req, res) => {
-    try {
-        const filters = req.body;
-        const data = await fetchRawMandiRecords(filters);
-        res.json(data);
-    } catch (error) {
-        console.error("Market API Error:", error.message);
-        res.status(500).json({ error: "Failed to fetch market data" });
-    }
-});
-
 app.post('/api/parse-voice', authenticateUser, async (req, res) => {
     try {
         const { transcript } = req.body;
@@ -620,6 +675,26 @@ app.get('/api/predictions/history', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error("History fetch error:", error);
         res.status(500).json({ error: "Failed to fetch prediction history" });
+    }
+});
+
+app.delete('/api/predictions/history/:id', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase
+            .from('predictions')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', req.user.id);
+
+        if (error) {
+            console.error("Error deleting history record:", error);
+            return res.status(500).json({ error: "Failed to delete prediction record" });
+        }
+        res.json({ message: "Prediction record deleted successfully" });
+    } catch (error) {
+        console.error("History delete error:", error);
+        res.status(500).json({ error: "Failed to delete prediction record" });
     }
 });
 

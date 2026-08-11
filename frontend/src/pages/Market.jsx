@@ -14,7 +14,7 @@ const COMMODITIES = [
 ];
 
 export default function Market() {
-  const { session } = useAuth();
+  const { token } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +25,7 @@ export default function Market() {
   const [commodity, setCommodity] = useState('');
   
   const fetchMarketData = async () => {
-    if (!session?.access_token) return;
+    if (!token) return;
     
     setLoading(true);
     setError('');
@@ -33,7 +33,7 @@ export default function Market() {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/market/prices`,
         { state, district, commodity, limit: 100 },
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       
       if (response.data.error) {
@@ -42,7 +42,7 @@ export default function Market() {
         setData(response.data.records || []);
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch market data');
+      setError(err.response?.data?.error || err.message || 'Failed to fetch market data');
     } finally {
       setLoading(false);
     }
@@ -50,16 +50,15 @@ export default function Market() {
 
   useEffect(() => {
     fetchMarketData();
-  }, [session]);
+  }, [token]);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     fetchMarketData();
   };
 
   return (
     <div className="flex flex-col h-full bg-transparent overflow-y-auto w-full">
-      <TopBar />
       
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -72,7 +71,7 @@ export default function Market() {
         </div>
 
         <div className="bg-white dark:bg-[#131F10] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
-          <form onSubmit={handleSubmit} method="POST" className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Map className="w-3.5 h-3.5" /> State
@@ -118,13 +117,14 @@ export default function Market() {
             </div>
 
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 h-[46px]"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 h-[46px]"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Search className="w-5 h-5" /> Search Prices</>}
             </button>
-          </form>
+          </div>
         </div>
 
         {error && (

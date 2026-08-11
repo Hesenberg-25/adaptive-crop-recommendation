@@ -205,3 +205,39 @@
   animation: border-glow 3s ease-in-out infinite;
 }
 
+/* ── Refined Organic Glass Panel ── */
+.glass-panel-refined {
+  @apply bg-white/5 dark:bg-[#1B2A17]/30 backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] rounded-[24px];
+  border-left: 4px solid transparent;
+  border-image: linear-gradient(to bottom, #10b981, #3b82f6) 1;
+}
+
+/* ── High Intensity Pulse Alert ── */
+@keyframes pulse-alert {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.pulse-alert {
+  animation: pulse-alert 2s infinite;
+}
+
+/* ── Shimmer Effect for AI Header ── */
+@keyframes shimmer-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.shimmer-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: shimmer-slide 3s ease-in-out infinite;
+}
