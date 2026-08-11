@@ -7,7 +7,7 @@ const { getComprehensiveAnalysis, parseVoiceInput } = require('./src/services/ai
 const { reverseGeocodeToLanguage } = require('./src/services/geoService');
 const { getDynamicSubsidiesForCrops } = require('./src/services/subsidyService');
 const { getDynamicMarketPrices, fetchRawMandiRecords } = require('./src/services/marketDataService');
-const { analyzeSoilImage } = require('./src/services/visionService');
+const { analyzeSoilImage, analyzeDisease } = require('./src/services/visionService');
 const cropModel = require('./src/ml/cropModel');
 const shapEngine = require('./src/ml/shapEngine');
 const { evaluateRisk } = require('./src/services/pestDiseaseRules');
@@ -510,7 +510,24 @@ app.post('/api/vision/analyze-soil', authenticateUser, async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error("Vision API Error:", error);
-        res.status(500).json({ error: "Failed to analyze soil image" });
+        res.status(500).json({ error: error.message || "Failed to analyze soil image" });
+    }
+});
+
+// Disease Image Analysis Route
+app.post('/api/vision/analyze-disease', authenticateUser, async (req, res) => {
+    try {
+        const { image, mimeType } = req.body;
+        if (!image) return res.status(400).json({ error: "Missing image data" });
+
+        // Strip the Base64 header if present (e.g. data:image/jpeg;base64,...)
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        
+        const result = await analyzeDisease(base64Data, mimeType || 'image/jpeg');
+        res.json(result);
+    } catch (error) {
+        console.error("Vision Disease API Error:", error);
+        res.status(500).json({ error: "Failed to analyze crop leaf image" });
     }
 });
 
