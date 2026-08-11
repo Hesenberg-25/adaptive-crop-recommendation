@@ -7,7 +7,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
-  const { user, token, logout } = useAuth();
+    const { user, token, logout } = useAuth();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);

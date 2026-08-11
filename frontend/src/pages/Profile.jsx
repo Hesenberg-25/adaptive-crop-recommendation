@@ -3,22 +3,28 @@ import { motion } from 'framer-motion';
 import { User as UserIcon, Phone, Mail, MapPin, Maximize, Wheat, Save, Loader2, Map, Droplet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CustomSelect from '../components/CustomSelect';
 
-const soilOptions = [
-  { value: "alluvial", label: "Alluvial (Northern)" },
-  { value: "black", label: "Black (Deccan)" },
-  { value: "red", label: "Red (East)" },
-  { value: "laterite", label: "Laterite (Ghats)" }
-];
 
 const Profile = () => {
+  
   const { token } = useAuth();
   const locationState = useLocation().state || {};
   const isNewUser = locationState.isNewUser;
   
+  const soilOptions = [
+    { value: "alluvial", label: "Alluvial (Rich, fertile, river basins)" },
+    { value: "black", label: "Black / Regur (Cotton-friendly, high moisture retention)" },
+    { value: "red", label: "Red / Yellow (Iron-rich, needs fertilizers)" },
+    { value: "laterite", label: "Laterite (Acidic, good for tea/coffee/cashew)" },
+    { value: "arid", label: "Arid / Desert (Sandy, saline, requires irrigation)" },
+    { value: "mountain", label: "Mountain / Forest (Rich in humus, acidic)" },
+    { value: "saline", label: "Saline / Alkaline (High salt content, needs treatment)" },
+    { value: "peaty", label: "Peaty / Marshy (High organic matter, heavy)" }
+  ];
+
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   
@@ -114,7 +120,8 @@ const Profile = () => {
             transition={{ delay: 1 }}
             className="text-slate-500 dark:text-slate-400 mt-2 text-lg"
           >
-            Let's get your farm profile set up so our AI can give you the best recommendations.
+            <h2 className="text-2xl font-bold font-poppins text-slate-800 dark:text-white mb-2">New User Setup</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Please complete your profile to unlock the full potential of AI-driven crop recommendations.</p>
           </motion.p>
         </div>
       )}
@@ -256,8 +263,8 @@ const Profile = () => {
                 placeholder="Irrigation..."
                 icon={<Droplet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                 options={[
-                  { value: "rainfed", label: "Rainfed" },
-                  { value: "irrigated", label: "Fully Irrigated" }
+                  { value: "rainfed", label: 'Rainfed' },
+                  { value: "irrigated", label: 'Fully Irrigated' }
                 ]}
               />
             </div>

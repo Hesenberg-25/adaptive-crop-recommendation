@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { 
   Landmark, 
   ChevronDown, 
@@ -32,6 +33,7 @@ const iconMap = {
 const SchemeCard = ({ scheme, index, isUniversal }) => {
   const [expanded, setExpanded] = useState(false);
   const IconComponent = iconMap[scheme.icon] || Landmark;
+  
 
   return (
     <motion.div
@@ -108,7 +110,7 @@ const SchemeCard = ({ scheme, index, isUniversal }) => {
               
               <div className="flex items-start gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                <span><strong className="text-slate-700 dark:text-slate-300">Eligibility:</strong> {scheme.eligibility}</span>
+                <span><strong className="text-slate-700 dark:text-slate-300">Eligibility:</strong> {scheme.eligibility || scheme.details || scheme.description}</span>
               </div>
               
               <a
@@ -135,6 +137,7 @@ const SchemeCard = ({ scheme, index, isUniversal }) => {
 };
 
 const GovernmentSchemes = ({ subsidyData }) => {
+  
   const [showAll, setShowAll] = useState(false);
 
   if (!subsidyData) return null;
@@ -153,7 +156,7 @@ const GovernmentSchemes = ({ subsidyData }) => {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold flex items-center gap-2 text-amber-600 dark:text-amber-400">
           <Landmark className="w-6 h-6" />
-          Government Subsidies & Schemes
+          Government Schemes & Subsidies
         </h2>
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-4 h-4 text-amber-500" />
@@ -167,9 +170,15 @@ const GovernmentSchemes = ({ subsidyData }) => {
       <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-amber-500/5 dark:via-emerald-500/5 dark:to-indigo-500/5 border border-amber-200/40 dark:border-amber-500/20 rounded-xl px-4 py-3">
         <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
           <span className="font-semibold text-amber-700 dark:text-amber-300">
-            💰 For {crop?.charAt(0).toUpperCase() + crop?.slice(1)} farmers:
+            💰 {'For %crop% farmers:'.replace('%crop%', crop?.charAt(0).toUpperCase() + crop?.slice(1))}
           </span>{' '}
-          {estimatedBenefitSummary}
+          {(estimatedBenefitSummary || '').replace(
+            /(\d+) government schemes available/g, 
+            (_, count) => `${count} $government schemes available`
+          ).replace(
+            'MSP price guarantee active',
+            'MSP price guarantee active'
+          )}
         </p>
       </div>
 

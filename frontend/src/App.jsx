@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -16,7 +16,22 @@ import Profile from './pages/Profile';
 import History from './pages/History';
 import Settings from './pages/Settings';
 import CatalogPage from './pages/CatalogPage';
+import Market from './pages/Market';
 import ErrorBoundary from './components/ErrorBoundary';
+
+const LANGUAGES = [
+  { code: 'en', label: '🇬🇧 English' },
+  { code: 'hi', label: '🇮🇳 हिन्दी (Hindi)' },
+  { code: 'mr', label: '🇮🇳 मराठी (Marathi)' },
+  { code: 'ta', label: '🇮🇳 தமிழ் (Tamil)' },
+  { code: 'te', label: '🇮🇳 తెలుగు (Telugu)' },
+  { code: 'kn', label: '🇮🇳 ಕನ್ನಡ (Kannada)' },
+  { code: 'gu', label: '🇮🇳 ગુજરાતી (Gujarati)' },
+  { code: 'bn', label: '🇮🇳 বাংলা (Bengali)' },
+  { code: 'pa', label: '🇮🇳 ਪੰਜਾਬੀ (Punjabi)' },
+  { code: 'ml', label: '🇮🇳 മലയാളം (Malayalam)' },
+  { code: 'or', label: '🇮🇳 ଓଡ଼ିଆ (Odia)' },
+];
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -25,13 +40,32 @@ const ProtectedRoute = ({ children }) => {
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/" /> : children;
+  return isAuthenticated ? <Navigate to="/dashboard" /> : children;
 };
 
 // Inner wrapper so we can access location for public/private layout split
 const AppShell = () => {
   const { isAuthenticated } = useAuth();
+  const { theme } = useTheme();
   const location = useLocation();
+
+  // Language state — lifted here so TopBar and Dashboard share it
+  const [language, setLanguage] = useState(localStorage.getItem('preferred_language') || 'en');
+
+  const handleLanguageChange = useCallback((langCode) => {
+    setLanguage(langCode);
+    localStorage.setItem('preferred_language', langCode);
+    
+    // Trigger Google Translate
+    setTimeout(() => {
+      const select = document.querySelector('.goog-te-combo');
+      if (select) {
+        select.value = langCode;
+        select.dispatchEvent(new Event('change'));
+      }
+    }, 100);
+  }, []);
+
 
   // Location/weather state lives here so TopBar and Dashboard share it
   const [useLiveWeather, setUseLiveWeather] = useState(false);
@@ -79,13 +113,9 @@ const AppShell = () => {
   const isPublicPage = ['/', '/login', '/signup'].includes(location.pathname);
 
   return (
-    <div className="min-h-screen text-farm-text-body relative">
-      {/* Background */}
-      <div className="fixed inset-0 z-[-1]">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center bg-no-repeat" />
-        <div className="absolute inset-0 bg-transparent dark:bg-[#10190F]/85 transition-colors duration-500" />
-        <div className="absolute inset-0 bg-[#FAF3E0]/20 dark:bg-transparent transition-colors duration-500" />
-      </div>
+    <div className="min-h-screen text-farm-text-body relative overflow-x-hidden">
+      {/* Background Layered Spatial Design */}
+      <div className={`fixed inset-0 z-[-1] transition-colors duration-1000 mesh-bg-${theme}`} />
 
       {/* Authenticated layout: Sidebar + TopBar */}
       {isAuthenticated && !isPublicPage && (
@@ -96,11 +126,14 @@ const AppShell = () => {
             toggleLiveWeather={toggleLiveWeather}
             locationName={locationName}
             locLoading={locLoading}
+            language={language}
+            languages={LANGUAGES}
+            onLanguageChange={handleLanguageChange}
           />
         </>
       )}
 
-      {/* Public layout: old minimal navbar */}
+      {/* Public layout: minimal navbar — never shows "Go to Dashboard" */}
       {(!isAuthenticated || isPublicPage) && (
         <nav className="sticky top-4 z-50 mx-4 md:mx-auto max-w-4xl bg-white/20 dark:bg-[#1B2A17]/30 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.15)] rounded-[2rem] px-6 py-3 flex justify-between items-center mb-8">
           <span className="font-extrabold font-poppins text-farm-primary flex items-center gap-2 text-xl">
@@ -119,8 +152,8 @@ const AppShell = () => {
         </nav>
       )}
 
-      {/* Page Content */}
-      <main className={isAuthenticated && !isPublicPage ? 'pl-20 pt-32' : ''}>
+      {/* Page Content — responsive padding */}
+      <main className={isAuthenticated && !isPublicPage ? 'pt-24 px-2 md:pl-20 md:pt-32 md:px-0' : ''}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
@@ -131,6 +164,7 @@ const AppShell = () => {
                 externalUseLiveWeather={useLiveWeather}
                 externalLocation={locationCoords}
                 externalLocationName={locationName}
+                language={language}
               />
             </ProtectedRoute>
           } />
@@ -138,6 +172,7 @@ const AppShell = () => {
           <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/market" element={<ProtectedRoute><Market /></ProtectedRoute>} />
         </Routes>
       </main>
 

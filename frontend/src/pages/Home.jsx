@@ -4,7 +4,9 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Sprout, Activity, DollarSign, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+
 const Home = () => {
+  
   const { isAuthenticated } = useAuth();
   const containerRef = useRef(null);
   
@@ -48,8 +50,7 @@ const Home = () => {
             animate={{ scale: 1, opacity: 1, rotateY: 0 }}
             transition={{ type: "spring", stiffness: 100, damping: 20, duration: 1 }}
           >
-            <h1 className="text-6xl md:text-8xl font-black font-playfair tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 via-teal-300 to-cyan-500 mb-6 drop-shadow-2xl">
-              Farm Smarter.<br/>Not Harder.
+            <h1 className="text-6xl md:text-8xl font-black font-playfair tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 via-teal-300 to-cyan-500 mb-6 drop-shadow-2xl" dangerouslySetInnerHTML={{ __html: 'Farm Smarter.<br/>Not Harder.' }}>
             </h1>
           </motion.div>
           
@@ -70,7 +71,7 @@ const Home = () => {
             <Link to={isAuthenticated ? "/dashboard" : "/signup"} className="group relative inline-flex items-center justify-center px-10 py-5 font-bold text-white transition-all duration-300 bg-emerald-600 rounded-full shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:shadow-[0_0_60px_rgba(16,185,129,0.7)] hover:-translate-y-1 overflow-hidden">
               <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black"></span>
               <span className="relative text-lg font-poppins flex items-center gap-3">
-                {isAuthenticated ? "Go to Dashboard" : "Start Predicting Now"}
+                {isAuthenticated ? 'Go to Dashboard' : 'Start Predicting Now'}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </span>
             </Link>
