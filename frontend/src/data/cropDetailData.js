@@ -70,7 +70,7 @@ const CROP_DETAILS = {
     },
     about: 'Wheat is one of India\'s most important rabi (winter) crops, grown extensively in northern and central India. It is a primary source of carbohydrates and protein in the Indian diet.',
     unsplashQuery: 'wheat field golden',
-    imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_000000008244820798fc4056ebe8f731&ts=496217&p=fs&cid=1&sig=edaa83a39b9643cd141ba5c4f78eac91af31bce355b57ae47de62295c16cebc4&v=0'
+    imageUrl: 'https://images.unsplash.com/photo-1621400343361-0fe9ff2f9b63?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fFdIRUFUfGVufDB8fDB8fHww'
   },
 
   'Maize': {
@@ -243,7 +243,7 @@ const CROP_DETAILS = {
     },
     about: 'Kidney beans (rajma) are a popular pulse crop grown primarily in hilly regions. They are an excellent source of plant-based protein and dietary fiber.',
     unsplashQuery: 'kidney beans plant',
-    imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_000000001c6c82069cac455885155cd8&ts=496218&p=fs&cid=1&sig=e814f46f87024e79810a693da3cfcd04fd8d138c57bfd2ec0eb458af96d5a623&v=0'
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbsdj4-nrrUcS1V-WrLoUQkM_-ndemwrpe25qC_v3uYb4t_Ng586M_5UiO&s=10'
   },
 
   'Pigeonpeas': {
@@ -277,7 +277,7 @@ const CROP_DETAILS = {
     },
     about: 'Pigeon peas (toor/arhar dal) are a vital protein source in the Indian diet. This crop is drought-tolerant and improves soil fertility through nitrogen fixation.',
     unsplashQuery: 'pigeon peas plant',
-    imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000eba0820899acdb6a58d24905&ts=496240&p=fs&cid=1&sig=53d6ffa005196ae2ca132a48f5d287a2e31ada709f8049e3310521ff02d0c6ce&v=0'
+    imageUrl: 'https://gardenerspath.com/wp-content/uploads/2022/02/Pigeon-Peas-Growing-in-the-Garden.jpg'
   },
 
   'Mothbeans': {
@@ -930,7 +930,7 @@ const CROP_DETAILS = {
     },
     about: 'Mango is India\'s national fruit, known as the "King of Fruits." India is the world\'s largest mango producer, with over 1,000 known varieties.',
     unsplashQuery: 'mango fruit tree',
-    imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000dc788206899952128f8d5bf2&ts=496217&p=fs&cid=1&sig=feede2076ca63f56989d3984e94c9dc1a858bdb7aaf4fedd5bdb25a8f9116190&v=0'
+    imageUrl: 'https://dukaan.b-cdn.net/700x700/webp/media/05ffbcbd-7acf-4c2f-b0f3-46c71b89cfd0.webp'
   },
 
   'Grapes': {
@@ -1171,7 +1171,7 @@ const CROP_DETAILS = {
     },
     about: 'Coconut is called the "Tree of Life" providing coconut water, oil, coir, and timber. It is a major plantation crop in Kerala, Karnataka, and Tamil Nadu.',
     unsplashQuery: 'coconut palm tree tropical',
-    imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000ab5482069d794d4c401cdebd&ts=496218&p=fs&cid=1&sig=c7c196633928922c09415bfae195fa8e861542837170138e75b80550cb4550f7&v=0'
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8UysI2EmPnFhSKtSmcyCArAX6GpqSv3n5FSEj8C2OTiaR23lCxLthF44t&s=10'
   },
 
   // ═══════════════════════════════════════════════
@@ -1621,7 +1621,7 @@ const CROP_DETAILS = {
     },
     about: 'Turmeric (haldi) is the "Golden Spice" of India, rich in curcumin with powerful anti-inflammatory properties. India produces 80% of the world\'s turmeric.',
     unsplashQuery: 'turmeric root spice',
-    imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000e700820698d9172cb6e0156c&ts=496218&p=fs&cid=1&sig=77d192467d607182f6bc8c7d4eb971cf010cbe44806aea52223d6390b29a4afc&v=0'
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBI8QC3unNgD2xToVcede5ZzyAWshX6XgfqH-uF45DnQ&s=10'
   },
 };
 
