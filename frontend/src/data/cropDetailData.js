@@ -35,7 +35,7 @@ const CROP_DETAILS = {
       expectedYield: '40 – 60 Quintal / Acre',
     },
     about: 'Rice is the staple food grain of India and is grown in warm, humid conditions with ample water. It is cultivated across diverse agro-climatic zones and supports the livelihood of millions of farmers.',
-    unsplashQuery: 'rice paddy field',,
+    unsplashQuery: 'rice paddy field',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/08/71/25/51/1000_F_871255119_9sfCYTloalVGac7ZAM5F1ADUv5ZXCjuM.jpg'
   },
 
@@ -69,7 +69,7 @@ const CROP_DETAILS = {
       expectedYield: '35 – 50 Quintal / Acre',
     },
     about: 'Wheat is one of India\'s most important rabi (winter) crops, grown extensively in northern and central India. It is a primary source of carbohydrates and protein in the Indian diet.',
-    unsplashQuery: 'wheat field golden',,
+    unsplashQuery: 'wheat field golden',
     imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_000000008244820798fc4056ebe8f731&ts=496217&p=fs&cid=1&sig=edaa83a39b9643cd141ba5c4f78eac91af31bce355b57ae47de62295c16cebc4&v=0'
   },
 
@@ -103,7 +103,7 @@ const CROP_DETAILS = {
       expectedYield: '30 – 50 Quintal / Acre',
     },
     about: 'Maize (corn) is a versatile cereal crop used for food, feed, and industrial purposes. It is grown in both kharif and rabi seasons across India.',
-    unsplashQuery: 'corn maize field',,
+    unsplashQuery: 'corn maize field',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/09/49/13/93/1000_F_949139356_3ZFuYjKHBYEaQmhrmxh3S3TQsU3LNtlc.jpg'
   },
 
@@ -137,7 +137,7 @@ const CROP_DETAILS = {
       expectedYield: '15 – 30 Quintal / Acre',
     },
     about: 'Sorghum (jowar) is a drought-tolerant cereal grain widely grown in semi-arid regions of India. It serves as both a food and fodder crop for livestock.',
-    unsplashQuery: 'sorghum grain field',,
+    unsplashQuery: 'sorghum grain field',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/20/13/79/39/1000_F_2013793913_OdfI9MkNzyMYcO507mONC8IPyzJhc5Gp.jpg'
   },
 
@@ -171,7 +171,7 @@ const CROP_DETAILS = {
       expectedYield: '12 – 25 Quintal / Acre',
     },
     about: 'Pearl Millet (bajra) is a highly drought-resistant cereal crop ideal for arid and semi-arid regions. It is rich in iron and zinc, making it a nutritionally superior grain.',
-    unsplashQuery: 'millet grain crop',,
+    unsplashQuery: 'millet grain crop',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/04/37/05/13/1000_F_437051356_KVZnnezrFAk6Xo20PvA7ctw3FZ0DQk2b.jpg'
   },
 
@@ -208,7 +208,7 @@ const CROP_DETAILS = {
       expectedYield: '10 – 18 Quintal / Acre',
     },
     about: 'Chickpea (chana) is India\'s most important pulse crop, rich in protein. It fixes atmospheric nitrogen, improving soil fertility for subsequent crops.',
-    unsplashQuery: 'chickpea plant field',,
+    unsplashQuery: 'chickpea plant field',
     imageUrl: 'https://pureandwhole.co.za/wp-content/uploads/2021/11/chickpeas.jpg'
   },
 
@@ -242,7 +242,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 15 Quintal / Acre',
     },
     about: 'Kidney beans (rajma) are a popular pulse crop grown primarily in hilly regions. They are an excellent source of plant-based protein and dietary fiber.',
-    unsplashQuery: 'kidney beans plant',,
+    unsplashQuery: 'kidney beans plant',
     imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_000000001c6c82069cac455885155cd8&ts=496218&p=fs&cid=1&sig=e814f46f87024e79810a693da3cfcd04fd8d138c57bfd2ec0eb458af96d5a623&v=0'
   },
 
@@ -276,7 +276,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 14 Quintal / Acre',
     },
     about: 'Pigeon peas (toor/arhar dal) are a vital protein source in the Indian diet. This crop is drought-tolerant and improves soil fertility through nitrogen fixation.',
-    unsplashQuery: 'pigeon peas plant',,
+    unsplashQuery: 'pigeon peas plant',
     imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000eba0820899acdb6a58d24905&ts=496240&p=fs&cid=1&sig=53d6ffa005196ae2ca132a48f5d287a2e31ada709f8049e3310521ff02d0c6ce&v=0'
   },
 
@@ -310,7 +310,7 @@ const CROP_DETAILS = {
       expectedYield: '4 – 8 Quintal / Acre',
     },
     about: 'Moth beans (matki) are highly drought-resistant legumes grown in arid regions of western India. They thrive in poor soils and require minimal water.',
-    unsplashQuery: 'moth beans legume crop',,
+    unsplashQuery: 'moth beans legume crop',
     imageUrl: 'https://5.imimg.com/data5/RF/ZL/FO/SELLER-4987194/moth-beans.png'
   },
 
@@ -344,7 +344,7 @@ const CROP_DETAILS = {
       expectedYield: '5 – 10 Quintal / Acre',
     },
     about: 'Mung bean (moong dal) is a short-duration pulse crop grown in summer and kharif seasons. It is highly nutritious and widely used in Indian cuisine.',
-    unsplashQuery: 'mung bean sprouts plant',,
+    unsplashQuery: 'mung bean sprouts plant',
     imageUrl: 'https://media.post.rvohealth.io/wp-content/uploads/sites/3/2020/02/324156_2200-800x1200.jpg'
   },
 
@@ -378,7 +378,7 @@ const CROP_DETAILS = {
       expectedYield: '5 – 10 Quintal / Acre',
     },
     about: 'Black gram (urad dal) is an important pulse crop of India, essential for making dal, idli batter, and papad. It is rich in protein and fixes atmospheric nitrogen.',
-    unsplashQuery: 'black gram urad beans',,
+    unsplashQuery: 'black gram urad beans',
     imageUrl: 'https://cdn.pixelbin.io/v2/plain-cake-860195/netmed/wrkr/nmz/platform/extensions/cms-blog/free/original/aUx9uI-j0-blogImge'
   },
 
@@ -412,7 +412,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 14 Quintal / Acre',
     },
     about: 'Lentil (masoor dal) is a cool-season pulse crop rich in protein and iron. It is a staple in Indian households and plays a key role in crop rotation systems.',
-    unsplashQuery: 'lentil plant field',,
+    unsplashQuery: 'lentil plant field',
     imageUrl: 'https://vibrantliving.in/cdn/shop/files/RedMasoorDalSplitSkinless.jpg?v=1731059680&width=2048'
   },
 
@@ -446,7 +446,7 @@ const CROP_DETAILS = {
       expectedYield: '30 – 60 Quintal / Acre (green)',
     },
     about: 'Peas are a cool-season vegetable and pulse crop widely cultivated in northern India. Green peas are rich in protein, vitamins, and dietary fiber.',
-    unsplashQuery: 'green peas plant pods',,
+    unsplashQuery: 'green peas plant pods',
     imageUrl: 'https://as1.ftcdn.net/v2/jpg/00/33/77/00/1000_F_33770088_HXwzySc5vZbp6ChZo378eXfpjA0Hz6I7.jpg'
   },
 
@@ -480,7 +480,7 @@ const CROP_DETAILS = {
       expectedYield: '10 – 20 Quintal / Acre',
     },
     about: 'Soybean is a protein-rich oilseed and pulse crop that fixes atmospheric nitrogen. It is widely grown in Madhya Pradesh and Maharashtra as a kharif crop.',
-    unsplashQuery: 'soybean field plant',,
+    unsplashQuery: 'soybean field plant',
     imageUrl: 'https://gonefarmers.com/cdn/shop/products/image_38a270c5-4d4b-4b34-960c-8f8e23cca776_2048x.heic?v=1658505369'
   },
 
@@ -517,7 +517,7 @@ const CROP_DETAILS = {
       expectedYield: '150 – 250 Quintal / Acre',
     },
     about: 'Cabbage is a cool-season vegetable rich in vitamins, minerals and fiber. It is widely used in salads, cooking and processing industry.',
-    unsplashQuery: 'cabbage vegetable field',,
+    unsplashQuery: 'cabbage vegetable field',
     imageUrl: 'https://images.unsplash.com/photo-1697346327617-c333613a349a?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -551,7 +551,7 @@ const CROP_DETAILS = {
       expectedYield: '120 – 200 Quintal / Acre',
     },
     about: 'Cauliflower is a popular cool-season brassica vegetable grown across India. It is rich in vitamin C, fiber and antioxidants.',
-    unsplashQuery: 'cauliflower vegetable',,
+    unsplashQuery: 'cauliflower vegetable',
     imageUrl: 'https://images.unsplash.com/photo-1692956706779-576c151ec712?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -585,7 +585,7 @@ const CROP_DETAILS = {
       expectedYield: '100 – 180 Quintal / Acre',
     },
     about: 'Carrot is a root vegetable rich in beta-carotene and vitamin A. It is widely grown as a cool-season crop and is consumed raw, cooked, or juiced.',
-    unsplashQuery: 'carrot vegetable garden',,
+    unsplashQuery: 'carrot vegetable garden',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/04/34/90/49/1000_F_434904940_QAjS6rRkv9WtoKeGnXd3U6b0D8RUdq0t.jpg'
   },
 
@@ -619,7 +619,7 @@ const CROP_DETAILS = {
       expectedYield: '100 – 200 Quintal / Acre',
     },
     about: 'Radish is a fast-growing root vegetable commonly grown as a cool-season crop. It is consumed raw in salads and is a good source of vitamin C.',
-    unsplashQuery: 'radish vegetable garden',,
+    unsplashQuery: 'radish vegetable garden',
     imageUrl: 'https://cdn.britannica.com/19/234319-050-B273922D/Daikon-radish.jpg'
   },
 
@@ -653,7 +653,7 @@ const CROP_DETAILS = {
       expectedYield: '100 – 200 Quintal / Acre',
     },
     about: 'Onion is one of India\'s most commercially important vegetable crops. It is grown across the country and is indispensable in Indian cooking.',
-    unsplashQuery: 'onion field harvest',,
+    unsplashQuery: 'onion field harvest',
     imageUrl: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -687,7 +687,7 @@ const CROP_DETAILS = {
       expectedYield: '50 – 80 Quintal / Acre',
     },
     about: 'Garlic is a high-value spice and medicinal crop known for its pungent flavor and health benefits. It is widely used in Indian cuisine and traditional medicine.',
-    unsplashQuery: 'garlic bulbs harvest',,
+    unsplashQuery: 'garlic bulbs harvest',
     imageUrl: 'https://images.unsplash.com/photo-1741518077910-d5449aaa1636?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -721,7 +721,7 @@ const CROP_DETAILS = {
       expectedYield: '60 – 100 Quintal / Acre',
     },
     about: 'Spinach (palak) is a nutritious leafy vegetable rich in iron, calcium and vitamins. It is a fast-growing cool-season crop that allows multiple harvests.',
-    unsplashQuery: 'spinach leaves garden',,
+    unsplashQuery: 'spinach leaves garden',
     imageUrl: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?q=80&w=580&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -755,7 +755,7 @@ const CROP_DETAILS = {
       expectedYield: '200 – 350 Quintal / Acre',
     },
     about: 'Tomato is one of the most widely grown vegetable crops in India, rich in lycopene and vitamin C. It is used extensively in cooking, processing, and as a fresh salad ingredient.',
-    unsplashQuery: 'tomato plant vine',,
+    unsplashQuery: 'tomato plant vine',
     imageUrl: 'https://plus.unsplash.com/premium_photo-1661833100239-de8f260b6f8c?q=80&w=872&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -789,7 +789,7 @@ const CROP_DETAILS = {
       expectedYield: '100 – 200 Quintal / Acre',
     },
     about: 'Potato is India\'s most important tuber crop and a dietary staple. It is grown as a rabi crop across Indo-Gangetic plains and hill regions.',
-    unsplashQuery: 'potato harvest farm',,
+    unsplashQuery: 'potato harvest farm',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/05/03/85/17/1000_F_503851762_GhOTaDzziA1mlmsAAGC1ggYgGqmBHKtJ.jpg'
   },
 
@@ -823,7 +823,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 15 Quintal / Acre (seed)',
     },
     about: 'Fenugreek (methi) is a dual-purpose crop used both as a leafy vegetable and for its seeds. It is rich in fiber and is widely used in Indian cooking and traditional medicine.',
-    unsplashQuery: 'fenugreek leaves plant',,
+    unsplashQuery: 'fenugreek leaves plant',
     imageUrl: 'https://as1.ftcdn.net/v2/jpg/03/08/37/90/1000_F_308379064_imKYU2eyxRdCY0kY52P77UjYvfY0okhN.jpg'
   },
 
@@ -860,7 +860,7 @@ const CROP_DETAILS = {
       expectedYield: '50 – 80 Quintal / Acre',
     },
     about: 'Pomegranate (anar) is a high-value fruit crop grown extensively in Maharashtra and Karnataka. It is rich in antioxidants and has excellent export potential.',
-    unsplashQuery: 'pomegranate fruit tree',,
+    unsplashQuery: 'pomegranate fruit tree',
     imageUrl: 'https://as1.ftcdn.net/v2/jpg/00/23/56/44/1000_F_23564400_ZTu4HD4sDDJEaC2IxS58GDhR9t3Zcsu2.jpg'
   },
 
@@ -895,7 +895,7 @@ const CROP_DETAILS = {
       expectedYield: '250 – 400 Quintal / Acre',
     },
     about: 'Banana is India\'s leading fruit crop, grown in tropical and subtropical regions. It is a rich source of potassium, vitamin B6, and dietary energy.',
-    unsplashQuery: 'banana plantation tropical',,
+    unsplashQuery: 'banana plantation tropical',
     imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=80&w=580&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -929,7 +929,7 @@ const CROP_DETAILS = {
       expectedYield: '40 – 100 Quintal / Acre (bearing)',
     },
     about: 'Mango is India\'s national fruit, known as the "King of Fruits." India is the world\'s largest mango producer, with over 1,000 known varieties.',
-    unsplashQuery: 'mango fruit tree',,
+    unsplashQuery: 'mango fruit tree',
     imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000dc788206899952128f8d5bf2&ts=496217&p=fs&cid=1&sig=feede2076ca63f56989d3984e94c9dc1a858bdb7aaf4fedd5bdb25a8f9116190&v=0'
   },
 
@@ -964,7 +964,7 @@ const CROP_DETAILS = {
       expectedYield: '80 – 150 Quintal / Acre',
     },
     about: 'Grapes are a high-value fruit crop mainly grown in Maharashtra, Karnataka and Tamil Nadu. They are consumed fresh, as raisins, and for wine production.',
-    unsplashQuery: 'grapes vineyard',,
+    unsplashQuery: 'grapes vineyard',
     imageUrl: 'https://images.unsplash.com/photo-1539519532614-723937382b86?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -998,7 +998,7 @@ const CROP_DETAILS = {
       expectedYield: '200 – 350 Quintal / Acre',
     },
     about: 'Watermelon is a refreshing summer fruit crop rich in water, vitamins, and lycopene. It is primarily grown in riverbed cultivation during summer months.',
-    unsplashQuery: 'watermelon field farm',,
+    unsplashQuery: 'watermelon field farm',
     imageUrl: 'https://images.unsplash.com/photo-1672155984538-351971a96b09?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -1032,7 +1032,7 @@ const CROP_DETAILS = {
       expectedYield: '80 – 150 Quintal / Acre',
     },
     about: 'Muskmelon (kharbooja) is a popular summer fruit grown in hot, dry conditions. It is refreshing and rich in vitamins A and C.',
-    unsplashQuery: 'muskmelon cantaloupe fruit',,
+    unsplashQuery: 'muskmelon cantaloupe fruit',
     imageUrl: 'https://as1.ftcdn.net/v2/jpg/03/13/26/44/1000_F_313264476_NjXJB4sLM3aLddCEvjhdHtztB7KT2INF.jpg'
   },
 
@@ -1066,7 +1066,7 @@ const CROP_DETAILS = {
       expectedYield: '60 – 120 Quintal / Acre (bearing)',
     },
     about: 'Apple is a temperate fruit crop grown in the hilly regions of Himachal Pradesh, Jammu & Kashmir, and Uttarakhand. It requires chilling hours and is a high-value export fruit.',
-    unsplashQuery: 'apple orchard tree',,
+    unsplashQuery: 'apple orchard tree',
     imageUrl: 'https://plus.unsplash.com/premium_photo-1661322640130-f6a1e2c36653?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -1101,7 +1101,7 @@ const CROP_DETAILS = {
       expectedYield: '80 – 150 Quintal / Acre (bearing)',
     },
     about: 'Orange (Nagpur/Mandarin orange) is a major citrus fruit of India, rich in vitamin C. Maharashtra and Madhya Pradesh are the leading producers.',
-    unsplashQuery: 'orange fruit tree',,
+    unsplashQuery: 'orange fruit tree',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/03/10/19/81/1000_F_310198165_I9CLr3Lv6rfgtT2hN571pEJkF2voKDvT.jpg'
   },
 
@@ -1136,7 +1136,7 @@ const CROP_DETAILS = {
       expectedYield: '200 – 400 Quintal / Acre',
     },
     about: 'Papaya is a fast-growing tropical fruit crop that starts bearing within 8–10 months. It is rich in papain enzyme, vitamin C and carotenoids.',
-    unsplashQuery: 'papaya fruit tree tropical',,
+    unsplashQuery: 'papaya fruit tree tropical',
     imageUrl: 'https://cdn.mos.cms.futurecdn.net/v2/t:0,l:200,cw:1200,ch:1200,q:80,w:1200/g7YTkCzPqJcCKSfEQi6hfE.jpg'
   },
 
@@ -1170,7 +1170,7 @@ const CROP_DETAILS = {
       expectedYield: '80 – 150 nuts/tree/year',
     },
     about: 'Coconut is called the "Tree of Life" providing coconut water, oil, coir, and timber. It is a major plantation crop in Kerala, Karnataka, and Tamil Nadu.',
-    unsplashQuery: 'coconut palm tree tropical',,
+    unsplashQuery: 'coconut palm tree tropical',
     imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000ab5482069d794d4c401cdebd&ts=496218&p=fs&cid=1&sig=c7c196633928922c09415bfae195fa8e861542837170138e75b80550cb4550f7&v=0'
   },
 
@@ -1208,7 +1208,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 15 Quintal / Acre (lint)',
     },
     about: 'Cotton is India\'s most important fiber crop, known as "White Gold." India is the largest cotton producer in the world, with major cultivation in Maharashtra, Gujarat, and Telangana.',
-    unsplashQuery: 'cotton field plant',,
+    unsplashQuery: 'cotton field plant',
     imageUrl: 'https://static.vecteezy.com/system/resources/thumbnails/015/990/308/small/ripe-cotton-plant-in-a-field-in-turkey-photo.jpg'
   },
 
@@ -1242,7 +1242,7 @@ const CROP_DETAILS = {
       expectedYield: '20 – 35 Quintal / Acre (fiber)',
     },
     about: 'Jute is the "Golden Fiber" of India, primarily grown in West Bengal and Bihar. It is an eco-friendly natural fiber used for packaging, textiles, and crafts.',
-    unsplashQuery: 'jute fiber plant field',,
+    unsplashQuery: 'jute fiber plant field',
     imageUrl: 'https://as1.ftcdn.net/v2/jpg/19/22/66/20/1000_F_1922662026_0uBXPTegcwQRE0xICPwgThxvQpfjMHml.jpg'
   },
 
@@ -1277,7 +1277,7 @@ const CROP_DETAILS = {
       expectedYield: '5 – 10 Quintal / Acre (clean coffee)',
     },
     about: 'Coffee is a premium plantation crop grown in the Western Ghats of Karnataka, Kerala, and Tamil Nadu. India produces both Arabica and Robusta varieties, exported worldwide.',
-    unsplashQuery: 'coffee plantation beans',,
+    unsplashQuery: 'coffee plantation beans',
     imageUrl: 'https://s3-alpha.figma.com/hub/file/2324984438288694833/aae344ba-2f31-478d-9443-151745a24ca5-cover.png'
   },
 
@@ -1312,7 +1312,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 15 Quintal / Acre (made tea)',
     },
     about: 'Tea is India\'s most popular beverage crop, grown in Assam, Darjeeling, and the Nilgiris. India is the world\'s second largest tea producer after China.',
-    unsplashQuery: 'tea plantation hills',,
+    unsplashQuery: 'tea plantation hills',
     imageUrl: 'https://images.unsplash.com/photo-1602943543714-cf535b048440?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8dGVhJTIwbGVhdmVzfGVufDB8fDB8fHww'
   },
 
@@ -1347,7 +1347,7 @@ const CROP_DETAILS = {
       expectedYield: '350 – 600 Quintal / Acre',
     },
     about: 'Sugarcane is a major cash crop and the primary source of sugar in India. Uttar Pradesh, Maharashtra, and Karnataka are the top producing states.',
-    unsplashQuery: 'sugarcane field farm',,
+    unsplashQuery: 'sugarcane field farm',
     imageUrl: 'https://as2.ftcdn.net/v2/jpg/01/05/07/85/1000_F_105078562_bRywiaGCN2h8tQRygAkUS3Dou1Ngjf3B.jpg'
   },
 
@@ -1381,7 +1381,7 @@ const CROP_DETAILS = {
       expectedYield: '10 – 20 Quintal / Acre (pods)',
     },
     about: 'Groundnut (peanut) is India\'s most important oilseed crop, rich in protein and healthy fats. Gujarat and Andhra Pradesh are the leading producers.',
-    unsplashQuery: 'peanut groundnut field',,
+    unsplashQuery: 'peanut groundnut field',
     imageUrl: 'https://images.unsplash.com/photo-1785619564649-658675821809?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 
@@ -1415,7 +1415,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 15 Quintal / Acre',
     },
     about: 'Mustard (sarson) is India\'s second most important oilseed crop after soybean. Rajasthan and Madhya Pradesh are major producing states.',
-    unsplashQuery: 'mustard field flowers yellow',,
+    unsplashQuery: 'mustard field flowers yellow',
     imageUrl: 'https://lh4.googleusercontent.com/W7fIFW4HvoHVUa6kP7-5DSpS3BFV6ZBEJN5AXl1QyYM4QlLDfhVIJV_4A3L8sR7dsdaUWTE41pFecQCpSgVMF1Qq2IYkgbET6uWHRcWs5_O-Ote5po4AoRU4jh_RnV3lcx8LTYsVLqq1N9zEifguAYhFTg-9q2uFK8-Cjqa4EABw3sEMkmYdCLQH3g'
   },
 
@@ -1449,7 +1449,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 15 Quintal / Acre',
     },
     about: 'Sunflower is an important oilseed crop with high-quality edible oil rich in linoleic acid. Karnataka is India\'s leading sunflower producing state.',
-    unsplashQuery: 'sunflower field',,
+    unsplashQuery: 'sunflower field',
     imageUrl: 'https://www.allthatgrows.in/cdn/shop/files/SunflowerRussianGiantSeeds.jpg?v=1754130908&width=1080'
   },
 
@@ -1483,7 +1483,7 @@ const CROP_DETAILS = {
       expectedYield: '6 – 12 Quintal / Acre',
     },
     about: 'Safflower (kusum) is an ancient oilseed crop known for producing high-quality edible oil with high linoleic acid content. Maharashtra is the top producer.',
-    unsplashQuery: 'safflower field bloom',,
+    unsplashQuery: 'safflower field bloom',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7f/Safflower.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original'
   },
 
@@ -1517,7 +1517,7 @@ const CROP_DETAILS = {
       expectedYield: '4 – 8 Quintal / Acre',
     },
     about: 'Sesame (til) is one of the oldest oilseed crops in the world, valued for its nutritious seeds rich in calcium and healthy fats. India is a major sesame exporter.',
-    unsplashQuery: 'sesame seed plant',,
+    unsplashQuery: 'sesame seed plant',
     imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDXeknpHCJebDQKvU8AKmG3zgJ9DJzBlglVJcTxP0lGDfSjq9_6Guib8Q&s=10'
   },
 
@@ -1551,7 +1551,7 @@ const CROP_DETAILS = {
       expectedYield: '5 – 10 Quintal / Acre',
     },
     about: 'Linseed (flaxseed/alsi) is a dual-purpose crop grown for its oil-rich seeds and fiber (flax). It is a rabi crop rich in omega-3 fatty acids.',
-    unsplashQuery: 'flax linseed flower field',,
+    unsplashQuery: 'flax linseed flower field',
     imageUrl: 'https://5.imimg.com/data5/SELLER/Default/2022/9/SI/ZQ/OT/139751067/flax-seeds-linseeds.jpg'
   },
 
@@ -1585,7 +1585,7 @@ const CROP_DETAILS = {
       expectedYield: '8 – 15 Quintal / Acre',
     },
     about: 'Castor is a non-edible oilseed crop grown for industrial oil. Gujarat produces over 80% of India\'s castor and India is the world\'s largest castor oil exporter.',
-    unsplashQuery: 'castor bean plant',,
+    unsplashQuery: 'castor bean plant',
     imageUrl: 'https://5.imimg.com/data5/II/JC/EM/SELLER-75729806/castor-seeds.jpg'
   },
 
@@ -1620,7 +1620,7 @@ const CROP_DETAILS = {
       expectedYield: '80 – 120 Quintal / Acre (fresh)',
     },
     about: 'Turmeric (haldi) is the "Golden Spice" of India, rich in curcumin with powerful anti-inflammatory properties. India produces 80% of the world\'s turmeric.',
-    unsplashQuery: 'turmeric root spice',,
+    unsplashQuery: 'turmeric root spice',
     imageUrl: 'https://chatgpt.com/backend-api/estuary/content?id=file_00000000e700820698d9172cb6e0156c&ts=496218&p=fs&cid=1&sig=77d192467d607182f6bc8c7d4eb971cf010cbe44806aea52223d6390b29a4afc&v=0'
   },
 };
