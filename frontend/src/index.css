@@ -100,6 +100,63 @@
   .glass-button {
     @apply bg-gradient-to-r from-farm-primary to-farm-primary-light hover:brightness-110 hover:scale-[1.02] text-white font-medium py-3 px-6 rounded-2xl transition-all shadow-[0_4px_14px_rgba(47,75,38,0.39)] dark:shadow-[0_0_20px_rgba(232,185,74,0.25)] border border-transparent dark:border-white/10 dark:border-t-white/20;
   }
+
+  /* AI Predict Button - semi-transparent with animated conic-gradient border */
+  .ai-predict-button {
+    position: relative;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: white;
+    z-index: 0;
+    box-shadow: 0 0 40px rgba(144,238,144,0.06);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .ai-predict-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 48px rgba(144,238,144,0.09);
+  }
+
+  .ai-predict-button > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .ai-predict-button::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: 1;
+    border-radius: inherit;
+    /* Slow linear gradient motion from light green to gold */
+    background: linear-gradient(90deg, rgba(189, 247, 216, 0.95) 0%, rgba(173,255,160,0.95) 35%, rgba(255,215,120,0.95) 100%);
+    background-size: 200% 200%;
+    filter: blur(4px);
+    opacity: 0.9;
+    animation: ai-gradient 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .ai-predict-button::after {
+    /* cover the center so the gradient appears only as a soft border */
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: rgba(0,0,0,0.0);
+    z-index: 2;
+    border-radius: calc(1rem - 1px);
+    pointer-events: none;
+  }
+
+  @keyframes ai-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
   
   /* Custom Range Slider */
   .custom-range-slider {

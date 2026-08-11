@@ -232,9 +232,9 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
                 disabled={loading}
                 whileHover={{ scale: loading ? 1 : 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex-1 h-full min-h-[120px] py-4 md:py-5 text-xl md:text-2xl flex justify-center items-center font-poppins rounded-3xl bg-gradient-to-br from-farm-accent-gold to-farm-accent-orange text-white dark:text-[#10190F] font-black shadow-[0_8px_32px_rgba(201,118,12,0.4)] hover:shadow-[0_16px_48px_rgba(201,118,12,0.6)] transition-all overflow-hidden relative group"
+                className="ai-predict-button flex-1 h-full min-h-[120px] py-4 md:py-5 text-xl md:text-2xl flex justify-center items-center font-poppins rounded-3xl text-white dark:text-[#10190F] font-black transition-all overflow-hidden relative group"
               >
-                <div className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
+                {/* decorative overlay removed to avoid conflicting animation */}
                 {loading && <Loader2 className="w-8 h-8 animate-spin mr-4" />}
                 <span className="flex items-center gap-3 relative z-10">
                   {loadingText} {!loading && <span className="text-3xl">🚀 {results ? "Re-run" : "Get AI Prediction"}</span>}

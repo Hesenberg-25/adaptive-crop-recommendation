@@ -20,7 +20,8 @@ const Signup = () => {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, { email, password });
       login(response.data.token, response.data.refresh_token);
       toast.success('Account created successfully!');
-      navigate('/dashboard', { state: { justLoggedIn: true } });
+      // Send new users to profile setup so we can auto-fill and let them edit details
+      navigate('/profile', { state: { isNewUser: true } });
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create account');
     } finally {

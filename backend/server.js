@@ -89,6 +89,24 @@ app.post('/api/auth/refresh', async (req, res) => {
     });
 });
 
+// Public endpoint to fetch subsidies for given crops and optional region
+app.get('/api/subsidies', async (req, res) => {
+    try {
+        const cropsQuery = req.query.crops || req.query.crop || '';
+        const crops = Array.isArray(cropsQuery) ? cropsQuery : (cropsQuery ? cropsQuery.split(',').map(s => s.trim()).filter(Boolean) : []);
+        const state = req.query.state || req.query.region || '';
+        const district = req.query.district || '';
+
+        if (!crops || crops.length === 0) return res.status(400).json({ error: 'Provide ?crops=rice,wheat or JSON body { crops: [...] }' });
+
+        const result = await getDynamicSubsidiesForCrops(crops, { state, district });
+        res.json({ crops, state, district, data: result });
+    } catch (e) {
+        console.error('Subsidies endpoint error:', e);
+        res.status(500).json({ error: 'Failed to retrieve subsidies' });
+    }
+});
+
 
 
 app.post('/api/predict', authenticateUser, async (req, res) => {
@@ -408,8 +426,8 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
         const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
 
-        // 3b. Government Subsidies & Schemes
-        const governmentSubsidies = await getDynamicSubsidiesForCrops(recommendedWithROI);
+        // 3b. Government Subsidies & Schemes (region-aware)
+        const governmentSubsidies = await getDynamicSubsidiesForCrops(recommendedWithROI, { state: detectedRegion, district: detectedDistrict });
 
         // 3. Gemini Comprehensive Analysis & Pest Alerts
         const risks = evaluateRisk({ temp: temperature, humidity, rainfall, windSpeed });

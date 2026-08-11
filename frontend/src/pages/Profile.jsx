@@ -58,6 +58,72 @@ const Profile = () => {
     else setFetching(false);
   }, [token]);
 
+  // Auto-fill profile for newly signed up users: derive name from email and try geolocation
+  useEffect(() => {
+    const tryAutoFill = async () => {
+      if (!token) return;
+      // If there's already meaningful data, skip autofill
+      const hasData = profile.name || profile.location || profile.primary_crops || profile.farm_size;
+      if (hasData) return;
+
+      const payload = {};
+      // Derive name from email if present
+      if (profile.email) {
+        const local = profile.email.split('@')[0];
+        const pretty = local.replace(/[^a-zA-Z]/g, ' ').split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ').trim();
+        if (pretty) payload.name = pretty;
+      }
+
+      // default irrigation
+      payload.irrigation_type = payload.irrigation_type || 'rainfed';
+
+      // Try geolocation to fill 'location'
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 }));
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          // reverse-geocode via Nominatim
+          try {
+            const geo = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const addr = geo.data.address || {};
+            const city = addr.city || addr.town || addr.village || addr.county || '';
+            const state = addr.state || addr.country || '';
+            const locStr = state ? `${city}, ${state}` : city || '';
+            if (locStr) payload.location = locStr;
+          } catch (e) {
+            // ignore reverse geocode failure
+          }
+        } catch (_e) {
+          // user denied or timeout — skip
+        }
+      }
+
+      // If we gathered any autofill data, persist it
+      if (Object.keys(payload).length > 0) {
+        try {
+          setLoading(true);
+          const saveResp = await axios.put(`${import.meta.env.VITE_API_URL}/api/farmer/profile`, payload, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (saveResp.data) {
+            setProfile(prev => ({ ...prev, ...saveResp.data }));
+            toast.success('Profile auto-filled. You can review and edit details.');
+          }
+        } catch (err) {
+          console.error('Auto-fill save error', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    if (isNewUser && !fetching) {
+      tryAutoFill();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNewUser, fetching, token]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));

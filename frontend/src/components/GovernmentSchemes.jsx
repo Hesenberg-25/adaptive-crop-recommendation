@@ -76,6 +76,11 @@ const SchemeCard = ({ scheme, index, isUniversal }) => {
             `}>
               {scheme.benefitType}
             </span>
+            {scheme.source && (
+              <span className={`text-[10px] ml-2 px-2 py-0.5 rounded-full font-semibold ${scheme.source === 'official' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}>
+                {scheme.source === 'official' ? 'Official' : scheme.source}
+              </span>
+            )}
           </div>
           
           <div className="flex items-center gap-2 mt-1">
@@ -140,11 +145,24 @@ const GovernmentSchemes = ({ subsidyData }) => {
   
   const [showAll, setShowAll] = useState(false);
 
-  if (!subsidyData) return null;
+  if (!subsidyData) {
+    return (
+      <div className="glass-panel p-6 w-full text-center text-slate-600 dark:text-slate-400 rounded-3xl border border-slate-200/40 dark:border-white/10">
+        <p className="text-sm font-semibold">Unable to process your request currently.</p>
+        <p className="mt-2 text-xs">Government subsidy details are unavailable right now. Please try again later.</p>
+      </div>
+    );
+  }
 
   const { universal = [], cropSpecific = [], totalSchemes, estimatedBenefitSummary, crop } = subsidyData;
-  const allSchemes = [...cropSpecific, ...universal];
+  const allSchemes = [...(cropSpecific || []), ...(universal || [])];
   const displayedSchemes = showAll ? allSchemes : allSchemes.slice(0, 3);
+
+  // Detect whether any scheme mentions MSP/price guarantee to avoid hardcoded claims
+  const hasPriceGuarantee = allSchemes.some(s => {
+    const text = `${s.name || ''} ${s.benefitType || ''} ${s.details || ''}`.toLowerCase();
+    return text.includes('msp') || text.includes('price guarantee') || text.includes('minimum support price');
+  });
 
   return (
     <motion.div
@@ -168,18 +186,15 @@ const GovernmentSchemes = ({ subsidyData }) => {
 
       {/* Summary Banner */}
       <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-amber-500/5 dark:via-emerald-500/5 dark:to-indigo-500/5 border border-amber-200/40 dark:border-amber-500/20 rounded-xl px-4 py-3">
-        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-          <span className="font-semibold text-amber-700 dark:text-amber-300">
-            💰 {'For %crop% farmers:'.replace('%crop%', crop?.charAt(0).toUpperCase() + crop?.slice(1))}
-          </span>{' '}
-          {(estimatedBenefitSummary || '').replace(
-            /(\d+) government schemes available/g, 
-            (_, count) => `${count} $government schemes available`
-          ).replace(
-            'MSP price guarantee active',
-            'MSP price guarantee active'
-          )}
-        </p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <span className="font-semibold text-amber-700 dark:text-amber-300">
+              💰 For {crop?.charAt(0).toUpperCase() + crop?.slice(1)} farmers:
+            </span>{' '}
+            <span>{estimatedBenefitSummary || `${allSchemes.length} schemes available`}</span>
+            {hasPriceGuarantee && (
+              <span className="ml-2 text-[11px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold">MSP / Price Guarantee detected</span>
+            )}
+          </p>
       </div>
 
       {/* Crop-Specific Schemes Section */}
