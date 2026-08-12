@@ -42,7 +42,7 @@ async def _fetch_mandi_prices(state: str = None, district: str = None) -> dict |
             url += f"&filters[state]={state}"
         if district:
             url += f"&filters[district]={district}"
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient(timeout=10, headers={"User-Agent": "Mozilla/5.0"}) as client:
             res = await client.get(url)
             res.raise_for_status()
             records = res.json().get("records", [])
@@ -93,7 +93,7 @@ async def fetch_raw_mandi_records(state=None, district=None, commodity=None, lim
             url += f"&filters[district]={district}"
         if commodity:
             url += f"&filters[commodity]={commodity}"
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient(timeout=10, headers={"User-Agent": "Mozilla/5.0"}) as client:
             res = await client.get(url)
             res.raise_for_status()
             data = res.json()
