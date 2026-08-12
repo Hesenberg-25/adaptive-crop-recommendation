@@ -25,12 +25,24 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
   const { token } = useAuth();
   const locationState = useLocation().state || {};
   const isJustLoggedIn = locationState.justLoggedIn;
+  const scanData = locationState.scanData;
+  const autoPredict = locationState.autoPredict;
 
   // Restore state from sessionStorage
   const saved = loadState();
 
-  const [inputs, setInputs] = useState(saved?.inputs || {
-    N: 90, P: 42, K: 43, pH: 6.5, temperature: 24, humidity: 82, rainfall: 220
+  const [inputs, setInputs] = useState(() => {
+    const defaultInputs = saved?.inputs || {
+      N: 90, P: 42, K: 43, pH: 6.5, temperature: 24, humidity: 82, rainfall: 220
+    };
+    if (scanData) {
+      console.log('Applying scanned soil data to Dashboard:', scanData);
+      if (scanData.N !== undefined) defaultInputs.N = parseFloat(scanData.N);
+      if (scanData.P !== undefined) defaultInputs.P = parseFloat(scanData.P);
+      if (scanData.K !== undefined) defaultInputs.K = parseFloat(scanData.K);
+      if (scanData.pH !== undefined) defaultInputs.pH = parseFloat(scanData.pH);
+    }
+    return defaultInputs;
   });
   const [droughtReduction, setDroughtReduction] = useState(saved?.droughtReduction || 0);
 
@@ -44,7 +56,14 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
   const [season, setSeason] = useState(saved?.season || 'auto');
   const [isIrrigated, setIsIrrigated] = useState(saved?.isIrrigated || false);
   const [technique, setTechnique] = useState(saved?.technique || 'monocropping');
-  const [soilType, setSoilType] = useState(saved?.soilType || '');
+  const [soilType, setSoilType] = useState(() => {
+    if (scanData?.soilType) {
+      const types = ['black', 'red', 'alluvial', 'laterite', 'sandy', 'loamy', 'clay'];
+      const matched = types.find(t => scanData.soilType.toLowerCase().includes(t));
+      if (matched) return matched;
+    }
+    return saved?.soilType || '';
+  });
   const language = langProp || 'en';
 
   // Target Crop Feature
@@ -60,6 +79,14 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
   useEffect(() => {
     saveState({ inputs, droughtReduction, season, isIrrigated, technique, soilType, cropCategory, targetCrop, results });
   }, [inputs, droughtReduction, season, isIrrigated, technique, soilType, cropCategory, targetCrop, results]);
+
+  useEffect(() => {
+    if (scanData) {
+      toast.success('AI Soil Scan applied to Dashboard!');
+      // Clear location state so a page refresh doesn't re-apply the scan values
+      window.history.replaceState({}, document.title);
+    }
+  }, [scanData]);
 
   // Weather Code helper
   const getWeatherEmoji = (code) => {
@@ -83,9 +110,23 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
         if (response.data) {
           setUserProfile(response.data);
           // Only set from profile if no saved state
-          if (!saved) {
-            if (response.data.soil_type) setSoilType(response.data.soil_type);
+          if (!saved && !scanData) {
+            if (response.data.soil_type) {
+              const types = ['black', 'red', 'alluvial', 'laterite', 'sandy', 'loamy', 'clay'];
+              const matched = types.find(t => response.data.soil_type.toLowerCase().includes(t));
+              if (matched) setSoilType(matched);
+            }
             if (response.data.irrigation_type) setIsIrrigated(response.data.irrigation_type === 'irrigated');
+            
+            // Apply soil nutrients from profile if they exist
+            setInputs(prev => {
+              const newInputs = { ...prev };
+              if (response.data.soil_n !== undefined && response.data.soil_n !== null) newInputs.N = parseFloat(response.data.soil_n);
+              if (response.data.soil_p !== undefined && response.data.soil_p !== null) newInputs.P = parseFloat(response.data.soil_p);
+              if (response.data.soil_k !== undefined && response.data.soil_k !== null) newInputs.K = parseFloat(response.data.soil_k);
+              if (response.data.soil_ph !== undefined && response.data.soil_ph !== null) newInputs.pH = parseFloat(response.data.soil_ph);
+              return newInputs;
+            });
           }
         }
       } catch (_error) {
@@ -150,6 +191,12 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
       setLoadingText('');
     }
   };
+
+  useEffect(() => {
+    if (autoPredict && !loading && !results) {
+      handlePredict();
+    }
+  }, [autoPredict]);
 
   const crazyVariants = {
     hidden: { opacity: 0, scale: 0.3, rotateX: 90, rotateY: 45, y: -200 },

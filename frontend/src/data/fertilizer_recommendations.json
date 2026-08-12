@@ -1,0 +1,110 @@
+{
+  "_schema": {
+    "description": "Fertilizer recommendation seed data.",
+    "format": [
+      {
+        "crop": "String (Name of the crop)",
+        "growth_stage": "String (sowing, seedling, vegetative, tillering, flowering, fruiting)",
+        "fertilizers": [
+          {
+            "name": "String (Fertilizer name e.g. Urea, DAP)",
+            "dosage_per_acre": "String (e.g. 50 kg)",
+            "method": "String (e.g. Basal/broadcasting)",
+            "timing": "String (e.g. At sowing)"
+          }
+        ],
+        "notes": ["String (General tips/precautions)"]
+      }
+    ]
+  },
+  "recommendations": [
+    {
+      "crop": "Wheat",
+      "growth_stage": "sowing",
+      "fertilizers": [
+        { "name": "DAP", "dosage_per_acre": "50 kg", "method": "Basal/broadcasting", "timing": "At sowing" },
+        { "name": "MOP", "dosage_per_acre": "20 kg", "method": "Basal/broadcasting", "timing": "At sowing" }
+      ],
+      "notes": ["Apply FYM 2-3 weeks before sowing for better soil structure.", "Ensure adequate soil moisture before application."]
+    },
+    {
+      "crop": "Wheat",
+      "growth_stage": "vegetative",
+      "fertilizers": [
+        { "name": "Urea", "dosage_per_acre": "25 kg", "method": "Top dressing", "timing": "25-30 days after sowing (CRI stage)" }
+      ],
+      "notes": ["Apply urea after the first irrigation for better efficiency.", "Avoid applying when leaves are wet to prevent scorching."]
+    },
+    {
+      "crop": "Rice",
+      "growth_stage": "sowing",
+      "fertilizers": [
+        { "name": "DAP", "dosage_per_acre": "40 kg", "method": "Basal/broadcasting", "timing": "At puddling/transplanting" },
+        { "name": "MOP", "dosage_per_acre": "20 kg", "method": "Basal/broadcasting", "timing": "At puddling/transplanting" }
+      ],
+      "notes": ["Incorporate fertilizers well into the soil during puddling.", "Apply Zinc Sulphate (10 kg/acre) as basal if soil is zinc deficient."]
+    },
+    {
+      "crop": "Rice",
+      "growth_stage": "vegetative",
+      "fertilizers": [
+        { "name": "Urea", "dosage_per_acre": "30 kg", "method": "Top dressing", "timing": "20-25 days after transplanting (Active tillering)" }
+      ],
+      "notes": ["Maintain a thin film of water while broadcasting urea.", "Consider neem-coated urea for slower release."]
+    },
+    {
+      "crop": "Cotton",
+      "growth_stage": "sowing",
+      "fertilizers": [
+        { "name": "DAP", "dosage_per_acre": "40 kg", "method": "Basal/band placement", "timing": "At sowing" },
+        { "name": "MOP", "dosage_per_acre": "20 kg", "method": "Basal/band placement", "timing": "At sowing" }
+      ],
+      "notes": ["Place fertilizer slightly away and below the seed.", "Add FYM (4-5 tons/acre) before sowing."]
+    },
+    {
+      "crop": "Cotton",
+      "growth_stage": "flowering",
+      "fertilizers": [
+        { "name": "Urea", "dosage_per_acre": "20 kg", "method": "Top dressing", "timing": "At square/flowering initiation" },
+        { "name": "KNO3", "dosage_per_acre": "2% solution", "method": "Foliar spray", "timing": "During peak flowering" }
+      ],
+      "notes": ["Foliar spray helps in retaining bolls.", "Apply when soil has adequate moisture."]
+    },
+    {
+      "crop": "Sugarcane",
+      "growth_stage": "sowing",
+      "fertilizers": [
+        { "name": "DAP", "dosage_per_acre": "60 kg", "method": "Basal in furrows", "timing": "At planting" },
+        { "name": "MOP", "dosage_per_acre": "30 kg", "method": "Basal in furrows", "timing": "At planting" },
+        { "name": "Urea", "dosage_per_acre": "35 kg", "method": "Basal in furrows", "timing": "At planting" }
+      ],
+      "notes": ["Mix fertilizers well in the furrows before placing setts."]
+    },
+    {
+      "crop": "Sugarcane",
+      "growth_stage": "vegetative",
+      "fertilizers": [
+        { "name": "Urea", "dosage_per_acre": "45 kg", "method": "Top dressing", "timing": "60-90 days after planting" }
+      ],
+      "notes": ["Apply fertilizer followed by earthing up and irrigation."]
+    },
+    {
+      "crop": "Maize",
+      "growth_stage": "sowing",
+      "fertilizers": [
+        { "name": "DAP", "dosage_per_acre": "45 kg", "method": "Basal/band placement", "timing": "At sowing" },
+        { "name": "MOP", "dosage_per_acre": "20 kg", "method": "Basal/band placement", "timing": "At sowing" },
+        { "name": "Zinc Sulphate", "dosage_per_acre": "10 kg", "method": "Basal", "timing": "At sowing" }
+      ],
+      "notes": ["Zinc is crucial for maize; apply as a separate basal dose (do not mix with DAP)."]
+    },
+    {
+      "crop": "Maize",
+      "growth_stage": "vegetative",
+      "fertilizers": [
+        { "name": "Urea", "dosage_per_acre": "30 kg", "method": "Top dressing/band placement", "timing": "Knee-high stage (30-35 days)" }
+      ],
+      "notes": ["Apply urea 5-10 cm away from the plant rows."]
+    }
+  ]
+}

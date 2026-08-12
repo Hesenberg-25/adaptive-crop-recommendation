@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Leaf, LayoutDashboard, History, BookOpen, Settings, TrendingUp } from 'lucide-react';
+import { Leaf, LayoutDashboard, History, BookOpen, Settings, TrendingUp, Sprout, Beaker, Stethoscope, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Sidebar = () => {
@@ -9,6 +9,9 @@ const Sidebar = () => {
     { to: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard' },
     { to: '/market',    icon: <TrendingUp className="w-5 h-5" />,      label: 'Live Market' },
     { to: '/catalog',   icon: <BookOpen className="w-5 h-5" />,        label: 'Crop Catalog' },
+    { to: '/soil',      icon: <Beaker className="w-5 h-5" />,          label: 'Soil Scan' },
+    { to: '/disease-detection', icon: <Stethoscope className="w-5 h-5" />, label: 'Disease Detection' },
+    { to: '/fertilizer',icon: <ShieldCheck className="w-5 h-5" />,     label: 'Fertilizer' },
     { to: '/history',   icon: <History className="w-5 h-5" />,         label: 'History' },
     { to: '/settings',  icon: <Settings className="w-5 h-5" />,        label: 'Settings' },
   ];

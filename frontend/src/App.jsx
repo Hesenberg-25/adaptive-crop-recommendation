@@ -17,6 +17,9 @@ import History from './pages/History';
 import Settings from './pages/Settings';
 import CatalogPage from './pages/CatalogPage';
 import Market from './pages/Market';
+import FertilizerReportPage from './pages/FertilizerReportPage';
+import DiseaseDetection from './pages/DiseaseDetection';
+import SoilScanPage from './pages/SoilScanPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const LANGUAGES = [
@@ -169,6 +172,9 @@ const AppShell = () => {
             </ProtectedRoute>
           } />
           <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
+          <Route path="/fertilizer" element={<ProtectedRoute><FertilizerReportPage /></ProtectedRoute>} />
+          <Route path="/disease-detection" element={<ProtectedRoute><DiseaseDetection /></ProtectedRoute>} />
+          <Route path="/soil" element={<ProtectedRoute><SoilScanPage /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

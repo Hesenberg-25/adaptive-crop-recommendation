@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Heart, Thermometer, Droplets, Timer, FlaskConical,
   Sprout, Bug, Leaf, ChevronLeft, ChevronRight, Download, Flower2,
-  TrendingUp, CalendarDays, SunMedium, CloudRain, Layers
+  TrendingUp, CalendarDays, SunMedium, CloudRain, Layers, Loader2
 } from 'lucide-react';
 import CROP_DETAILS from '../data/cropDetailData';
+import { generateCropReportPDF } from '../utils/pdfExport';
 
 const categoryColorMap = {
   'Cereal':     { bg: 'bg-amber-600',   text: 'text-white' },
@@ -52,8 +54,9 @@ const useMultiCropImages = (cropName, query, count = 5) => {
 
 
 const CropDetailView = ({ crop, onBack, isFavorite, onToggleFavorite }) => {
-    const detail = CROP_DETAILS[crop.name];
+  const detail = CROP_DETAILS[crop.name];
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const fetchedImages = useMultiCropImages(
     crop.name,
@@ -357,38 +360,25 @@ const CropDetailView = ({ crop, onBack, isFavorite, onToggleFavorite }) => {
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="glass-button !py-2.5 !px-5 !text-sm flex items-center gap-2 flex-shrink-0"
-            onClick={() => {
-              // PDF download placeholder
-              const printContent = `
-                ${crop.name} - Crop Report
-                ${detail.scientificName}
-                Category: ${crop.category}
-                Season: ${detail.sowingSeason}
-                Climate: ${detail.climate.tempRange}
-                Soil: ${detail.soilType}
-                pH: ${detail.ph}
-                Duration: ${detail.duration} Days
-                
-                Fertilizer (per acre):
-                FYM: ${detail.fertilizer.fym}
-                N: ${detail.fertilizer.nitrogen}
-                P₂O₅: ${detail.fertilizer.phosphorus}
-                K₂O: ${detail.fertilizer.potassium}
-                
-                ${detail.about}
-              `;
-              const blob = new Blob([printContent], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${crop.name}_crop_report.txt`;
-              a.click();
-              URL.revokeObjectURL(url);
+            className={`glass-button !py-2.5 !px-5 !text-sm flex items-center gap-2 flex-shrink-0 ${isGeneratingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isGeneratingPdf}
+            onClick={async () => {
+              try {
+                setIsGeneratingPdf(true);
+                // Wrap in setTimeout to allow UI to update to loading state
+                await new Promise(resolve => setTimeout(resolve, 100)); 
+                generateCropReportPDF(crop, detail);
+                toast.success('Report downloaded successfully!');
+              } catch (err) {
+                console.error("PDF Generation Error:", err);
+                toast.error('Failed to generate PDF. Please try again.');
+              } finally {
+                setIsGeneratingPdf(false);
+              }
             }}
           >
-            <Download className="w-4 h-4" />
-            Download Report
+            {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isGeneratingPdf ? 'Generating...' : 'Download Report'}
           </motion.button>
         </div>
       </div>
