@@ -23,9 +23,8 @@ class CropPredictor:
         # Resolve paths relative to *this* file so the service works from any CWD
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # Dataset lives in the Node.js backend's data directory (shared resource)
         self.data_path = os.path.join(
-            base_dir, "..", "backend", "src", "data", "Crop_recommendation.csv"
+            base_dir, "data", "Crop_recommendation.csv"
         )
         # Serialized model artifact stored alongside the Python service
         self.model_path = os.path.join(base_dir, "crop_rf_model.pkl")

@@ -185,7 +185,7 @@ const Dashboard = ({ externalUseLiveWeather, externalLocation, externalLocationN
       toast.success('Prediction generated & saved to database!');
     } catch (error) {
       clearInterval(intervalId);
-      toast.error(error.response?.data?.error || 'Failed to generate prediction');
+      toast.error(error.response?.data?.detail || error.response?.data?.error || 'Failed to generate prediction');
     } finally {
       setLoading(false);
       setLoadingText('');
