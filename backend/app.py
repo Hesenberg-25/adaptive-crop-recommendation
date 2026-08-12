@@ -529,7 +529,7 @@ class MarketBody(BaseModel):
 async def market_prices(body: MarketBody, user=Depends(get_current_user)):
     result = await fetch_raw_mandi_records(body.state, body.district, body.commodity, body.limit, body.offset)
     if result.get("error"):
-        raise HTTPException(status_code=400, detail=result["error"])
+        print("MARKET API ERROR:", result["error"])
     return result
 
 

@@ -98,6 +98,15 @@ async def fetch_raw_mandi_records(state=None, district=None, commodity=None, lim
             res.raise_for_status()
             data = res.json()
         return {"records": data.get("records", []), "total": data.get("total", 0), "count": data.get("count", 0)}
+    except httpx.HTTPStatusError as exc:
+        err_msg = str(exc)
+        try:
+            err_data = exc.response.json()
+            if isinstance(err_data, dict):
+                err_msg = err_data.get("message") or err_data.get("error") or str(exc)
+        except Exception:
+            pass
+        return {"records": [], "total": 0, "error": f"Mandi API Error: {err_msg}"}
     except Exception as exc:
         return {"records": [], "total": 0, "error": str(exc)}
 
