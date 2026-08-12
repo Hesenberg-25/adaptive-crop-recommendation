@@ -1,4 +1,4 @@
-# ml_backend/requirements.txt
+# backend/requirements.txt
 # Python dependencies for the full AgriVision Python backend
 
 # Web framework

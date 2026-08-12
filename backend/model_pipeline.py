@@ -62,8 +62,8 @@ class CropPredictor:
         train_acc = self.model.score(X_train, y_train) * 100
         val_acc = self.model.score(X_test, y_test) * 100
 
-        print(f"✅  Training accuracy : {train_acc:.2f}%")
-        print(f"✅  Validation accuracy: {val_acc:.2f}%")
+        print(f"[Success] Training accuracy : {train_acc:.2f}%")
+        print(f"[Success] Validation accuracy: {val_acc:.2f}%")
 
         # Persist model + feature names together for deterministic reloading
         artifact = {
@@ -72,7 +72,7 @@ class CropPredictor:
             "class_labels": list(self.class_labels),
         }
         joblib.dump(artifact, self.model_path)
-        print(f"💾  Model saved → {self.model_path}")
+        print(f"[Info] Model saved to {self.model_path}")
 
         # Pre-compute class-level feature means for importance narratives
         self._compute_class_means(df)
@@ -202,9 +202,9 @@ class CropPredictor:
             self.model = artifact["model"]
             self.feature_names = artifact["feature_names"]
             self.class_labels = np.array(artifact["class_labels"])
-            print("🔄  Model loaded from disk.")
+            print("[Info] Model loaded from disk.")
         else:
-            print("⚠️  No saved model found — training from scratch...")
+            print("[Warning] No saved model found - training from scratch...")
             self.train_and_save_model()
 
     def _ensure_class_means(self):
@@ -263,7 +263,7 @@ class CropPredictor:
 if __name__ == "__main__":
     predictor = CropPredictor()
     result = predictor.train_and_save_model()
-    print(f"\n📊  Result: {result}")
+    print(f"\n[Result]: {result}")
 
     # Quick smoke test
     sample = {
@@ -272,4 +272,4 @@ if __name__ == "__main__":
         "ph": 6.5, "rainfall": 202.9,
     }
     prediction = predictor.predict_top_crops(sample)
-    print(f"\n🌾  Prediction: {prediction}")
+    print(f"\n[Prediction]: {prediction}")
