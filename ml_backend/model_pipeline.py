@@ -227,6 +227,35 @@ class CropPredictor:
         # Normalize index to lowercase for robust lookups
         self._class_means.index = self._class_means.index.str.strip().str.lower()
 
+    def _load_training_data_for_shap(self) -> list:
+        """
+        Load the CSV dataset and return rows as a list of dicts compatible
+        with the JavaScript shapEngine format:
+            [{ "label": "rice", "features": { "N": 90, "P": 42, ... } }, ...]
+        Results are cached after the first load.
+        """
+        if hasattr(self, "_shap_training_cache") and self._shap_training_cache:
+            return self._shap_training_cache
+
+        if not os.path.exists(self.data_path):
+            return []
+
+        try:
+            df = pd.read_csv(self.data_path)
+            rows = []
+            for _, row in df.iterrows():
+                label = str(row.get("label", "")).strip().lower()
+                if not label:
+                    continue
+                features = {feat: float(row[feat]) for feat in self.FEATURE_NAMES if feat in row}
+                rows.append({"label": label, "features": features})
+            self._shap_training_cache = rows
+            return rows
+        except Exception as exc:
+            print(f"[CropPredictor] Error loading training data for SHAP: {exc}")
+            return []
+
+
 
 # ------------------------------------------------------------------
 # CLI entrypoint: train the model manually via `python model_pipeline.py`
