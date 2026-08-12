@@ -168,8 +168,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const marketPrices = await getDynamicMarketPrices(detectedRegion, detectedDistrict);
 
         // 2. ML Logic
-        const mlPredictions = cropModel.predict(inputs);
-
+        const mlPredictions = await cropModel.predict(inputs);
         const trainingData = cropModel.getTrainingData();
         let allKnownLabels = [...new Set(trainingData.map(d => d.label))];
         if (allKnownLabels.length === 0) {
