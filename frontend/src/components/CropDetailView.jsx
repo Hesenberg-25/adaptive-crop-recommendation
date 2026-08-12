@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,56 +17,14 @@ const categoryColorMap = {
   'Cash Crop':  { bg: 'bg-purple-600',  text: 'text-white' },
 };
 
-// In-memory image cache
-const imgCache = {};
-
-const useMultiCropImages = (cropName, query, count = 5) => {
-  const [images, setImages] = useState([]);
-
-  useEffect(() => {
-    if (!cropName) return;
-    const key = cropName.toLowerCase();
-
-    if (imgCache[key] && imgCache[key].length >= count) {
-      setImages(imgCache[key]);
-      return;
-    }
-
-    const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-    if (!accessKey) return;
-
-    fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query || key + ' crop farm')}&per_page=${count}&orientation=landscape&client_id=${accessKey}`
-    )
-      .then(r => r.json())
-      .then(data => {
-        const urls = (data?.results || []).map(r => r?.urls?.regular || r?.urls?.small).filter(Boolean);
-        if (urls.length > 0) {
-          imgCache[key] = urls;
-          setImages(urls);
-        }
-      })
-      .catch(() => setImages([]));
-  }, [cropName, query, count]);
-
-  return images;
-};
-
 
 const CropDetailView = ({ crop, onBack, isFavorite, onToggleFavorite }) => {
   const detail = CROP_DETAILS[crop.name];
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  const fetchedImages = useMultiCropImages(
-    crop.name,
-    detail?.unsplashQuery,
-    5
-  );
-
-  const images = detail?.imageUrl 
-    ? [detail.imageUrl, ...fetchedImages.filter(img => img !== detail.imageUrl)] 
-    : fetchedImages;
+  // Use the same image from the crop catalog data
+  const images = detail?.imageUrl ? [detail.imageUrl] : [];
 
   const nextImage = useCallback(() => {
     if (images.length > 0) setActiveImageIdx(i => (i + 1) % images.length);

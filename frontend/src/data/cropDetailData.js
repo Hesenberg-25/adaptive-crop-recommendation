@@ -1636,5 +1636,19 @@ Object.keys(CROP_DETAILS).forEach((cropName) => {
   }
 });
 
+// Normalized lookup map for catalog images
+const normalizedCatalogMap = {};
+Object.keys(CROP_DETAILS).forEach((key) => {
+  const normKey = key.toLowerCase().replace(/[\s\-_]+/g, '');
+  normalizedCatalogMap[normKey] = CROP_DETAILS[key]?.imageUrl;
+});
+
+export const getCropCatalogImage = (cropName) => {
+  if (!cropName) return null;
+  const normKey = String(cropName).toLowerCase().replace(/[\s\-_]+/g, '');
+  return normalizedCatalogMap[normKey] || CROP_DETAILS[cropName]?.imageUrl || getCropImage(cropName) || null;
+};
+
 export default CROP_DETAILS;
+
 

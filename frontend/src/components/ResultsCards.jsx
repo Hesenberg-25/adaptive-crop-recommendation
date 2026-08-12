@@ -1,65 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Sprout, TrendingUp, AlertCircle, IndianRupee, Droplets, Ban } from 'lucide-react';
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
-import { getCropImage } from '../data/cropImages';
+import CROP_DETAILS from '../data/cropDetailData';
 
-// In-memory cache so we don't re-fetch on every render
-const imageCache = {};
+// Normalized lookup: handles "rice", "Rice", "pearl_millet", "Pearl Millet" etc.
+const normalizedImageMap = {};
+Object.keys(CROP_DETAILS).forEach((key) => {
+  const norm = key.toLowerCase().replace(/[\s\-_]+/g, '');
+  if (CROP_DETAILS[key]?.imageUrl) {
+    normalizedImageMap[norm] = CROP_DETAILS[key].imageUrl;
+  }
+});
 
-const useCropImage = (cropName) => {
-  const [imgUrl, setImgUrl] = useState(() => getCropImage(cropName));
-
-  useEffect(() => {
-    if (!cropName) return;
-    
-    // First priority: check static crop image mapping
-    const staticUrl = getCropImage(cropName);
-    if (staticUrl) {
-      setImgUrl(staticUrl);
-      return;
-    }
-
-    const key = cropName.toLowerCase();
-    if (imageCache[key]) {
-      setImgUrl(imageCache[key]);
-      return;
-    }
-
-    const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-    if (!accessKey) return;
-
-    fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(key + ' crop farm')}&per_page=1&orientation=squarish&client_id=${accessKey}`
-    )
-      .then((r) => r.json())
-      .then((data) => {
-        const url = data?.results?.[0]?.urls?.small;
-        if (url) {
-          imageCache[key] = url;
-          setImgUrl(url);
-        } else {
-          fetch(
-            `https://api.unsplash.com/search/photos?query=farming+field&per_page=1&orientation=squarish&client_id=${accessKey}`
-          )
-            .then((r) => r.json())
-            .then((fd) => {
-              const fb = fd?.results?.[0]?.urls?.small || '';
-              imageCache[key] = fb;
-              setImgUrl(fb);
-            });
-        }
-      })
-      .catch(() => setImgUrl(''));
-  }, [cropName]);
-
-  return imgUrl;
+const getCropCatalogImage = (cropName) => {
+  if (!cropName) return null;
+  const norm = String(cropName).toLowerCase().replace(/[\s\-_]+/g, '');
+  return normalizedImageMap[norm] || null;
 };
 
 // Individual crop card
 export const CropCard = ({ pred, isRecommended, idx }) => {
   const isTop = isRecommended && idx === 0;
-  const cropImg = useCropImage(pred.crop || pred.name);
+  const cropImg = getCropCatalogImage(pred.crop || pred.name);
 
   let translatedAvoidReason = pred.avoidReason;
   if (translatedAvoidReason) {
