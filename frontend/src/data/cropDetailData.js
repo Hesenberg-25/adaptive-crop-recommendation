@@ -1,5 +1,6 @@
 // Comprehensive crop detail data for all 48 crops in the catalog
 // Data sourced from CROP_INPUT_REFERENCE.md and standard Indian agricultural references
+import { getCropImage } from './cropImages';
 
 const CROP_DETAILS = {
   // ═══════════════════════════════════════════════
@@ -1625,4 +1626,15 @@ const CROP_DETAILS = {
   },
 };
 
+// Ensure all crops have an imageUrl assigned from cropImages
+Object.keys(CROP_DETAILS).forEach((cropName) => {
+  if (!CROP_DETAILS[cropName].imageUrl) {
+    const img = getCropImage(cropName);
+    if (img) {
+      CROP_DETAILS[cropName].imageUrl = img;
+    }
+  }
+});
+
 export default CROP_DETAILS;
+

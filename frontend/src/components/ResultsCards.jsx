@@ -2,17 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { Sprout, TrendingUp, AlertCircle, IndianRupee, Droplets, Ban } from 'lucide-react';
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
+import { getCropImage } from '../data/cropImages';
 
 // In-memory cache so we don't re-fetch on every render
 const imageCache = {};
 
 const useCropImage = (cropName) => {
-  const [imgUrl, setImgUrl] = useState(null);
+  const [imgUrl, setImgUrl] = useState(() => getCropImage(cropName));
 
   useEffect(() => {
     if (!cropName) return;
-    const key = cropName.toLowerCase();
+    
+    // First priority: check static crop image mapping
+    const staticUrl = getCropImage(cropName);
+    if (staticUrl) {
+      setImgUrl(staticUrl);
+      return;
+    }
 
+    const key = cropName.toLowerCase();
     if (imageCache[key]) {
       setImgUrl(imageCache[key]);
       return;
