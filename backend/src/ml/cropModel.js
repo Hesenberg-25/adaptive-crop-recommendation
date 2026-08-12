@@ -92,33 +92,6 @@ async function trainModel() {
     await Promise.all([loadTrainingData(), warmPythonService()]);
 }
 
-function fallbackPredict(inputs) {
-    const { N, P, K, temperature, humidity, rainfall } = inputs;
-    let crops = [];
-
-    if (rainfall > 180 && humidity > 70) {
-        crops.push({ name: 'rice', confidence: Math.min(95, 70 + (rainfall / 10)) });
-        crops.push({ name: 'sugarcane', confidence: Math.min(85, 60 + (humidity / 5)) });
-        crops.push({ name: 'jute', confidence: 75 });
-    } else if (temperature > 25 && rainfall > 80 && rainfall <= 180) {
-        crops.push({ name: 'maize', confidence: Math.min(90, 65 + (N / 4)) });
-        crops.push({ name: 'cotton', confidence: 80 });
-        crops.push({ name: 'groundnut', confidence: 70 });
-    } else if (temperature <= 25 && rainfall <= 100) {
-        crops.push({ name: 'wheat', confidence: Math.min(88, 60 + (K / 3)) });
-        crops.push({ name: 'chickpea', confidence: 82 });
-        crops.push({ name: 'mustard', confidence: 72 });
-    } else {
-        crops.push({ name: 'soybean', confidence: 85 });
-        crops.push({ name: 'millet', confidence: 78 });
-        crops.push({ name: 'lentil', confidence: 65 });
-    }
-
-    return crops.map((c) => ({ name: c.name, confidence: Math.round(c.confidence) }))
-        .sort((a, b) => b.confidence - a.confidence)
-        .slice(0, 3);
-}
-
 async function predict(inputs) {
     const normalizedInputs = {
         N: parseFloat(inputs.N) || 0,
@@ -138,18 +111,14 @@ async function predict(inputs) {
 
         if (response.data && response.data.status === 'success' && Array.isArray(response.data.predictions)) {
             lastPrediction = response.data;
-            return response.data.predictions.map((p) => ({
-                name: p.crop,
-                confidence: Math.round(p.confidence),
-            }));
+            return response.data;
         }
 
-        console.warn('⚠️  Unexpected response from Python ML service:', response.data);
-        return fallbackPredict(normalizedInputs);
+        const errorMessage = response.data?.detail?.message || JSON.stringify(response.data);
+        throw new Error(`Unexpected Python ML service response: ${errorMessage}`);
     } catch (error) {
-        console.warn('⚠️  Python ML service offline, using heuristic fallback.');
-        if (error && error.code) console.warn(`   Error code: ${error.code}`);
-        return fallbackPredict(normalizedInputs);
+        console.error('Python ML service request failed:', error.message || error);
+        throw new Error('Python ML service is unavailable or returned invalid output.');
     }
 }
 

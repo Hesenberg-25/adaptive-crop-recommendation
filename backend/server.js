@@ -166,53 +166,24 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         const inputs = { N, P, K, pH, temperature, humidity, rainfall };
 
         const marketPrices = await getDynamicMarketPrices(detectedRegion, detectedDistrict);
+        const trainingData = cropModel.getTrainingData();
 
         // 2. ML Logic
-        const mlPredictions = await cropModel.predict(inputs);
-        const trainingData = cropModel.getTrainingData();
-        let allKnownLabels = [...new Set(trainingData.map(d => d.label))];
-        if (allKnownLabels.length === 0) {
-            allKnownLabels = ["rice", "wheat", "maize", "sugarcane", "cotton", "jute", "soybean", "millet"];
-        }
+        const pyResponse = await cropModel.predict(inputs);
+        const mlPredictions = Array.isArray(pyResponse)
+            ? pyResponse
+            : Array.isArray(pyResponse.predictions)
+                ? pyResponse.predictions
+                : [];
+        const shapImportance = Array.isArray(pyResponse)
+            ? []
+            : pyResponse.feature_importances || pyResponse.featureImportances || [];
 
-        let allCrops = allKnownLabels.map(label => {
-            const found = mlPredictions.find(p => p.name.toLowerCase() === label.toLowerCase());
-            let confidence = found ? found.confidence : 0;
-            if (!found) {
-                // Anti-clamping: map raw distance to a distinct 1-15% score
-                const cropData = trainingData.filter(d => d.label.toLowerCase() === label.toLowerCase());
-                if (cropData.length > 0) {
-                    let sumDist = 0;
-                    cropData.forEach(d => {
-                        let dist = 0;
-                        const feats = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall'];
-                        for (let key of feats) {
-                            let val = (key === 'ph') ? pH : inputs[key];
-                            const diff = (d.features[key] || 0) - val;
-                            dist += diff * diff;
-                        }
-                        sumDist += Math.sqrt(dist);
-                    });
-                    const avgDist = sumDist / cropData.length;
-                    confidence = Math.max(1, 15 - Math.round(avgDist / 15));
-                } else {
-                    confidence = 1;
-                }
-            }
-
-            // Apply soil type penalty
-            if (soilType) {
-                const data = marketPrices[label.toLowerCase()] || marketPrices['default'];
-                if (data.preferredSoil && !data.preferredSoil.includes(soilType.toLowerCase())) {
-                    confidence = Math.max(1, confidence - 30);
-                }
-            }
-
-            return {
-                name: label,
-                confidence
-            };
-        });
+        const normalizedPredictions = mlPredictions.map((prediction) => ({
+            name: prediction.name || prediction.crop || 'Unknown',
+            confidence: Number(prediction.confidence ?? prediction.confidence_score ?? 0),
+            ...prediction,
+        }));
 
         const attachFinancials = (crop) => {
             const data = marketPrices[crop.name.toLowerCase()] || marketPrices['default'];
@@ -236,7 +207,8 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
             };
         };
 
-        const allCropsWithROI = allCrops.map(attachFinancials);
+        let recommendedWithROI = normalizedPredictions.map(attachFinancials);
+        const allCropsWithROI = [...recommendedWithROI];
 
         allCropsWithROI.sort((a, b) => {
             if (b.confidence !== a.confidence) return b.confidence - a.confidence;
@@ -247,7 +219,6 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         });
 
         const threshold = 40;
-        let recommendedWithROI = [];
         let avoidWithROI = [];
 
         if (allCropsWithROI.length >= 6) {
@@ -423,7 +394,7 @@ app.post('/api/predict', authenticateUser, async (req, res) => {
         }
 
         const primaryCrop = recommendedWithROI.length > 0 ? recommendedWithROI[0].name : (avoidWithROI.length > 0 ? avoidWithROI[0].name : 'Unknown');
-        const shapImportance = shapEngine.calculate(inputs, primaryCrop, trainingData);
+        // shapImportance is already populated from the Python service response.
 
         // 3b. Government Subsidies & Schemes (region-aware)
         const governmentSubsidies = await getDynamicSubsidiesForCrops(recommendedWithROI, { state: detectedRegion, district: detectedDistrict });
