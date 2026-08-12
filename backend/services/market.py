@@ -33,7 +33,7 @@ STATIC_FALLBACK = {
 
 
 async def _fetch_mandi_prices(state: str = None, district: str = None) -> dict | None:
-    api_key = os.getenv("DATA_GOV_IN_API_KEY")
+    api_key = os.getenv("DATA_GOV_IN_API_KEY", "579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b")
     if not api_key:
         return None
     try:
@@ -82,7 +82,7 @@ async def _fetch_mandi_prices(state: str = None, district: str = None) -> dict |
 
 
 async def fetch_raw_mandi_records(state=None, district=None, commodity=None, limit=50, offset=0) -> dict:
-    api_key = os.getenv("DATA_GOV_IN_API_KEY")
+    api_key = os.getenv("DATA_GOV_IN_API_KEY", "579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b")
     if not api_key:
         return {"records": [], "total": 0, "error": "Missing API Key"}
     try:
